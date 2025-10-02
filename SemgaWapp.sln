@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36408.4 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "SemgaWapp", "SemgaWapp\SemgaWapp.vbproj", "{776EC7E9-4780-4D55-9471-0B43D75DDE47}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{776EC7E9-4780-4D55-9471-0B43D75DDE47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{776EC7E9-4780-4D55-9471-0B43D75DDE47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{776EC7E9-4780-4D55-9471-0B43D75DDE47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{776EC7E9-4780-4D55-9471-0B43D75DDE47}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FE02E201-8029-4F43-8B18-1EC14CCFB440}
+	EndGlobalSection
+EndGlobal

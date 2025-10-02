@@ -1,0 +1,897 @@
+﻿<%@ Page Language="VB" AutoEventWireup="true" CodeBehind="Dashboard.aspx.vb" Inherits="SemgaWapp.Dashboard" %>
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Cooperativa Segma - Panel de Control</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #87CEEB, #B0E0E6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .welcome-text {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .main-content {
+            padding: 10px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .card-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .card-content {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .members-card .card-icon {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .loans-card .card-icon {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+        }
+
+        .auxiliares-card .card-icon {
+            background: linear-gradient(135deg, #6f42c1, #5a2d91);
+        }
+
+        .savings-card .card-icon {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+        }
+
+        .reports-card .card-icon {
+            background: linear-gradient(135deg, #6c757d, #545b62);
+        }
+
+        .logs-card .card-icon {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+        }
+
+        .admin-card .card-icon {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .welcome-banner {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .welcome-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .welcome-subtitle {
+            display: none;
+        }
+
+        .user-role {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #d4edda;
+            color: #155724;
+            padding: 6px 12px;
+            border-radius: 18px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .user-role i {
+            color: #28a745;
+        }
+
+        .admin-badge {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .admin-badge i {
+            color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .welcome-title {
+                font-size: 20px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .card-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .card-title {
+                font-size: 15px;
+            }
+        }
+    </style>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+    <form id="form1" runat="server">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-vault"></i>
+                </div>
+                <div class="logo-text">Cooperativa Segma</div>
+            </div>
+            
+            <div class="user-info">
+                <div class="welcome-text">
+                    Bienvenido, <strong><%= Session("Nombre") & " " & Session("Apellido") %></strong>
+                </div>
+                                 <asp:Button ID="btnLogout" runat="server" Text="Cerrar Sesi&#243;n" 
+                           CssClass="logout-btn" OnClick="btnLogout_Click" />
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                <!-- Members Card -->
+                <div class="card members-card" onclick="window.location.href='Forms/Socios/GestionSocios.aspx'">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                                                 <div class="card-title">Gesti&#243;n de Socios</div>
+                    </div>
+                                        <div class="card-content">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <h3 id="sociosActivosCount" style="color: #28a745; font-size: 24px; margin: 0; font-weight: 700;">-</h3>
+                            <span style="font-size: 12px; color: #666;">Socios activos</span>
+                        </div>
+                        <div id="miniGraficoTipos" style="padding: 8px; background: rgba(40, 167, 69, 0.1); border-radius: 6px; min-height: 50px;">
+                            <div id="graficoBarras" style="display: flex; align-items: end; gap: 8px; height: 40px; justify-content: center; width: 100%;">
+                                <div style="color: #999; font-size: 10px; text-align: center;">Cargando...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movimientos Card -->
+                <div class="card loans-card" onclick="window.location.href='Forms/Transacciones/Transacciones.aspx'">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="card-title">Movimientos de Cuentas</div>
+                    </div>
+                    <div class="card-content">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <h3 id="totalMovimientosCount" style="color: #007bff; font-size: 24px; margin: 0; font-weight: 700;">-</h3>
+                            <span style="font-size: 12px; color: #666;">Movimientos esta semana</span>
+                        </div>
+                        <div id="miniGraficoMovimientos" style="padding: 8px; background: rgba(0, 123, 255, 0.1); border-radius: 6px; min-height: 50px;">
+                            <div id="graficoBarrasMovimientos" style="display: flex; align-items: end; gap: 8px; height: 40px; justify-content: center; width: 100%;">
+                                <div style="color: #999; font-size: 10px; text-align: center;">Cargando...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auxiliares Card -->
+                <div class="card auxiliares-card" onclick="window.location.href='Forms/Auxiliares/AuxiliaresAsociados.aspx'">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-users-cog"></i>
+                        </div>
+                        <div class="card-title">Gesti&#243;n de Auxiliares</div>
+                    </div>
+                    <div class="card-content">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <h3 id="auxiliaresActivosCount" style="color: #6f42c1; font-size: 24px; margin: 0; font-weight: 700;">-</h3>
+                            <span style="font-size: 12px; color: #666;">Auxiliares activos</span>
+                        </div>
+                        <div id="miniGraficoAuxiliares" style="padding: 8px; background: rgba(111, 66, 193, 0.1); border-radius: 6px; min-height: 50px;">
+                            <div id="graficoBarrasAuxiliares" style="display: flex; align-items: end; gap: 8px; height: 40px; justify-content: center; width: 100%;">
+                                <div style="color: #999; font-size: 10px; text-align: center;">Cargando...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                                <!-- Reports Card -->
+                <div class="card reports-card" onclick="window.location.href='Reportes.aspx'">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="card-title">Reportes y Estad&#237;sticas</div>
+                    </div>
+                    <div class="card-content">
+                        <div style="margin-bottom: 8px;">
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0; border-bottom: 1px solid #eee;">
+                                <i class="fas fa-chart-line" style="margin-right: 5px;"></i>
+                                Reporte mensual
+                            </a>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0; border-bottom: 1px solid #eee;">
+                                <i class="fas fa-chart-pie" style="margin-right: 5px;"></i>
+                                Estad&#237;sticas de socios
+                            </a>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0; border-bottom: 1px solid #eee;">
+                                <i class="fas fa-file-invoice-dollar" style="margin-right: 5px;"></i>
+                                Reporte financiero
+                            </a>
+                        </div>
+                        <div>
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0;">
+                                <i class="fas fa-download" style="margin-right: 5px;"></i>
+                                Exportar datos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs and Audit Card -->
+                <div class="card logs-card" onclick="window.location.href='LogsAuditoria.aspx'">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="card-title">Logs y Auditor&#237;as</div>
+                    </div>
+                    <div class="card-content">
+                        <div style="margin-bottom: 8px;">
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0; border-bottom: 1px solid #eee;">
+                                <i class="fas fa-history" style="margin-right: 5px;"></i>
+                                Historial de accesos
+                            </a>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0; border-bottom: 1px solid #eee;">
+                                <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
+                                Alertas de seguridad
+                            </a>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0; border-bottom: 1px solid #eee;">
+                                <i class="fas fa-user-clock" style="margin-right: 5px;"></i>
+                                Actividad de usuarios
+                            </a>
+                        </div>
+                        <div>
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0;">
+                                <i class="fas fa-file-alt" style="margin-right: 5px;"></i>
+                                Reportes de auditor&#237;a
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Settings Card (solo para nivel 0) -->
+                <% If Session("NivelAcceso") = 0 Then %>
+                                 <div class="card admin-card" onclick="window.location.href='Forms/Mantenimientos/dashboardSistemas.aspx'">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="card-title">Configuraciones del Sistema</div>
+                    </div>
+                                        <div class="card-content">
+                        <div style="margin-bottom: 8px;">
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0; border-bottom: 1px solid #eee;">
+                                <i class="fas fa-user-cog" style="margin-right: 5px;"></i>
+                                Gesti&#243;n de usuarios
+                            </a>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0; border-bottom: 1px solid #eee;">
+                                <i class="fas fa-shield-alt" style="margin-right: 5px;"></i>
+                                Configuraci&#243;n de seguridad
+                            </a>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0; border-bottom: 1px solid #eee;">
+                                <i class="fas fa-database" style="margin-right: 5px;"></i>
+                                Respaldo de datos
+                            </a>
+                        </div>
+                        <div>
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0;">
+                                <i class="fas fa-tools" style="margin-right: 5px;"></i>
+                                Mantenimiento del sistema
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <% End If %>
+            </div>
+        </div>
+    </form>
+    
+    <!-- Scripts necesarios para el monitoreo de inactividad -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    
+    <!-- Script de monitoreo de inactividad -->
+    <script src="Scripts/smart-chips.js"></script>
+    <script src="Scripts/inactivity-monitor-final.js?v=2.6"></script>
+    
+    <!-- Script para cargar datos del dashboard -->
+    <script>
+        $(document).ready(function() {
+            cargarDatosDashboard();
+        });
+
+        function cargarDatosDashboard() {
+            $.ajax({
+                type: "POST",
+                url: "Dashboard.aspx/ObtenerDatosDashboard",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(response) {
+                    if (typeof response.d === 'string') {
+                        response.d = JSON.parse(response.d);
+                    }
+                    
+                    if (response.d.Success) {
+                        // Actualizar el número de socios activos
+                        var sociosActivos = response.d.Data.SociosActivos;
+                        $('#sociosActivosCount').text(sociosActivos.toLocaleString());
+                        
+                        // Actualizar el número de auxiliares activos
+                        var auxiliaresActivos = response.d.Data.AuxiliaresActivos;
+                        $('#auxiliaresActivosCount').text(auxiliaresActivos.toLocaleString());
+                        
+                        // Procesar y mostrar el minigráfico de tipos de asociados
+                        var jsonTiposAsociados = response.d.Data.JsonTiposAsociados;
+                        
+                        if (jsonTiposAsociados && jsonTiposAsociados !== '[]' && jsonTiposAsociados !== 'null') {
+                            try {
+                                var tiposAsociados = JSON.parse(jsonTiposAsociados);
+                                
+                                crearMiniGrafico(tiposAsociados);
+                            } catch (e) {
+                                
+                                
+                            }
+                        } else {
+                            
+                            $('#graficoBarras').html('<div style="color: #999; font-size: 10px; text-align: center;">Sin datos disponibles</div>');
+                        }
+                        
+                        // Procesar y mostrar los movimientos por día
+                        var jsonUltimosMovimientos = response.d.Data.JsonUltimosMovimientos;
+                        
+                        
+                        if (jsonUltimosMovimientos && jsonUltimosMovimientos !== '[]' && jsonUltimosMovimientos !== 'null') {
+                            try {
+                                var movimientosPorDia = JSON.parse(jsonUltimosMovimientos);
+                                
+                                mostrarMovimientosPorDia(movimientosPorDia);
+                            } catch (e) {
+                                
+                                
+                            }
+                        } else {
+                            
+                            $('#totalMovimientosCount').text('0');
+                            $('#graficoBarrasMovimientos').html('<div style="color: #999; font-size: 10px; text-align: center;">Sin datos disponibles</div>');
+                        }
+                        
+                        // Procesar y mostrar el minigráfico de tipos de auxiliares
+                        var jsonTiposAuxiliares = response.d.Data.JsonTiposAuxiliares;
+                        
+                        
+                        if (jsonTiposAuxiliares && jsonTiposAuxiliares !== '[]' && jsonTiposAuxiliares !== 'null') {
+                            try {
+                                var tiposAuxiliares = JSON.parse(jsonTiposAuxiliares);
+                                
+                                crearMiniGraficoAuxiliares(tiposAuxiliares);
+                            } catch (e) {
+                                
+                                
+                                $('#graficoBarrasAuxiliares').html('<div style="color: #999; font-size: 10px; text-align: center;">Error al cargar datos</div>');
+                            }
+                        } else {
+                            
+                            $('#graficoBarrasAuxiliares').html('<div style="color: #999; font-size: 10px; text-align: center;">Sin datos disponibles</div>');
+                        }
+                    } else {
+                        
+                        $('#sociosActivosCount').text('Error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    
+                    $('#sociosActivosCount').text('Error');
+                }
+            });
+        }
+
+        function crearMiniGrafico(tiposAsociados) {
+            
+            
+            var graficoBarras = $('#graficoBarras');
+            if (graficoBarras.length === 0) {
+                
+                return;
+            }
+            
+            // Limpiar contenido anterior
+            graficoBarras.empty();
+            
+            // Verificar si hay datos válidos
+            if (!tiposAsociados || tiposAsociados.length === 0 || !Array.isArray(tiposAsociados)) {
+                
+                graficoBarras.html('<div style="color: #999; font-size: 10px; text-align: center;">Sin datos</div>');
+                return;
+            }
+            
+            // Ajustar el justify-content dinámicamente
+            var justificarContenido = tiposAsociados.length <= 3 ? 'center' : 'space-between';
+            graficoBarras.css('justify-content', justificarContenido);
+            
+            // Verificar que los datos tengan la estructura correcta
+            var datosValidos = tiposAsociados.filter(function(tipo) {
+                return tipo && tipo.TipoAsociado && typeof tipo.Cantidad === 'number' && tipo.Cantidad >= 0;
+            });
+            
+            if (datosValidos.length === 0) {
+                
+                graficoBarras.html('<div style="color: #999; font-size: 10px; text-align: center;">Sin datos</div>');
+                return;
+            }
+            
+            
+            
+            // Calcular el máximo para normalizar las barras
+            var maxCantidad = Math.max(...datosValidos.map(t => t.Cantidad));
+            
+            
+            // Colores para las barras
+            var colores = ['#28a745', '#17a2b8', '#ffc107', '#dc3545', '#6c757d', '#fd7e14'];
+            
+            datosValidos.forEach(function(tipo, index) {
+                var altura = maxCantidad > 0 ? (tipo.Cantidad / maxCantidad) * 35 : 0;
+                var color = colores[index % colores.length];
+                
+                
+                
+                var barra = $('<div>').css({
+                    'width': datosValidos.length <= 3 ? '16px' : 'auto',
+                    'flex': datosValidos.length > 3 ? '1' : 'none',
+                    'max-width': '20px',
+                    'height': altura + 'px',
+                    'background': color,
+                    'border-radius': '2px 2px 0 0',
+                    'position': 'relative',
+                    'transition': 'all 0.3s ease',
+                    'min-height': '2px'
+                }).attr('title', tipo.TipoAsociado + ': ' + tipo.Cantidad);
+                
+                // Agregar etiqueta con el número
+                var etiqueta = $('<div>').css({
+                    'position': 'absolute',
+                    'top': '-15px',
+                    'left': '50%',
+                    'transform': 'translateX(-50%)',
+                    'font-size': '8px',
+                    'color': '#333',
+                    'font-weight': 'bold',
+                    'white-space': 'nowrap'
+                }).text(tipo.Cantidad);
+                
+                barra.append(etiqueta);
+                graficoBarras.append(barra);
+            });
+            
+            // Limpiar etiquetas anteriores si existen
+            graficoBarras.next('.etiquetas-tipos').remove();
+            
+            // Agregar etiquetas de tipos debajo del gráfico
+            var etiquetasContainer = $('<div>').addClass('etiquetas-tipos').css({
+                'display': 'flex',
+                'justify-content': datosValidos.length <= 3 ? 'center' : 'space-between',
+                'gap': '8px',
+                'margin-top': '4px',
+                'flex-wrap': 'wrap',
+                'width': '100%'
+            });
+            
+            datosValidos.forEach(function(tipo, index) {
+                var color = colores[index % colores.length];
+                var etiqueta = $('<div>').css({
+                    'font-size': '8px',
+                    'color': '#666',
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'gap': '2px'
+                });
+                
+                var punto = $('<div>').css({
+                    'width': '6px',
+                    'height': '6px',
+                    'background': color,
+                    'border-radius': '50%'
+                });
+                
+                etiqueta.append(punto).append(tipo.TipoAsociado);
+                etiquetasContainer.append(etiqueta);
+            });
+            
+            graficoBarras.after(etiquetasContainer);
+            
+        }
+
+        function crearMiniGraficoAuxiliares(tiposAuxiliares) {
+            
+            
+            var graficoBarras = $('#graficoBarrasAuxiliares');
+            if (graficoBarras.length === 0) {
+                
+                return;
+            }
+            
+            // Limpiar contenido anterior
+            graficoBarras.empty();
+            
+            // Verificar si hay datos válidos
+            if (!tiposAuxiliares || tiposAuxiliares.length === 0 || !Array.isArray(tiposAuxiliares)) {
+                
+                graficoBarras.html('<div style="color: #999; font-size: 10px; text-align: center;">Sin datos</div>');
+                return;
+            }
+            
+            // Ajustar el justify-content dinámicamente
+            var justificarContenido = tiposAuxiliares.length <= 3 ? 'center' : 'space-between';
+            graficoBarras.css('justify-content', justificarContenido);
+            
+            // Verificar que los datos tengan la estructura correcta
+            var datosValidos = tiposAuxiliares.filter(function(tipo) {
+                return tipo && tipo.TipoAuxiliar && typeof tipo.Cantidad === 'number' && tipo.Cantidad >= 0;
+            });
+            
+            if (datosValidos.length === 0) {
+                
+                graficoBarras.html('<div style="color: #999; font-size: 10px; text-align: center;">Sin datos</div>');
+                return;
+            }
+            
+            
+            
+            // Calcular el máximo para normalizar las barras
+            var maxCantidad = Math.max(...datosValidos.map(t => t.Cantidad));
+            
+            
+            // Colores para las barras (tonos púrpura)
+            var colores = ['#6f42c1', '#8e44ad', '#9b59b6', '#a569bd', '#bb8fce', '#d2b4de'];
+            
+            datosValidos.forEach(function(tipo, index) {
+                var altura = maxCantidad > 0 ? (tipo.Cantidad / maxCantidad) * 35 : 0;
+                var color = colores[index % colores.length];
+                
+                
+                
+                var barra = $('<div>').css({
+                    'width': datosValidos.length <= 3 ? '16px' : 'auto',
+                    'flex': datosValidos.length > 3 ? '1' : 'none',
+                    'max-width': '20px',
+                    'height': altura + 'px',
+                    'background': color,
+                    'border-radius': '2px 2px 0 0',
+                    'position': 'relative',
+                    'transition': 'all 0.3s ease',
+                    'min-height': '2px'
+                }).attr('title', tipo.TipoAuxiliar + ': ' + tipo.Cantidad);
+                
+                // Agregar etiqueta con el número
+                var etiqueta = $('<div>').css({
+                    'position': 'absolute',
+                    'top': '-15px',
+                    'left': '50%',
+                    'transform': 'translateX(-50%)',
+                    'font-size': '8px',
+                    'color': '#333',
+                    'font-weight': 'bold',
+                    'white-space': 'nowrap'
+                }).text(tipo.Cantidad);
+                
+                barra.append(etiqueta);
+                graficoBarras.append(barra);
+            });
+            
+            // Limpiar etiquetas anteriores si existen
+            graficoBarras.next('.etiquetas-tipos-auxiliares').remove();
+            
+            // Agregar etiquetas de tipos debajo del gráfico
+            var etiquetasContainer = $('<div>').addClass('etiquetas-tipos-auxiliares').css({
+                'display': 'flex',
+                'justify-content': datosValidos.length <= 3 ? 'center' : 'space-between',
+                'gap': '8px',
+                'margin-top': '4px',
+                'flex-wrap': 'wrap',
+                'width': '100%'
+            });
+            
+            datosValidos.forEach(function(tipo, index) {
+                var color = colores[index % colores.length];
+                var etiqueta = $('<div>').css({
+                    'font-size': '8px',
+                    'color': '#666',
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'gap': '2px'
+                });
+                
+                var punto = $('<div>').css({
+                    'width': '6px',
+                    'height': '6px',
+                    'background': color,
+                    'border-radius': '50%'
+                });
+                
+                etiqueta.append(punto).append(tipo.TipoAuxiliar);
+                etiquetasContainer.append(etiqueta);
+            });
+            
+            graficoBarras.after(etiquetasContainer);
+            
+        }
+
+        function mostrarMovimientosPorDia(movimientosPorDia) {
+            
+            
+            var graficoBarras = $('#graficoBarrasMovimientos');
+            if (graficoBarras.length === 0) {
+                
+                return;
+            }
+            
+            graficoBarras.empty();
+            
+            if (!movimientosPorDia || movimientosPorDia.length === 0) {
+                
+                graficoBarras.html('<div style="color: #999; font-size: 10px; text-align: center;">Sin datos</div>');
+                return;
+            }
+            
+            // Ajustar el justify-content dinámicamente
+            var justificarContenido = movimientosPorDia.length <= 3 ? 'center' : 'space-between';
+            graficoBarras.css('justify-content', justificarContenido);
+            
+            // Calcular el total de movimientos
+            var totalMovimientos = movimientosPorDia.reduce(function(sum, dia) {
+                return sum + (parseInt(dia.TotalMovimientos) || 0);
+            }, 0);
+            
+            // Actualizar el contador total
+            $('#totalMovimientosCount').text(totalMovimientos.toLocaleString());
+            
+            
+            
+            // Calcular el máximo para normalizar las barras
+            var maxMovimientos = Math.max(...movimientosPorDia.map(d => parseInt(d.TotalMovimientos) || 0));
+            
+            
+            // Colores para las barras (tonos azules)
+            var colores = ['#007bff', '#0056b3', '#004085', '#003d82', '#003a7a', '#003771', '#003469'];
+            
+            movimientosPorDia.forEach(function(dia, index) {
+                var cantidad = parseInt(dia.TotalMovimientos) || 0;
+                var altura = maxMovimientos > 0 ? (cantidad / maxMovimientos) * 35 : 0;
+                var color = colores[index % colores.length];
+                
+                
+                
+                var barra = $('<div>').css({
+                    'width': movimientosPorDia.length <= 3 ? '16px' : 'auto',
+                    'flex': movimientosPorDia.length > 3 ? '1' : 'none',
+                    'max-width': '20px',
+                    'height': altura + 'px',
+                    'background': color,
+                    'border-radius': '2px 2px 0 0',
+                    'position': 'relative',
+                    'transition': 'all 0.3s ease',
+                    'min-height': '2px'
+                }).attr('title', dia.DiaSemana + ': ' + cantidad + ' movimientos');
+                
+                // Agregar etiqueta con el número
+                var etiqueta = $('<div>').css({
+                    'position': 'absolute',
+                    'top': '-15px',
+                    'left': '50%',
+                    'transform': 'translateX(-50%)',
+                    'font-size': '8px',
+                    'color': '#333',
+                    'font-weight': 'bold',
+                    'white-space': 'nowrap'
+                }).text(cantidad);
+                
+                barra.append(etiqueta);
+                graficoBarras.append(barra);
+            });
+            
+            // Limpiar etiquetas anteriores si existen
+            graficoBarras.next('.etiquetas-movimientos').remove();
+            
+            // Agregar etiquetas de días debajo del gráfico
+            var etiquetasContainer = $('<div>').addClass('etiquetas-movimientos').css({
+                'display': 'flex',
+                'justify-content': movimientosPorDia.length <= 3 ? 'center' : 'space-between',
+                'gap': '8px',
+                'margin-top': '4px',
+                'flex-wrap': 'wrap',
+                'width': '100%'
+            });
+            
+            movimientosPorDia.forEach(function(dia, index) {
+                var color = colores[index % colores.length];
+                var etiqueta = $('<div>').css({
+                    'font-size': '8px',
+                    'color': '#666',
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'gap': '2px'
+                });
+                
+                var punto = $('<div>').css({
+                    'width': '6px',
+                    'height': '6px',
+                    'background': color,
+                    'border-radius': '50%'
+                });
+                
+                etiqueta.append(punto).append(dia.DiaSemana);
+                etiquetasContainer.append(etiqueta);
+            });
+            
+            graficoBarras.after(etiquetasContainer);
+            
+        }
+    </script>
+</body>
+</html>
+
+
+
