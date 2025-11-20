@@ -218,3 +218,20 @@ El formulario de auxiliares ahora tiene exactamente el mismo aspecto visual que 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

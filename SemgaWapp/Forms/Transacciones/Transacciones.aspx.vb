@@ -22,7 +22,7 @@ Public Class Transacciones
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function BuscarAsociados(busqueda As String) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 BuscarAsociados iniciado. Búsqueda: " & busqueda)
+			ModGlobal.EscribirLog("BuscarAsociados iniciado. Búsqueda: " & busqueda)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 
@@ -32,9 +32,9 @@ Public Class Transacciones
 
 			If Integer.TryParse(busqueda, numeroAsociado) Then
 				esNumero = True
-				ModGlobal.EscribirLog("🔍 Búsqueda por ID detectada: " & numeroAsociado)
+				ModGlobal.EscribirLog("Búsqueda por ID detectada: " & numeroAsociado)
 			Else
-				ModGlobal.EscribirLog("🔍 Búsqueda por texto detectada: " & busqueda)
+				ModGlobal.EscribirLog("Búsqueda por texto detectada: " & busqueda)
 			End If
 
 			Dim sSql As String
@@ -57,15 +57,17 @@ Public Class Transacciones
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al buscar asociados: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al buscar asociados: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Data = "",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
 				}
+			Else
+				ModGlobal.EscribirLog("Comando ejecutado correctamente - BuscarAsociados")
 			End If
 
-			ModGlobal.EscribirLog("📊 Resultados encontrados: " & dt.Rows.Count & " registros")
+			ModGlobal.EscribirLog("Resultados encontrados: " & dt.Rows.Count & " registros")
 
 			' Crear lista de objetos simples para evitar referencias circulares
 			Dim asociados As New List(Of Object)
@@ -75,7 +77,7 @@ Public Class Transacciones
 					Dim row As DataRow = dt.Rows(i)
 
 					' Log para verificar qué campos están disponibles
-					ModGlobal.EscribirLog("📋 Campos disponibles en la fila:")
+					ModGlobal.EscribirLog("Campos disponibles en la fila:")
 					For Each col As DataColumn In dt.Columns
 						ModGlobal.EscribirLog($"  - {col.ColumnName}: {row(col.ColumnName)}")
 					Next
@@ -88,7 +90,7 @@ Public Class Transacciones
 					If dt.Columns.Contains("JsonAuxiliares") AndAlso Not String.IsNullOrEmpty(row("JsonAuxiliares").ToString()) Then
 						Try
 							Dim jsonAuxiliaresValue As String = row("JsonAuxiliares").ToString()
-							ModGlobal.EscribirLog($"✅ JsonAuxiliares encontrado: {jsonAuxiliaresValue}")
+							ModGlobal.EscribirLog($"JsonAuxiliares encontrado: {jsonAuxiliaresValue}")
 
 							' Deserializar el JSON en el servidor
 							Dim auxiliaresData As Object = New JavaScriptSerializer().Deserialize(Of Object)(jsonAuxiliaresValue)
@@ -109,7 +111,7 @@ Public Class Transacciones
 								If Not auxiliaresPorRubro.ContainsKey(codigoRubro) Then
 									auxiliaresPorRubro(codigoRubro) = New List(Of Object)
 								End If
-								
+
 								Dim idTipoAuxiliar As String = auxiliarDict("IdTipoAuxiliar").ToString()
 								Dim descripcionAuxiliar As String = auxiliarDict("DescripcionAuxiliar").ToString()
 								Dim cuenta As String = auxiliarDict("Cuenta").ToString()
@@ -158,15 +160,15 @@ Public Class Transacciones
 								End If
 							Next
 
-							ModGlobal.EscribirLog($"📊 Rubros procesados: {rubrosUnicos.Count}")
-							ModGlobal.EscribirLog($"📊 Auxiliares por rubro: {auxiliaresPorRubro.Count}")
-							ModGlobal.EscribirLog($"📊 Transacciones por rubro: {transaccionesPorRubro.Count}")
+							ModGlobal.EscribirLog($"Rubros procesados: {rubrosUnicos.Count}")
+							ModGlobal.EscribirLog($"Auxiliares por rubro: {auxiliaresPorRubro.Count}")
+							ModGlobal.EscribirLog($"Transacciones por rubro: {transaccionesPorRubro.Count}")
 
 						Catch ex As Exception
-							ModGlobal.EscribirLog($"❌ Error al procesar JsonAuxiliares: {ex.Message}")
+							ModGlobal.EscribirLog($"Error al procesar JsonAuxiliares: {ex.Message}")
 						End Try
 					Else
-						ModGlobal.EscribirLog("❌ JsonAuxiliares NO encontrado o vacío")
+						ModGlobal.EscribirLog("JsonAuxiliares NO encontrado o vacío")
 					End If
 
 					' Crear objeto asociado con datos procesados
@@ -183,7 +185,7 @@ Public Class Transacciones
 					}
 
 					' Log para verificar el objeto antes de serializar
-					ModGlobal.EscribirLog($"📋 Objeto asociado antes de serializar: Rubros = {asociado.Rubros.Count}, Auxiliares = {asociado.AuxiliaresPorRubro.Count}, Transacciones = {asociado.TransaccionesPorRubro.Count}")
+					ModGlobal.EscribirLog($"Objeto asociado antes de serializar: Rubros = {asociado.Rubros.Count}, Auxiliares = {asociado.AuxiliaresPorRubro.Count}, Transacciones = {asociado.TransaccionesPorRubro.Count}")
 					asociados.Add(asociado)
 
 
@@ -191,13 +193,13 @@ Public Class Transacciones
 			End If
 
 			Dim jsonData As String = New JavaScriptSerializer().Serialize(asociados)
-			ModGlobal.EscribirLog("📋 JSON generado (primeros 200 chars): " & jsonData.Substring(0, Math.Min(200, jsonData.Length)))
+			ModGlobal.EscribirLog("JSON generado (primeros 200 chars): " & jsonData.Substring(0, Math.Min(200, jsonData.Length)))
 
 			' Log específico para verificar datos procesados en el JSON final
 			If jsonData.Contains("Rubros") AndAlso jsonData.Contains("AuxiliaresPorRubro") AndAlso jsonData.Contains("TransaccionesPorRubro") Then
-				ModGlobal.EscribirLog("✅ Datos procesados (Rubros, AuxiliaresPorRubro, TransaccionesPorRubro) encontrados en JSON final")
+				ModGlobal.EscribirLog("Datos procesados (Rubros, AuxiliaresPorRubro, TransaccionesPorRubro) encontrados en JSON final")
 			Else
-				ModGlobal.EscribirLog("❌ Datos procesados NO encontrados en JSON final")
+				ModGlobal.EscribirLog("Datos procesados NO encontrados en JSON final")
 			End If
 
 			Return New With {
@@ -206,7 +208,7 @@ Public Class Transacciones
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en BuscarAsociados: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en BuscarAsociados: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Data = "",
@@ -220,7 +222,7 @@ Public Class Transacciones
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerRubros() As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerRubros iniciado")
+			ModGlobal.EscribirLog("ObtenerRubros iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spAuxiliares_ObtenerRubros"
@@ -230,12 +232,14 @@ Public Class Transacciones
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener rubros: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener rubros: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Data = "",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
 				}
+			Else
+				ModGlobal.EscribirLog("Comando ejecutado correctamente - ObtenerRubros")
 			End If
 
 			' Crear lista de objetos simples para evitar referencias circulares
@@ -255,7 +259,7 @@ Public Class Transacciones
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerRubros: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerRubros: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Data = "",
@@ -268,7 +272,7 @@ Public Class Transacciones
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerAuxiliaresAsociado(numeroAsociado As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerAuxiliaresAsociado iniciado. Número: " & numeroAsociado)
+			ModGlobal.EscribirLog("ObtenerAuxiliaresAsociado iniciado. Número: " & numeroAsociado)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spAuxiliares_ObtenerAuxiliaresPorAsociado"
@@ -282,12 +286,14 @@ Public Class Transacciones
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener auxiliares: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener auxiliares: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Data = "",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
 				}
+			Else
+				ModGlobal.EscribirLog("Comando ejecutado correctamente - ObtenerAuxiliaresAsociado")
 			End If
 
 			' Crear lista de objetos simples para evitar referencias circulares
@@ -308,7 +314,7 @@ Public Class Transacciones
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerAuxiliaresAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerAuxiliaresAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Data = "",
@@ -321,7 +327,7 @@ Public Class Transacciones
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerCodigosTransaccion(codigoRubro As String) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerCodigosTransaccion iniciado. Rubro: " & codigoRubro)
+			ModGlobal.EscribirLog("ObtenerCodigosTransaccion iniciado. Rubro: " & codigoRubro)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spTransacciones_ObtenerCodigosPorRubro"
@@ -335,12 +341,14 @@ Public Class Transacciones
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener códigos: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener códigos: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Data = "",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
 				}
+			Else
+				ModGlobal.EscribirLog("Comando ejecutado correctamente - ObtenerCodigosTransaccion")
 			End If
 
 			' Crear lista de objetos simples para evitar referencias circulares
@@ -361,7 +369,7 @@ Public Class Transacciones
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerCodigosTransaccion: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerCodigosTransaccion: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Data = "",
@@ -374,7 +382,7 @@ Public Class Transacciones
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function GuardarMovimiento(movimientoData As String) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 GuardarMovimiento iniciado")
+			ModGlobal.EscribirLog("GuardarMovimiento iniciado")
 			ModGlobal.EscribirLog("📄 Datos recibidos: " & movimientoData)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
@@ -382,12 +390,21 @@ Public Class Transacciones
 
 			Dim sSql As String = "Exec spMovimientos_GuardarMovimiento"
 
+			' Convertir el monto a decimal, normalizando coma decimal a punto decimal
+			Dim montoStr As String = movimientoDict("Monto").ToString().Replace(",", ".")
+			Dim montoDecimal As Decimal = Convert.ToDecimal(montoStr, System.Globalization.CultureInfo.InvariantCulture)
+			ModGlobal.EscribirLog($"💰 Monto original: {movimientoDict("Monto")}, normalizado: {montoStr}, decimal: {montoDecimal}")
+
+			' Convertir el decimal a string con punto decimal para el parámetro
+			Dim montoParam As String = montoDecimal.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+			ModGlobal.EscribirLog($"💰 Monto para parámetro: {montoParam}")
+
 			With objSql.Parametros
 				.Add("@NumeroAsociado", movimientoDict("NumeroAsociado"))
 				.Add("@CodigoRubro", movimientoDict("CodigoRubro"))
 				.Add("@IDAuxiliar", movimientoDict("IDAuxiliar"))
 				.Add("@CodigoTransaccion", movimientoDict("CodigoTransaccion"))
-				.Add("@Monto", movimientoDict("Monto"))
+				.Add("@Monto", montoParam)
 				.Add("@Observaciones", If(String.IsNullOrEmpty(movimientoDict("Observaciones").ToString()), "", movimientoDict("Observaciones")))
 				.Add("@UsuarioID", HttpContext.Current.Session(VariablesSesion.UsuarioId))
 			End With
@@ -395,22 +412,73 @@ Public Class Transacciones
 			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
 			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
-			' Verificar si hubo error en la base de datos
+			' Verificar si hubo error en la ejecución del comando
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al guardar movimiento: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al guardar movimiento: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
 				}
 			End If
 
+			' Validar la respuesta del SP (puede retornar un mensaje de error aun sin excepción)
+			If dt Is Nothing OrElse dt.Rows.Count = 0 Then
+				ModGlobal.EscribirLog("Respuesta vacía del SP spMovimientos_GuardarMovimiento")
+				Return New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Respuesta vacía del procedimiento almacenado"
+				}
+			End If
+
+			Dim row As DataRow = dt.Rows(0)
+			Dim resultadoSp As String = ""
+			Dim mensajeSp As String = ""
+
+			If dt.Columns.Contains("Resultado") AndAlso Not IsDBNull(row("Resultado")) Then
+				resultadoSp = row("Resultado").ToString().Trim().ToUpper()
+			End If
+			If dt.Columns.Contains("Mensaje") AndAlso Not IsDBNull(row("Mensaje")) Then
+				mensajeSp = row("Mensaje").ToString().Trim()
+			End If
+
+			' Si el SP indica explícitamente error por columnas conocidas, devolver ERROR
+			If resultadoSp <> "" AndAlso resultadoSp <> "OK" AndAlso resultadoSp <> "SUCCESS" Then
+				ModGlobal.EscribirLog($"SP retornó Resultado='{resultadoSp}' Mensaje='{mensajeSp}'")
+				Return New With {
+					.Resultado = "ERROR",
+					.Mensaje = If(mensajeSp <> "", mensajeSp, "El procedimiento almacenado reportó un error")
+				}
+			End If
+			If mensajeSp <> "" AndAlso mensajeSp.ToUpper().Contains("ERROR") Then
+				ModGlobal.EscribirLog($"SP retornó Mensaje con indicio de error: '{mensajeSp}'")
+				Return New With {
+					.Resultado = "ERROR",
+					.Mensaje = mensajeSp
+				}
+			End If
+
+			' Intentar extraer MovimientoID de manera flexible
+			Dim movimientoId As String = ""
+			If dt.Columns.Contains("MovimientoID") AndAlso Not IsDBNull(row("MovimientoID")) Then
+				movimientoId = row("MovimientoID").ToString()
+			ElseIf dt.Columns.Contains("IdMovimiento") AndAlso Not IsDBNull(row("IdMovimiento")) Then
+				movimientoId = row("IdMovimiento").ToString()
+			ElseIf dt.Columns.Contains("MovimientoId") AndAlso Not IsDBNull(row("MovimientoId")) Then
+				movimientoId = row("MovimientoId").ToString()
+			ElseIf dt.Columns.Count > 0 AndAlso Not IsDBNull(row(0)) Then
+				' Fallback: tomar primera columna si parece numérica
+				movimientoId = row(0).ToString()
+			End If
+
+			ModGlobal.EscribirLog($"GuardarMovimiento OK. MovimientoID='{movimientoId}', MensajeSP='{mensajeSp}'")
+
 			Return New With {
 				.Resultado = "SUCCESS",
-				.Mensaje = "Movimiento guardado correctamente",
-				.MovimientoID = dt.Rows(0)(2)
+				.Mensaje = If(mensajeSp <> "", mensajeSp, "Movimiento guardado correctamente"),
+				.MovimientoID = movimientoId
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GuardarMovimiento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GuardarMovimiento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al guardar movimiento: " & ex.Message
@@ -435,8 +503,19 @@ Public Class Transacciones
 
 			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
+			' Verificar si hubo error en la base de datos
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener datos del comprobante: " & objSql.MensajeError)
+				Return New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				}
+			Else
+				ModGlobal.EscribirLog("Comando ejecutado correctamente - GenerarComprobante")
+			End If
+
 			If dt.Rows.Count = 0 Then
-				ModGlobal.EscribirLog("❌ No se encontró el movimiento con ID: " & movimientoId)
+				ModGlobal.EscribirLog("No se encontró el movimiento con ID: " & movimientoId)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "No se encontró el movimiento"
@@ -451,8 +530,8 @@ Public Class Transacciones
 			' Formatear fecha y hora
 			Dim fechaHora As String = Convert.ToDateTime(row("FechaMovimiento")).ToString("dd/MM/yyyy HH:mm")
 
-			' Formatear monto
-			Dim montoFormateado As String = Convert.ToDecimal(row("Monto")).ToString("N2")
+			' Formatear monto con punto decimal
+			Dim montoFormateado As String = Convert.ToDecimal(row("Monto")).ToString("###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
 
 			' Leer el template HTML
 			Dim templatePath As String = HttpContext.Current.Server.MapPath("~/Forms/Transacciones/ComprobanteTransaccion.html")
@@ -469,7 +548,7 @@ Public Class Transacciones
 			htmlTemplate = htmlTemplate.Replace("@DescripcionTransaccion", row("DescripcionTransaccion").ToString())
 			htmlTemplate = htmlTemplate.Replace("@Monto", montoFormateado)
 
-			ModGlobal.EscribirLog("✅ Comprobante generado exitosamente para movimiento: " & movimientoId)
+			ModGlobal.EscribirLog("Comprobante generado exitosamente para movimiento: " & movimientoId)
 
 			Return New With {
 				.Resultado = "SUCCESS",
@@ -477,7 +556,7 @@ Public Class Transacciones
 			}
 
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GenerarComprobante: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GenerarComprobante: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al generar comprobante: " & ex.Message
@@ -504,11 +583,13 @@ Public Class Transacciones
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al marcar como impreso: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al marcar como impreso: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
 				}
+			Else
+				ModGlobal.EscribirLog("Comando ejecutado correctamente - MarcarComprobanteImpreso")
 			End If
 
 			Dim filasAfectadas As Integer = 0
@@ -517,13 +598,13 @@ Public Class Transacciones
 			End If
 
 			If filasAfectadas > 0 Then
-				ModGlobal.EscribirLog("✅ Comprobante marcado como impreso para movimiento: " & movimientoId)
+				ModGlobal.EscribirLog("Comprobante marcado como impreso para movimiento: " & movimientoId)
 				Return New With {
 					.Resultado = "SUCCESS",
 					.Mensaje = "Comprobante marcado como impreso"
 				}
 			Else
-				ModGlobal.EscribirLog("❌ No se encontró el movimiento con ID: " & movimientoId)
+				ModGlobal.EscribirLog("No se encontró el movimiento con ID: " & movimientoId)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "No se encontró el movimiento"
@@ -531,7 +612,7 @@ Public Class Transacciones
 			End If
 
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en MarcarComprobanteImpreso: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en MarcarComprobanteImpreso: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al marcar comprobante como impreso: " & ex.Message

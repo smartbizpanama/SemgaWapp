@@ -240,3 +240,18 @@ console.log('✅ Tipo de auxiliar seleccionado automáticamente:', tiposFiltrado
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

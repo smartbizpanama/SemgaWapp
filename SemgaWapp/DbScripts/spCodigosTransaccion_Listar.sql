@@ -25,6 +25,7 @@ BEGIN
             ELSE 'N/A'
         END AS DescripcionDebCred,
         ct.CuentaContable,
+        ct.ContraCuenta,
         ct.SnActivo,
         CASE 
             WHEN ct.SnActivo = 1 THEN 'Activo'

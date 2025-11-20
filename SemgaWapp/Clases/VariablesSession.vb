@@ -31,6 +31,7 @@
     Public Const SessionTimeout As String = "SessionTimeout"
     Public Const MONITOREAR_INACTIVIDAD As String = "MONITOREAR_INACTIVIDAD"
     Public Const TIEMPO_MONITOREAR_INACTIVIDAD As String = "TIEMPO_MONITOREAR_INACTIVIDAD"
+    Public Const BACKUP_DIR As String = "BACKUP_DIR"
 
 
 End Module

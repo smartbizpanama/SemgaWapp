@@ -10,6 +10,7 @@ CREATE PROCEDURE [dbo].[spCodigosTransaccion_Guardar]
     @Descripcion NVARCHAR(150),
     @DebCred CHAR(1),
     @CuentaContable VARCHAR(50),
+    @ContraCuenta VARCHAR(50),
     @SnActivo BIT = 1
 AS
 BEGIN
@@ -96,6 +97,7 @@ BEGIN
                 Descripcion,
                 DebCred,
                 CuentaContable,
+                ContraCuenta,
                 SnActivo,
                 SnEliminado
             )
@@ -105,6 +107,7 @@ BEGIN
                 @Descripcion,
                 @DebCred,
                 @CuentaContable,
+                @ContraCuenta,
                 ISNULL(@SnActivo, 1),
                 0
             );
@@ -122,6 +125,7 @@ BEGIN
                 Descripcion = @Descripcion,
                 DebCred = @DebCred,
                 CuentaContable = @CuentaContable,
+                ContraCuenta = @ContraCuenta,
                 SnActivo = @SnActivo
             WHERE ID = @ID AND SnEliminado = 0;
             

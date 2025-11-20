@@ -1,11 +1,11 @@
-<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="comprobanteText.aspx.vb" Inherits="SemgaWapp.comprobanteText" %>
+﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="comprobanteText.aspx.vb" Inherits="SemgaWapp.comprobanteText" %>
 
 <!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Prueba de Comprobante - Cooperativa Segma</title>
+    <title>Prueba de Comprobante - Cooperativa Coopsemga</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
@@ -283,15 +283,15 @@
                 dataType: 'json',
                 success: function(response) {
                     if (response.d.Resultado === 'SUCCESS') {
-                        console.log('✅ Comprobante marcado como impreso correctamente');
+                        console.log('Comprobante marcado como impreso correctamente');
                         showToast('success', 'Éxito', 'Comprobante marcado como impreso');
                     } else {
-                        console.error('❌ Error al marcar como impreso:', response.d.Mensaje);
+                        console.error('Error al marcar como impreso:', response.d.Mensaje);
                         showToast('error', 'Error', 'Error al marcar comprobante como impreso: ' + response.d.Mensaje);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('❌ Error AJAX al marcar como impreso:', error);
+                    console.error('Error AJAX al marcar como impreso:', error);
                     showToast('error', 'Error', 'Error al marcar comprobante como impreso: ' + error);
                 }
             });

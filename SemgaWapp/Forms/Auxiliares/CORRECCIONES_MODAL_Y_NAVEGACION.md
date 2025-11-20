@@ -235,3 +235,18 @@ Dashboard.aspx (raíz) ← ✅ Ruta corregida
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

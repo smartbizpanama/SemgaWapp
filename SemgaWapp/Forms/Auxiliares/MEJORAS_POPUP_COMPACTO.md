@@ -230,3 +230,18 @@ Total: 2 filas × ~80px = ~160px de altura
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

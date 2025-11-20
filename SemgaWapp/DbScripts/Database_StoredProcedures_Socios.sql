@@ -16,7 +16,7 @@ BEGIN
         SELECT
             a.NumeroAsociado, a.IdTipoAsociado, ta.TipoAsociado, a.Nombre, a.SegundoNombre,
             a.Apellido, a.SegundoApellido, a.Estatus, a.TipoIdentificacion, a.NumeroIdentificacion,
-            a.TelefonoResidencia, a.TelefonoCelular, a.TelefonoFamiliar, a.CorreoElectronico,
+            a.TelefonoResidencia, a.TelefonoCelular, a.TelefonoFamiliar, a.TelefonoTrabajo, a.CorreoElectronico,
             a.Sexo, a.FechaNacimiento, a.ProvinciaResidencia, a.DistritoResidencia,
             a.CorregimientoResidencia, a.DireccionResidencia, a.ProvinciaTrabajo,
             a.DistritoTrabajo, a.CorregimientoTrabajo, a.DireccionTrabajo, a.LugarTrabajo,
@@ -55,7 +55,7 @@ BEGIN
         SELECT
             a.NumeroAsociado, a.IdTipoAsociado, ta.TipoAsociado, a.Nombre, a.SegundoNombre,
             a.Apellido, a.SegundoApellido, a.Estatus, a.TipoIdentificacion, a.NumeroIdentificacion,
-            a.TelefonoResidencia, a.TelefonoCelular, a.TelefonoFamiliar, a.CorreoElectronico,
+            a.TelefonoResidencia, a.TelefonoCelular, a.TelefonoFamiliar, a.TelefonoTrabajo, a.CorreoElectronico,
             a.Sexo, a.FechaNacimiento, a.ProvinciaResidencia, a.DistritoResidencia,
             a.CorregimientoResidencia, a.DireccionResidencia, a.ProvinciaTrabajo,
             a.DistritoTrabajo, a.CorregimientoTrabajo, a.DireccionTrabajo, a.LugarTrabajo,
@@ -81,7 +81,8 @@ CREATE PROCEDURE [dbo].[spGestionSocios_CrearSocio]
     @Apellido NVARCHAR(100) = NULL, @SegundoApellido NVARCHAR(100) = NULL, @Estatus CHAR(1) = 'A',
     @TipoIdentificacion NVARCHAR(20) = NULL, @NumeroIdentificacion NVARCHAR(50) = NULL,
     @TelefonoResidencia NVARCHAR(20) = NULL, @TelefonoCelular NVARCHAR(20) = NULL,
-    @TelefonoFamiliar NVARCHAR(20) = NULL, @CorreoElectronico NVARCHAR(100) = NULL,
+    @TelefonoFamiliar NVARCHAR(20) = NULL, @TelefonoTrabajo NVARCHAR(20) = NULL,
+    @CorreoElectronico NVARCHAR(100) = NULL,
     @Sexo CHAR(1) = NULL, @FechaNacimiento DATE = NULL, @ProvinciaResidencia NVARCHAR(50) = NULL,
     @DistritoResidencia NVARCHAR(50) = NULL, @CorregimientoResidencia NVARCHAR(50) = NULL,
     @DireccionResidencia NVARCHAR(200) = NULL, @ProvinciaTrabajo NVARCHAR(50) = NULL,
@@ -101,14 +102,14 @@ BEGIN
         INSERT INTO tbAsociados (
             IdTipoAsociado, Nombre, SegundoNombre, Apellido, SegundoApellido, Estatus,
             TipoIdentificacion, NumeroIdentificacion, TelefonoResidencia, TelefonoCelular,
-            TelefonoFamiliar, CorreoElectronico, Sexo, FechaNacimiento, ProvinciaResidencia,
+            TelefonoFamiliar, TelefonoTrabajo, CorreoElectronico, Sexo, FechaNacimiento, ProvinciaResidencia,
             DistritoResidencia, CorregimientoResidencia, DireccionResidencia, ProvinciaTrabajo,
             DistritoTrabajo, CorregimientoTrabajo, DireccionTrabajo, LugarTrabajo, Ocupacion,
             NivelEstudio, Profesion, FechaCreacion, UsuarioCrea, snEliminado
         ) VALUES (
             @IdTipoAsociado, @Nombre, @SegundoNombre, @Apellido, @SegundoApellido, @Estatus,
             @TipoIdentificacion, @NumeroIdentificacion, @TelefonoResidencia, @TelefonoCelular,
-            @TelefonoFamiliar, @CorreoElectronico, @Sexo, @FechaNacimiento, @ProvinciaResidencia,
+            @TelefonoFamiliar, @TelefonoTrabajo, @CorreoElectronico, @Sexo, @FechaNacimiento, @ProvinciaResidencia,
             @DistritoResidencia, @CorregimientoResidencia, @DireccionResidencia, @ProvinciaTrabajo,
             @DistritoTrabajo, @CorregimientoTrabajo, @DireccionTrabajo, @LugarTrabajo, @Ocupacion,
             @NivelEstudio, @Profesion, GETDATE(), @Usuario, 0
@@ -131,7 +132,8 @@ CREATE PROCEDURE [dbo].[spGestionSocios_ActualizarSocio]
     @SegundoApellido NVARCHAR(100) = NULL, @Estatus CHAR(1) = NULL,
     @TipoIdentificacion NVARCHAR(20) = NULL, @NumeroIdentificacion NVARCHAR(50) = NULL,
     @TelefonoResidencia NVARCHAR(20) = NULL, @TelefonoCelular NVARCHAR(20) = NULL,
-    @TelefonoFamiliar NVARCHAR(20) = NULL, @CorreoElectronico NVARCHAR(100) = NULL,
+    @TelefonoFamiliar NVARCHAR(20) = NULL, @TelefonoTrabajo NVARCHAR(20) = NULL,
+    @CorreoElectronico NVARCHAR(100) = NULL,
     @Sexo CHAR(1) = NULL, @FechaNacimiento DATE = NULL, @ProvinciaResidencia NVARCHAR(50) = NULL,
     @DistritoResidencia NVARCHAR(50) = NULL, @CorregimientoResidencia NVARCHAR(50) = NULL,
     @DireccionResidencia NVARCHAR(200) = NULL, @ProvinciaTrabajo NVARCHAR(50) = NULL,
@@ -158,7 +160,7 @@ BEGIN
             Apellido = @Apellido, SegundoApellido = @SegundoApellido, Estatus = @Estatus,
             TipoIdentificacion = @TipoIdentificacion, NumeroIdentificacion = @NumeroIdentificacion,
             TelefonoResidencia = @TelefonoResidencia, TelefonoCelular = @TelefonoCelular,
-            TelefonoFamiliar = @TelefonoFamiliar, CorreoElectronico = @CorreoElectronico,
+            TelefonoFamiliar = @TelefonoFamiliar, TelefonoTrabajo = @TelefonoTrabajo, CorreoElectronico = @CorreoElectronico,
             Sexo = @Sexo, FechaNacimiento = @FechaNacimiento, ProvinciaResidencia = @ProvinciaResidencia,
             DistritoResidencia = @DistritoResidencia, CorregimientoResidencia = @CorregimientoResidencia,
             DireccionResidencia = @DireccionResidencia, ProvinciaTrabajo = @ProvinciaTrabajo,

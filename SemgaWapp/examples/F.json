@@ -1,0 +1,35 @@
+{
+  "Origen": "F",
+  "Hdr": {
+    "Usuario": "4",
+    "IdSession": "194E91A7-7314-4B97-AA86-3B1625B1FECA",
+    "Timestamp": "2025-11-03T14:03:51.535",
+    "Nota": "SessionInfo no encontrado en tbLogSesionHdr (wappuser)"
+  },
+  "Srv": {
+    "Tipo": "SessionInfoSQL",
+    "Timestamp": "2025-11-03T14:03:51.550",
+    "SPID": 63,
+    "ServerName":"GIL-MAIN-PC\MSSQLSERVER01",
+    "DatabaseName": "SegmaDB",
+    "LoginName": "wappuser",
+    "UserName": "dbo",
+    "DbUser": "wappuser",
+    "HostName": "GIL-MAIN-PC",
+    "AppName": ".Net SqlClient Data Provider",
+    "ProgramName": ".Net SqlClient Data Provider",
+    "ClientNetAddress": "<local machine>",
+    "LoginTime": "2025-11-03T14:03:51.443",
+    "CPU": 0,
+    "MemoryUsage": 0,
+    "Reads": 0,
+    "Writes": 0,
+    "ServerVersion": "16.0.1000.6",
+    "ServerEdition": "Developer Edition (64-bit)",
+    "ServerBuild": "RTM",
+    "Language": "",
+    "IsClustered": false,
+    "IsIntegratedSecurityOnly": false,
+    "MachineName": "GIL-MAIN-PC"
+  }
+}

@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Parámetros del Sistema - Cooperativa Segma</title>
+    <title>Parámetros del Sistema - Cooperativa Coopsemga</title>
     
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -185,14 +185,16 @@
             <!-- Header Section -->
             <div style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 10px 15px; margin: -15px -15px 15px -15px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <button type="button" onclick="window.location.href='dashboardSistemas.aspx'" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                        <i class="fas fa-arrow-left"></i>
-                        Volver
-                    </button>
                     <h2 style="margin: 0; font-size: 18px;">
                         <i class="fas fa-cogs" style="margin-right: 8px;"></i>
                         Parámetros del Sistema
                     </h2>
+                </div>
+                <div>
+                    <button type="button" onclick="window.location.href='dashboardSistemas.aspx'" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver
+                    </button>
                 </div>
             </div>
 
@@ -264,7 +266,7 @@
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log("🔍 Respuesta grupos:", response);
+                    console.log("Respuesta grupos:", response);
                     
                     // Verificar si response.d es un string que necesita ser parseado
                     let responseData = response.d;
@@ -276,7 +278,7 @@
                         grupos = JSON.parse(responseData.Datos);
                         llenarDropdownGrupos();
                     } else {
-                        console.log("❌ Error cargando grupos:", responseData);
+                        console.log("Error cargando grupos:", responseData);
                     }
                 },
                 error: function(xhr, status, error) {
@@ -308,8 +310,8 @@
                 dataType: "json",
                 success: function(response) {
                     mostrarLoading(false);
-                    console.log("🔍 Respuesta completa:", response);
-                    console.log("🔍 response.d:", response.d);
+                    console.log("Respuesta completa:", response);
+                    console.log("response.d:", response.d);
                     
                     // Verificar si response.d es un string que necesita ser parseado
                     let responseData = response.d;
@@ -318,11 +320,11 @@
                     }
                     
                     if (responseData && responseData.Resultado === "SUCCESS") {
-                        console.log("🔍 Datos recibidos:", responseData.Datos);
+                        console.log("Datos recibidos:", responseData.Datos);
                         parametros = JSON.parse(responseData.Datos);
                         mostrarParametros();
                     } else {
-                        console.log("❌ Error en respuesta:", responseData);
+                        console.log("Error en respuesta:", responseData);
                         mostrarError("Error cargando parámetros: " + (responseData ? responseData.Mensaje : "Error desconocido"));
                     }
                 },

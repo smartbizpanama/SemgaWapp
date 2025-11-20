@@ -90,15 +90,13 @@ function crearChipInteligente(tipo, valor, textoAdicional = '', mostrarNombre = 
 
     // Para tipos de documento, siempre mostrar el código del tipo, no el nombre
     const textoMostrar = (tipo === 'tiposDocumento') ? valor : (mostrarNombre ? itemConfig.nombre : valor);
-    
-    const chip = `<span class="badge ${itemConfig.color} me-1"><i class="${itemConfig.icono} me-1"></i>${textoMostrar}</span>`;
-    
+
+    let contenido = `<i class="${itemConfig.icono} me-1"></i>${textoMostrar}`;
     if (textoAdicional) {
-        const resultado = chip + `<span class="text-muted">${textoAdicional}</span>`;
-        return resultado;
+        contenido += `<span class="ms-2 fw-semibold">${textoAdicional}</span>`;
     }
-    
-    return chip;
+
+    return `<span class="badge ${itemConfig.color} me-1 d-inline-flex align-items-center">${contenido}</span>`;
 }
 
 /**

@@ -1,0 +1,91 @@
+{"Origen":"W","Hdr":{
+  "Usuario": "admin",
+  "IdSesion": "68489267-6DE6-43C2-8199-2B22F7FA39D7",
+  "HoraInicioSesion": "2025-11-03T13:14:02.468Z",
+  "Timestamp": 1762193642468,
+  "Servidor": {
+    "ServerName": "GIL-MAIN-PC",
+    "ServerTime": "2025-11-03T13:14:02.468Z",
+    "TimeZone": "SA Pacific Standard Time",
+    "OSVersion": "Microsoft Windows NT 10.0.26100.0",
+    "ProcessorCount": "16",
+    "WorkingSet": "193851392"
+  },
+  "Aplicacion": {
+    "AppDomain": "/LM/W3SVC/3/ROOT-1-134066650635556936",
+    "BaseDirectory": "C:\\Users\\Gilbe\\OneDrive\\SmartBiz\\SmartBizDevs\\Coopsemga\\SemgaWapp\\SemgaWapp\\",
+    "Version": "1.0.0.0",
+    "ProcessId": "37832",
+    "ThreadId": "56"
+  },
+  "Request": {
+    "UserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "UserHostAddress": "::1",
+    "UserHostName": "::1",
+    "HttpMethod": "POST",
+    "Url": "http://localhost:44328/Login.aspx/ValidateLogin",
+    "RawUrl": "/Login.aspx/ValidateLogin",
+    "QueryString": "",
+    "ContentType": "application/json; charset=UTF-8",
+    "ContentLength": 37,
+    "IsSecureConnection": false,
+    "IsLocal": true,
+    "AcceptTypes": "*/*",
+    "Headers": {
+      "Connection": "keep-alive",
+      "Content-Length": "37",
+      "Content-Type": "application/json; charset=UTF-8",
+      "Accept": "*/*",
+      "Accept-Encoding": "gzip, deflate, br, zstd",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Cookie": "ASP.NET_SessionId=db2k0uyzdxwmhphuilghabzr",
+      "Host": "localhost:44328",
+      "Referer": "http://localhost:44328/Login.aspx",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "X-Requested-With": "XMLHttpRequest",
+      "sec-ch-ua": "\"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"144\", \"Google Chrome\";v=\"144\"",
+      "sec-ch-ua-mobile": "?0",
+      "Origin": "http://localhost:44328",
+      "Sec-Fetch-Site": "same-origin",
+      "Sec-Fetch-Mode": "cors",
+      "Sec-Fetch-Dest": "empty"
+    },
+    "Cookies": {
+      "ASP.NET_SessionId": "db2k0uyzdxwmhphuilghabzr"
+    },
+    "Form": {}
+  },
+  "Session": {
+    "SessionID": "db2k0uyzdxwmhphuilghabzr",
+    "Timeout": 1440,
+    "IsNewSession": false,
+    "IsReadOnly": false,
+    "Count": 1,
+    "Mode": "InProc",
+    "Keys": [
+      "LogID"
+    ]
+  },
+  "Browser": {
+    "Browser": "Chrome",
+    "Version": "144.0",
+    "MajorVersion": 144,
+    "MinorVersion": 0.0,
+    "Platform": "WinNT",
+    "IsMobileDevice": false,
+    "IsCrawler": false,
+    "JavaScript": true,
+    "VBScript": false,
+    "Frames": true,
+    "Tables": true,
+    "Cookies": true,
+    "ActiveXControls": false
+  },
+  "Network": {
+    "LocalIP": "10.212.134.202",
+    "HostName": "GIL-MAIN-PC",
+    "DomainName": "GIL-MAIN-PC",
+    "UserName": "Gilbe"
+  }
+}}

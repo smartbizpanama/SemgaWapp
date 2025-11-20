@@ -7,7 +7,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Configuraciones del Sistema - Cooperativa Segma</title>
+    <title>Configuraciones del Sistema - Cooperativa Coopsemga</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <!-- Script de monitoreo de inactividad -->
@@ -421,7 +421,7 @@
                 <div class="logo-icon">
                     <i class="fa-solid fa-vault"></i>
                 </div>
-                <div class="logo-text">Cooperativa Segma</div>
+                <div class="logo-text">Cooperativa Coopsemga</div>
             </div>
             
             <div class="breadcrumb">
@@ -476,7 +476,7 @@
                 </div>
 
                 <!-- Respaldo de Datos -->
-                <div class="tile backup-tile" onclick="openModal('backup')">
+                <div class="tile backup-tile" onclick="window.location.href='../Sistemas/Respaldos.aspx'">
                     <div class="tile-icon">
                         <i class="fas fa-database"></i>
                     </div>

@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Gestión de Transacciones - Cooperativa Segma</title>
+    <title>Gestión de Transacciones - Cooperativa Coopsemga</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
@@ -142,7 +142,7 @@
         }
         
         .asociado-bloqueado::before {
-            content: "✓ TRANSACCIÓN GUARDADA";
+            content: "✓ TRANSACCIÓN GUARDADA - ID: " attr(data-transaction-id);
             position: absolute;
             top: -10px;
             right: 10px;
@@ -153,6 +153,7 @@
             font-size: 11px;
             font-weight: bold;
             z-index: 10;
+            white-space: nowrap;
         }
         
         .asociado-bloqueado .fas.fa-user-check {
@@ -165,6 +166,101 @@
         
         .asociado-bloqueado small {
             color: #155724 !important;
+        }
+        
+        /* Estilos para el div de mensajes (error/éxito) */
+        #divErrorValidacion {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            animation: slideInError 0.3s ease-out;
+        }
+        
+        #divErrorValidacion.alert-danger {
+            border-left: 4px solid #dc3545;
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15);
+        }
+        
+        #divErrorValidacion.alert-success {
+            border-left: 4px solid #28a745;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+        }
+        
+        @keyframes slideInError {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        #divErrorValidacion .btn-outline-danger {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+        
+        #divErrorValidacion .btn-outline-danger:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        #divErrorValidacion.alert-success .btn-outline-danger {
+            border-color: #28a745;
+            color: #28a745;
+        }
+        
+        #divErrorValidacion.alert-success .btn-outline-danger:hover {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        /* Asegurar que el botón de cerrar se muestre correctamente */
+        #btnCerrarError {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Asegurar que el ícono de cerrar sea una X */
+        #btnCerrarError span {
+            font-size: 16px !important;
+            font-weight: bold !important;
+            color: inherit !important;
+        }
+        
+        /* Ajustar altura de botones para que coincida con form-control */
+        #btnGuardarTransaccion, #btnCancelarTransaccion {
+            height: 38px !important;
+            padding: 8px 16px !important;
+            font-size: 14px !important;
+            line-height: 1.5 !important;
+        }
+        
+        /* Asegurar que el botón Volver siempre esté a la derecha */
+        .header-section .col-md-6.text-end {
+            display: flex !important;
+            justify-content: flex-end !important;
+            align-items: center !important;
+        }
+        
+        .header-section .col-md-6.text-end button {
+            flex-shrink: 0 !important;
+        }
+        
+        /* Asegurar que el header mantenga su layout */
+        .header-section {
+            position: relative !important;
+            z-index: 1 !important;
+        }
+        
+        .header-section .row {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
         }
     </style>
 </head>
@@ -221,6 +317,24 @@
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Div de Error de Validación -->
+                <div class="col-md-8">
+                    <div id="divErrorValidacion" class="alert alert-danger d-none" style="margin-bottom: 0;">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle fa-lg text-danger me-3"></i>
+                                <div>
+                                    <strong class="d-block">Error de Validación</strong>
+                                    <span id="lblMensajeError" class="text-muted"></span>
+                                </div>
+                            </div>
+                            <button type="button" id="btnCerrarError" class="btn btn-outline-danger btn-sm">
+                                <span style="font-size: 16px; font-weight: bold;">×</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -301,7 +415,7 @@
                                         <div class="mb-3 d-flex gap-2 align-items-center h-100">
                                             <!-- Botones originales -->
                                             <button type="button" id="btnGuardarTransaccion" class="btn btn-success">
-                                                <i class="fas fa-save me-1"></i>Guardar Transacción
+                                                <i class="fas fa-save me-1"></i>Guardar
                                             </button>
                                             <button type="button" id="btnCancelarTransaccion" class="btn btn-secondary">
                                                 <i class="fas fa-times me-1"></i>Cancelar
@@ -410,6 +524,29 @@
             $('#btnNuevaTransaccion').on('click', function() {
                 nuevaTransaccion();
             });
+            
+            // Evento para cerrar el div de error
+            $('#btnCerrarError').on('click', function() {
+                ocultarErrorValidacion();
+            });
+            
+            // Evento para presionar Enter en el campo monto
+            $('#txtMonto').on('keypress', function(e) {
+                if (e.which === 13) { // Enter key
+                    e.preventDefault();
+                    // Quitar el foco del campo para evitar múltiples activaciones
+                    $(this).blur();
+                    // Pequeño delay para asegurar que el blur se procese
+                    setTimeout(function() {
+                        guardarTransaccion();
+                    }, 50);
+                }
+            });
+            
+            // Ocultar mensajes de error/éxito cuando el usuario interactúe con cualquier control
+            $('input, select, button').on('focus click change input', function() {
+                ocultarMensajes();
+            });
         });
 
         // Variable global para almacenar datos
@@ -417,6 +554,7 @@
         var globalSearchConfig = null;
         var jsonAuxiliares = null; // Almacenar el JSON de auxiliares del asociado
         var ultimoMovimientoId = null; // Almacenar el ID del último movimiento guardado
+        var guardandoTransaccion = false; // Prevenir múltiples ejecuciones simultáneas
 
         // Función para inicializar el componente global de búsqueda
         function inicializarBusquedaAsociadosGlobal() {
@@ -473,6 +611,9 @@
             
             // Mostrar formulario de Transacción
             $('#divFormularioTransaccion').removeClass('d-none');
+            
+            // Ocultar cualquier error de validación previo
+            ocultarErrorValidacion();
             
             // Cargar datos para el formulario usando JsonAuxiliares
             cargarDatosFormulario();
@@ -750,8 +891,8 @@
 
 		function cargarCuentasPorAuxiliar(auxiliarId) {
 			const [cuenta, idTipoAuxiliar] = auxiliarId.split('-');
-			console.log('🔍 cargarCuentasPorAuxiliar - auxiliarId:', auxiliarId);
-			console.log('🔍 cargarCuentasPorAuxiliar - cuenta:', cuenta, 'idTipoAuxiliar:', idTipoAuxiliar);
+			console.log('cargarCuentasPorAuxiliar - auxiliarId:', auxiliarId);
+			console.log('cargarCuentasPorAuxiliar - cuenta:', cuenta, 'idTipoAuxiliar:', idTipoAuxiliar);
 
 			$('#ddlCuenta').empty();
 
@@ -762,18 +903,18 @@
 				// Buscar en todos los rubros
 				Object.keys(jsonAuxiliares.AuxiliaresPorRubro).forEach(codigoRubro => {
 					const auxiliares = jsonAuxiliares.AuxiliaresPorRubro[codigoRubro];
-					console.log('🔍 Procesando rubro:', codigoRubro, 'auxiliares:', auxiliares);
+					console.log('Procesando rubro:', codigoRubro, 'auxiliares:', auxiliares);
 					auxiliares.forEach(auxiliar => {
-						console.log('🔍 Verificando auxiliar:', auxiliar, 'IdTipoAuxiliar:', auxiliar.IdTipoAuxiliar, 'vs buscado:', idTipoAuxiliar);
+						console.log('Verificando auxiliar:', auxiliar, 'IdTipoAuxiliar:', auxiliar.IdTipoAuxiliar, 'vs buscado:', idTipoAuxiliar);
 						if (auxiliar.IdTipoAuxiliar === idTipoAuxiliar) {
-							console.log('✅ Auxiliar coincide, IdAuxiliar:', auxiliar.IdAuxiliar, 'Cuenta:', auxiliar.Cuenta);
+							console.log('Auxiliar coincide, IdAuxiliar:', auxiliar.IdAuxiliar, 'Cuenta:', auxiliar.Cuenta);
 							// Si tiene lista de cuentas, usar todas
 							if (auxiliar.Cuentas && Array.isArray(auxiliar.Cuentas)) {
-								console.log('📋 Procesando lista de cuentas:', auxiliar.Cuentas);
+								console.log('Procesando lista de cuentas:', auxiliar.Cuentas);
 								auxiliar.Cuentas.forEach(cuentaItem => {
 									if (typeof cuentaItem === 'object' && cuentaItem.IdAuxiliar && cuentaItem.Cuenta) {
 										// Ya es un objeto con IdAuxiliar y Cuenta
-										console.log('📝 Agregando cuenta de lista:', cuentaItem);
+										console.log('Agregando cuenta de lista:', cuentaItem);
 										todasLasCuentas.push(cuentaItem);
 									} else if (typeof cuentaItem === 'string') {
 										// Es un string, crear objeto
@@ -781,7 +922,7 @@
 											IdAuxiliar: auxiliar.IdAuxiliar,
 											Cuenta: cuentaItem
 										};
-										console.log('📝 Agregando cuenta string:', cuentaObj);
+										console.log('Agregando cuenta string:', cuentaObj);
 										todasLasCuentas.push(cuentaObj);
 									}
 								});
@@ -791,14 +932,14 @@
 									IdAuxiliar: auxiliar.IdAuxiliar,
 									Cuenta: auxiliar.Cuenta
 								};
-								console.log('📝 Agregando cuenta única:', cuentaObj);
+								console.log('Agregando cuenta única:', cuentaObj);
 								todasLasCuentas.push(cuentaObj);
 							}
 						}
 					});
 				});
 
-				console.log('📊 Todas las cuentas encontradas:', todasLasCuentas);
+				console.log('Todas las cuentas encontradas:', todasLasCuentas);
 				
 				// Eliminar duplicados por IdAuxiliar
 				const cuentasUnicas = [];
@@ -813,26 +954,26 @@
 					}
 				});
 				
-				console.log('📊 Cuentas únicas después de eliminar duplicados:', cuentasUnicas);
+				console.log('Cuentas únicas después de eliminar duplicados:', cuentasUnicas);
 
 				if (cuentasUnicas.length === 1) {
 					// Si solo hay una cuenta, seleccionarla automáticamente
 					const cuentaItem = cuentasUnicas[0];
-					console.log('✅ Una sola cuenta encontrada:', cuentaItem);
+					console.log('Una sola cuenta encontrada:', cuentaItem);
 					$('#ddlCuenta').append(`<option value="${cuentaItem.IdAuxiliar}">${cuentaItem.Cuenta}</option>`);
 					$('#ddlCuenta').val(cuentaItem.IdAuxiliar);
-					console.log('✅ Dropdown cuenta valor seleccionado:', cuentaItem.IdAuxiliar);
+					console.log('Dropdown cuenta valor seleccionado:', cuentaItem.IdAuxiliar);
 				} else {
 					// Si hay múltiples cuentas, mostrar opción de seleccionar
-					console.log('📋 Múltiples cuentas encontradas, agregando opciones...');
+					console.log('Múltiples cuentas encontradas, agregando opciones...');
 					$('#ddlCuenta').append('<option value="">Seleccionar cuenta...</option>');
 					cuentasUnicas.forEach(cuentaItem => {
-						console.log('📝 Agregando opción:', cuentaItem.IdAuxiliar, '->', cuentaItem.Cuenta);
+						console.log('Agregando opción:', cuentaItem.IdAuxiliar, '->', cuentaItem.Cuenta);
 						$('#ddlCuenta').append(`<option value="${cuentaItem.IdAuxiliar}">${cuentaItem.Cuenta}</option>`);
 					});
 					// Seleccionar automáticamente la opción "Seleccionar cuenta..."
 					$('#ddlCuenta').val('');
-					console.log('✅ Dropdown cuenta valor seleccionado: (vacío)');
+					console.log('Dropdown cuenta valor seleccionado: (vacío)');
 				}
 			} else {
 				// Fallback: usar la cuenta original
@@ -871,14 +1012,22 @@
         }
 
         function guardarTransaccion() {
-            if (!validarFormularioTransaccion()) {
+            // Prevenir múltiples ejecuciones simultáneas
+            if (guardandoTransaccion) {
                 return;
             }
+            
+            if (!validarFormularioTransaccion()) {
+                guardandoTransaccion = false;
+                return;
+            }
+            
+            guardandoTransaccion = true;
 
             const idAuxiliarSeleccionado = $('#ddlCuenta').val();
-            console.log('🔍 IDAuxiliar seleccionado en dropdown:', idAuxiliarSeleccionado);
-            console.log('🔍 Tipo de IDAuxiliar:', typeof idAuxiliarSeleccionado);
-            console.log('🔍 Opciones disponibles en dropdown cuenta:', $('#ddlCuenta option').map(function() { return $(this).val() + ':' + $(this).text(); }).get());
+            console.log('IDAuxiliar seleccionado en dropdown:', idAuxiliarSeleccionado);
+            console.log('Tipo de IDAuxiliar:', typeof idAuxiliarSeleccionado);
+            console.log('Opciones disponibles en dropdown cuenta:', $('#ddlCuenta option').map(function() { return $(this).val() + ':' + $(this).text(); }).get());
 
             // Obtener datos para el confirm
             const datosConfirm = obtenerDatosParaConfirm();
@@ -892,7 +1041,9 @@
             const auxiliarSeleccionado = $('#ddlAuxiliar option:selected').text();
             const cuentaSeleccionada = $('#ddlCuenta option:selected').text();
             const transaccionSeleccionada = $('#ddlCodigoTransaccion option:selected').text();
-            const monto = parseFloat($('#txtMonto').val());
+            // Normalizar el monto para usar punto decimal
+            const montoInput = $('#txtMonto').val().replace(',', '.');
+            const monto = parseFloat(montoInput);
             
             return {
                 asociado: asociadoSeleccionado.nombre,
@@ -907,9 +1058,9 @@
         }
 
         function mostrarConfirmGuardado(datos) {
-            const montoFormateado = datos.monto.toLocaleString('es-CO', {
-                style: 'currency',
-                currency: 'COP'
+            const montoFormateado = datos.monto.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             });
 
             // Crear el modal personalizado
@@ -954,10 +1105,6 @@
                                     <span class="valor">${datos.observaciones}</span>
                                 </div>
                                 ` : ''}
-                            </div>
-                            <div class="pregunta-confirm">
-                                <i class="fas fa-question-circle text-info"></i>
-                                ¿Desea guardar esta transacción?
                             </div>
                         </div>
                         <div class="custom-modal-footer">
@@ -1046,21 +1193,21 @@
                         }
                         
                         .custom-modal-body {
-                            padding: 25px;
+                            padding: 15px 20px;
                         }
                         
                         .datos-transaccion {
                             background: #f8f9fa;
                             border-radius: 8px;
-                            padding: 20px;
-                            margin-bottom: 20px;
+                            padding: 15px;
+                            margin-bottom: 0;
                         }
                         
                         .campo-dato {
                             display: flex;
                             justify-content: space-between;
                             align-items: center;
-                            padding: 8px 0;
+                            padding: 6px 0;
                             border-bottom: 1px solid #e9ecef;
                         }
                         
@@ -1070,8 +1217,8 @@
                         
                         .campo-dato.monto {
                             background: #e8f5e8;
-                            margin: 10px -10px -10px -10px;
-                            padding: 15px 10px;
+                            margin: 8px -8px -8px -8px;
+                            padding: 10px 8px;
                             border-radius: 6px;
                             border-bottom: none;
                         }
@@ -1153,13 +1300,17 @@
         function procederConGuardado() {
             const idAuxiliarSeleccionado = $('#ddlCuenta').val();
             
+            // Normalizar el monto para usar punto decimal
+            const montoInput = $('#txtMonto').val().replace(',', '.');
+            const montoNormalizado = parseFloat(montoInput);
+            
             const transaccionData = {
                 NumeroAsociado: asociadoSeleccionado.numeroAsociado,
                 CodigoRubro: $('#ddlRubro').val(),
                 IDAuxiliar: idAuxiliarSeleccionado, // Usar IdAuxiliar del dropdown de cuentas
                 CodigoTransaccion: $('#ddlCodigoTransaccion').val(),
                 FechaMovimiento: new Date().toISOString().split('T')[0], // Fecha actual
-                Monto: parseFloat($('#txtMonto').val()),
+                Monto: montoNormalizado,
                 DebCred: 'D', // Por defecto Débito
                 Saldo: 0,
                 Observaciones: $('#txtObservaciones').val()
@@ -1174,17 +1325,34 @@
                 data: JSON.stringify({ movimientoData: JSON.stringify(transaccionData) }),
                 dataType: "json",
                 success: function(response) {
+                    console.log('📥 Respuesta del servidor (GuardarMovimiento):', response);
+                    console.log('📥 response.d:', response.d);
+                    
                     if (response.d && response.d.Resultado === 'SUCCESS') {
                         // Almacenar el ID del movimiento para el comprobante
                         ultimoMovimientoId = response.d.MovimientoID;
-                        showToast('success', 'Éxito', 'Movimiento guardado correctamente');
+                        console.log('Movimiento guardado exitosamente. ID almacenado:', ultimoMovimientoId);
+                        console.log('Tipo de ultimoMovimientoId:', typeof ultimoMovimientoId);
+                        console.log('Valor de ultimoMovimientoId:', ultimoMovimientoId);
+                        
+                        // Formatear el ID con ceros a la izquierda (12 dígitos)
+                        const idFormateado = ultimoMovimientoId.toString().padStart(12, '0');
+                        console.log('🔢 ID formateado:', idFormateado);
+                        
+                        mostrarExitoValidacion(`Movimiento guardado correctamente. ID: ${idFormateado}`);
                         bloquearFormularioPostGuardado();
                     } else {
-                        showToast('error', 'Error', response.d.Mensaje || 'Error al guardar movimiento');
+                        console.error('Error en respuesta del servidor:', response.d);
+                        // Mostrar error en el div de validación en lugar del toast
+                        mostrarErrorValidacion(response.d.Mensaje || 'Error al guardar movimiento');
                     }
+                    // Resetear la variable de control
+                    guardandoTransaccion = false;
                 },
                 error: function() {
-                    showToast('error', 'Error', 'Error al guardar movimiento');
+                    mostrarErrorValidacion('Error al guardar movimiento');
+                    // Resetear la variable de control
+                    guardandoTransaccion = false;
                 }
             });
         }
@@ -1203,7 +1371,7 @@
             });
 
             if (!valido) {
-                showToast('warning', 'Validación', 'Por favor complete todos los campos requeridos');
+                mostrarErrorValidacion('Por favor complete todos los campos requeridos');
             }
 
             return valido;
@@ -1227,6 +1395,10 @@
             // Cambiar el estilo visual para indicar que está bloqueado
             $('#divAsociadoSeleccionado').addClass('asociado-bloqueado');
             
+            // Actualizar el badge con el ID formateado
+            const idFormateado = ultimoMovimientoId.toString().padStart(12, '0');
+            $('#divAsociadoSeleccionado').attr('data-transaction-id', idFormateado);
+            
             // Ocultar botones de guardar/cancelar
             $('#btnGuardarTransaccion, #btnCancelarTransaccion').hide();
             
@@ -1240,28 +1412,48 @@
         }
 
         function imprimirComprobante() {
+            console.log('🖨️ Iniciando impresión de comprobante...');
+            console.log('ultimoMovimientoId actual:', ultimoMovimientoId);
+            console.log('Tipo de ultimoMovimientoId:', typeof ultimoMovimientoId);
+            
             // Obtener el ID del movimiento guardado (se almacena en una variable global)
             if (typeof ultimoMovimientoId === 'undefined' || !ultimoMovimientoId) {
+                console.error('No se encontró el ID del movimiento para imprimir');
                 alert('No se encontró el ID del movimiento para imprimir');
                 return;
             }
+
+            const movimientoIdParaEnviar = ultimoMovimientoId.toString();
+            console.log('📤 Enviando ID de movimiento al servidor:', movimientoIdParaEnviar);
+            console.log('📤 Tipo del ID a enviar:', typeof movimientoIdParaEnviar);
 
             // Llamar al WebMethod para generar el comprobante
             $.ajax({
                 type: 'POST',
                 url: 'Transacciones.aspx/GenerarComprobante',
-                data: JSON.stringify({ movimientoId: ultimoMovimientoId.toString() }),
+                data: JSON.stringify({ movimientoId: movimientoIdParaEnviar }),
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
                 success: function(response) {
+                    console.log('📥 Respuesta del servidor (GenerarComprobante):', response);
+                    console.log('📥 response.d:', response.d);
+                    
                     if (response.d.Resultado === 'SUCCESS') {
+                        console.log('Comprobante generado exitosamente');
                         // Mostrar el comprobante en un modal
                         mostrarModalComprobante(response.d.Html, ultimoMovimientoId);
                     } else {
+                        console.error('Error al generar comprobante:', response.d.Mensaje);
                         alert('Error al generar el comprobante: ' + response.d.Mensaje);
                     }
                 },
                 error: function(xhr, status, error) {
+                    console.error('Error AJAX al generar comprobante:', {
+                        xhr: xhr,
+                        status: status,
+                        error: error,
+                        responseText: xhr.responseText
+                    });
                     alert('Error al generar el comprobante: ' + error);
                 }
             });
@@ -1357,8 +1549,7 @@
                             border-radius: 8px;
                             padding: 20px;
                             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-                            max-height: 70vh;
-                            overflow-y: auto;
+                            /* Removido max-height y overflow-y para evitar doble scroll */
                         }
                         
                         .comprobante-modal-footer {
@@ -1471,6 +1662,29 @@
         function volverDashboard() {
             window.location.href = '../../Dashboard.aspx';
         }
+        
+        // Funciones para manejar el div de mensajes (error/éxito)
+        function mostrarErrorValidacion(mensaje) {
+            $('#lblMensajeError').html(mensaje); // Usar html() en lugar de text() para interpretar HTML
+            $('#divErrorValidacion').removeClass('d-none alert-success').addClass('alert-danger');
+            $('#divErrorValidacion i').removeClass('fa-check-circle fa-lg text-success').addClass('fa-exclamation-triangle fa-lg text-danger');
+            $('#divErrorValidacion strong').text('Error de Validación');
+        }
+        
+        function mostrarExitoValidacion(mensaje) {
+            $('#lblMensajeError').html(mensaje); // Usar html() en lugar de text() para interpretar HTML
+            $('#divErrorValidacion').removeClass('d-none alert-danger').addClass('alert-success');
+            $('#divErrorValidacion i').removeClass('fa-exclamation-triangle fa-lg text-danger').addClass('fa-check-circle fa-lg text-success');
+            $('#divErrorValidacion strong').text('Éxito');
+        }
+        
+        function ocultarMensajes() {
+            $('#divErrorValidacion').addClass('d-none');
+        }
+        
+        function ocultarErrorValidacion() {
+            ocultarMensajes();
+        }
 
         // Funciones de Toast Notifications
         function showToast(type, title, message, duration = 4000) {
@@ -1522,15 +1736,15 @@
                 dataType: 'json',
                 success: function(response) {
                     if (response.d.Resultado === 'SUCCESS') {
-                        console.log('✅ Comprobante marcado como impreso correctamente');
+                        console.log('Comprobante marcado como impreso correctamente');
                         showToast('success', 'Éxito', 'Comprobante marcado como impreso');
                     } else {
-                        console.error('❌ Error al marcar como impreso:', response.d.Mensaje);
+                        console.error('Error al marcar como impreso:', response.d.Mensaje);
                         showToast('error', 'Error', 'Error al marcar comprobante como impreso: ' + response.d.Mensaje);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('❌ Error AJAX al marcar como impreso:', error);
+                    console.error('Error AJAX al marcar como impreso:', error);
                     showToast('error', 'Error', 'Error al marcar comprobante como impreso: ' + error);
                 }
             });

@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
-    <title>Segma - Inicio de Sesi&#243;n Seguro</title>
+    <title>Coopsemga - Inicio de Sesi&#243;n Seguro</title>
     <meta charset="utf-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Portal cooperativo seguro de Segma" />
+    <meta name="description" content="Portal cooperativo seguro de Coopsemga" />
     <meta name="robots" content="noindex, nofollow" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -53,7 +53,7 @@
 
         .logo-section {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         
@@ -340,10 +340,9 @@
             <!-- Logo y nombre del banco -->
             <div class="logo-section">
                  <div >
-                     <i class="fa-solid fa-vault" style="font-size: 50px; color: #DAA520;"></i>
+                     <img src="logo.png" alt="Logo Coopsemga" style="width: 180px; height: 80px; object-fit: contain; margin-bottom: 5px;" />
                  </div>
-                <h1 class="bank-name">Segma</h1>
-                <p class="bank-subtitle">La cooperativa del pueblo</p>
+                <p class="bank-subtitle">Cooperativa de Servicios Múltiples de Guararé Arriba</p>
             </div>
 
             <!-- Mensaje de error -->

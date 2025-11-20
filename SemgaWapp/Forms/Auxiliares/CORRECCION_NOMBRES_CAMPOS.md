@@ -215,3 +215,18 @@ item.CodigoRubro            // Existe en ambas tablas
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

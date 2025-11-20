@@ -35,7 +35,7 @@ Public Class comprobanteText
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener datos del comprobante: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener datos del comprobante: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -43,7 +43,7 @@ Public Class comprobanteText
 			End If
 
 			If dt.Rows.Count = 0 Then
-				ModGlobal.EscribirLog("❌ No se encontró el movimiento con ID: " & movimientoId)
+				ModGlobal.EscribirLog("No se encontró el movimiento con ID: " & movimientoId)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "No se encontró el movimiento con ID: " & movimientoId
@@ -58,8 +58,8 @@ Public Class comprobanteText
 			' Formatear fecha y hora
 			Dim fechaHora As String = Convert.ToDateTime(row("FechaMovimiento")).ToString("dd/MM/yyyy HH:mm")
 
-			' Formatear monto
-			Dim montoFormateado As String = Convert.ToDecimal(row("Monto")).ToString("N2")
+			' Formatear monto con punto decimal
+			Dim montoFormateado As String = Convert.ToDecimal(row("Monto")).ToString("###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
 
 			' Leer el template HTML
 			Dim templatePath As String = HttpContext.Current.Server.MapPath("~/Forms/Transacciones/ComprobanteTransaccion.html")
@@ -76,7 +76,7 @@ Public Class comprobanteText
 			htmlTemplate = htmlTemplate.Replace("@DescripcionTransaccion", row("DescripcionTransaccion").ToString())
 			htmlTemplate = htmlTemplate.Replace("@Monto", montoFormateado)
 
-			ModGlobal.EscribirLog("✅ Comprobante generado exitosamente para movimiento: " & movimientoId)
+			ModGlobal.EscribirLog("Comprobante generado exitosamente para movimiento: " & movimientoId)
 
 			Return New With {
 				.Resultado = "SUCCESS",
@@ -84,7 +84,7 @@ Public Class comprobanteText
 			}
 
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GenerarComprobante: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GenerarComprobante: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al generar comprobante: " & ex.Message
@@ -111,7 +111,7 @@ Public Class comprobanteText
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al marcar como impreso: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al marcar como impreso: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -124,13 +124,13 @@ Public Class comprobanteText
 			End If
 
 			If filasAfectadas > 0 Then
-				ModGlobal.EscribirLog("✅ Comprobante marcado como impreso para movimiento: " & movimientoId)
+				ModGlobal.EscribirLog("Comprobante marcado como impreso para movimiento: " & movimientoId)
 				Return New With {
 					.Resultado = "SUCCESS",
 					.Mensaje = "Comprobante marcado como impreso"
 				}
 			Else
-				ModGlobal.EscribirLog("❌ No se encontró el movimiento con ID: " & movimientoId)
+				ModGlobal.EscribirLog("No se encontró el movimiento con ID: " & movimientoId)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "No se encontró el movimiento"
@@ -138,7 +138,7 @@ Public Class comprobanteText
 			End If
 
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en MarcarComprobanteImpreso: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en MarcarComprobanteImpreso: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al marcar comprobante como impreso: " & ex.Message

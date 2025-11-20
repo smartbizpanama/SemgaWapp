@@ -303,3 +303,18 @@ function convertirFechaParaBD(fecha) { /* ... */ }
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

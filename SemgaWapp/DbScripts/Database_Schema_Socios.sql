@@ -37,6 +37,7 @@ BEGIN
         [TelefonoResidencia] NVARCHAR(20) NULL,
         [TelefonoCelular] NVARCHAR(20) NULL,
         [TelefonoFamiliar] NVARCHAR(20) NULL,
+        [TelefonoTrabajo] NVARCHAR(20) NULL,
         [CorreoElectronico] NVARCHAR(100) NULL,
         [Sexo] CHAR(1) NULL, -- M=Masculino, F=Femenino
         [FechaNacimiento] DATE NULL,

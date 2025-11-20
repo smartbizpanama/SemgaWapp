@@ -1,0 +1,29 @@
+{
+    "Origen": "D",
+    "Srv": {
+        "Tipo": "SessionInfoSQL",
+        "Timestamp": "2025-11-03T14:04:43.230",
+        "SPID": 69,
+        "ServerName":"GIL-MAIN-PC\MSSQLSERVER01",
+        "DatabaseName": "SegmaDB",
+        "LoginName": "sa",
+        "UserName": "dbo",
+        "DbUser": "sa",
+        "HostName": "GIL-MAIN-PC",
+        "AppName": "SQL Server Management Studio",
+        "ProgramName": "SQL Server Management Studio",
+        "ClientNetAddress": "<local machine>",
+        "LoginTime": "2025-11-03T14:04:34.313",
+        "CPU": 437,
+        "MemoryUsage": 4,
+        "Reads": 0,
+        "Writes": 5,
+        "ServerVersion": "16.0.1000.6",
+        "ServerEdition": "Developer Edition (64-bit)",
+        "ServerBuild": "RTM",
+        "Language": "",
+        "IsClustered": false,
+        "IsIntegratedSecurityOnly": false,
+        "MachineName": "GIL-MAIN-PC"
+    }
+}

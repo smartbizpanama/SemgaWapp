@@ -21,7 +21,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerRubros() As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerRubros iniciado")
+			ModGlobal.EscribirLog("ObtenerRubros iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spRubros_ListarParaDropdown"
@@ -31,7 +31,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener rubros: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener rubros: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -56,7 +56,7 @@ Public Class Mantenimientos
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerRubros: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerRubros: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -64,12 +64,54 @@ Public Class Mantenimientos
 			}
 		End Try
 	End Function
-
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ObtenerCuentasParaDropdown() As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO ObtenerCuentasParaDropdown")
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "Exec spCuentas_ListarParaDropdown"
+			ModGlobal.EscribirLog($"Ejecutando SQL: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener cuentas: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+						.Resultado = "ERROR",
+						.Datos = "",
+						.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+					})
+			End If
+			ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
+			Dim cuentas As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim cuenta As New With {
+						.Cuenta = row("Cuenta").ToString(),
+						.NombreCuenta = row("NombreCuenta").ToString(),
+						.Saldo = If(row.Table.Columns.Contains("Saldo") AndAlso Not row.IsNull("Saldo"), Convert.ToDecimal(row("Saldo")), 0D)
+					}
+				cuentas.Add(cuenta)
+			Next
+			ModGlobal.EscribirLog("Metodo ObtenerCuentasParaDropdown completado exitosamente")
+			Return serializer.Serialize(New With {
+					.Resultado = "SUCCESS",
+					.Datos = serializer.Serialize(cuentas),
+					.Mensaje = ""
+				})
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ObtenerCuentasParaDropdown: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error al obtener cuentas: " & ex.Message
+				})
+		End Try
+	End Function
 	<WebMethod()>
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ListarCodigosTransaccion(filtros As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ListarCodigosTransaccion iniciado")
+			ModGlobal.EscribirLog("ListarCodigosTransaccion iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spCodigosTransaccion_Listar"
@@ -94,7 +136,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al listar códigos: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al listar códigos: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -115,6 +157,7 @@ Public Class Mantenimientos
 					.DebCred = row("DebCred").ToString(),
 					.DescripcionDebCred = row("DescripcionDebCred").ToString(),
 					.CuentaContable = row("CuentaContable").ToString(),
+					.ContraCuenta = row("ContraCuenta").ToString(),
 					.SnActivo = CBool(row("SnActivo")),
 					.DescripcionEstado = row("DescripcionEstado").ToString(),
 					.SnEliminado = CBool(row("SnEliminado"))
@@ -128,7 +171,7 @@ Public Class Mantenimientos
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ListarCodigosTransaccion: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ListarCodigosTransaccion: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -141,7 +184,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerCodigoTransaccion(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerCodigoTransaccion iniciado. ID: " & id)
+			ModGlobal.EscribirLog("ObtenerCodigoTransaccion iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spCodigosTransaccion_Listar"
@@ -153,7 +196,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener código: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener código: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -180,6 +223,7 @@ Public Class Mantenimientos
 					.DebCred = codigoEncontrado("DebCred").ToString(),
 					.DescripcionDebCred = codigoEncontrado("DescripcionDebCred").ToString(),
 					.CuentaContable = codigoEncontrado("CuentaContable").ToString(),
+					.ContraCuenta = codigoEncontrado("ContraCuenta").ToString(),
 					.SnActivo = CBool(codigoEncontrado("SnActivo")),
 					.DescripcionEstado = codigoEncontrado("DescripcionEstado").ToString(),
 					.SnEliminado = CBool(codigoEncontrado("SnEliminado"))
@@ -198,7 +242,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerCodigoTransaccion: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerCodigoTransaccion: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -211,8 +255,8 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function GuardarCodigoTransaccion(codigoData As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 GuardarCodigoTransaccion iniciado")
-			ModGlobal.EscribirLog("📋 Datos recibidos: " & New JavaScriptSerializer().Serialize(codigoData))
+			ModGlobal.EscribirLog("GuardarCodigoTransaccion iniciado")
+			ModGlobal.EscribirLog("Datos recibidos: " & New JavaScriptSerializer().Serialize(codigoData))
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spCodigosTransaccion_Guardar"
@@ -223,9 +267,10 @@ Public Class Mantenimientos
 			Dim descripcion As String = codigoData("Descripcion").ToString()
 			Dim debCred As String = codigoData("DebCred").ToString()
 			Dim cuentaContable As String = If(codigoData.ContainsKey("CuentaContable"), codigoData("CuentaContable").ToString(), "")
+			Dim contraCuenta As String = If(codigoData.ContainsKey("ContraCuenta"), codigoData("ContraCuenta").ToString(), "")
 			Dim snActivo As Boolean = If(codigoData.ContainsKey("SnActivo"), Convert.ToBoolean(codigoData("SnActivo")), True)
 
-			ModGlobal.EscribirLog($"📝 Valores extraídos - ID: {id}, CodigoRubro: {codigoRubro}, CodigoTransaccion: {codigoTransaccion}, Descripcion: {descripcion}, DebCred: {debCred}, CuentaContable: {cuentaContable}, SnActivo: {snActivo}")
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, CodigoRubro: {codigoRubro}, CodigoTransaccion: {codigoTransaccion}, Descripcion: {descripcion}, DebCred: {debCred}, CuentaContable: {cuentaContable}, ContraCuenta: {contraCuenta}, SnActivo: {snActivo}")
 
 			With objSql.Parametros
 				If id > 0 Then
@@ -238,6 +283,9 @@ Public Class Mantenimientos
 				If Not String.IsNullOrEmpty(cuentaContable) Then
 					.Add("@CuentaContable", cuentaContable)
 				End If
+				If Not String.IsNullOrEmpty(contraCuenta) Then
+					.Add("@ContraCuenta", contraCuenta)
+				End If
 				.Add("@SnActivo", snActivo)
 			End With
 
@@ -246,7 +294,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al guardar código: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al guardar código: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -269,7 +317,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GuardarCodigoTransaccion: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GuardarCodigoTransaccion: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al guardar código de transacción: " & ex.Message
@@ -281,7 +329,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function EliminarCodigoTransaccion(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 EliminarCodigoTransaccion iniciado. ID: " & id)
+			ModGlobal.EscribirLog("EliminarCodigoTransaccion iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spCodigosTransaccion_Eliminar"
@@ -295,7 +343,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al eliminar código: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al eliminar código: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -318,7 +366,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en EliminarCodigoTransaccion: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en EliminarCodigoTransaccion: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al eliminar código de transacción: " & ex.Message
@@ -332,7 +380,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ListarDepartamentos(filtros As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ListarDepartamentos iniciado")
+			ModGlobal.EscribirLog("ListarDepartamentos iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spDepartamentos_Listar"
@@ -354,7 +402,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al listar departamentos: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al listar departamentos: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -388,7 +436,7 @@ Public Class Mantenimientos
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ListarDepartamentos: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ListarDepartamentos: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -401,7 +449,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerDepartamento(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerDepartamento iniciado. ID: " & id)
+			ModGlobal.EscribirLog("ObtenerDepartamento iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spDepartamentos_Listar"
@@ -413,7 +461,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener departamento: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener departamento: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -458,7 +506,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerDepartamento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerDepartamento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -471,8 +519,8 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function GuardarDepartamento(departamentoData As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 GuardarDepartamento iniciado")
-			ModGlobal.EscribirLog("📋 Datos recibidos: " & New JavaScriptSerializer().Serialize(departamentoData))
+			ModGlobal.EscribirLog("GuardarDepartamento iniciado")
+			ModGlobal.EscribirLog("Datos recibidos: " & New JavaScriptSerializer().Serialize(departamentoData))
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spDepartamentos_Guardar"
@@ -485,7 +533,7 @@ Public Class Mantenimientos
 			Dim email As String = If(departamentoData.ContainsKey("Email"), departamentoData("Email").ToString(), "")
 			Dim activo As Boolean = If(departamentoData.ContainsKey("Activo"), Convert.ToBoolean(departamentoData("Activo")), True)
 
-			ModGlobal.EscribirLog($"📝 Valores extraídos - ID: {id}, Nombre: {nombre}, Descripcion: {descripcion}, Responsable: {responsable}, Telefono: {telefono}, Email: {email}, Activo: {activo}")
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, Nombre: {nombre}, Descripcion: {descripcion}, Responsable: {responsable}, Telefono: {telefono}, Email: {email}, Activo: {activo}")
 
 			With objSql.Parametros
 				If id > 0 Then
@@ -512,7 +560,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al guardar departamento: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al guardar departamento: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -535,7 +583,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GuardarDepartamento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GuardarDepartamento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al guardar departamento: " & ex.Message
@@ -547,7 +595,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function EliminarDepartamento(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 EliminarDepartamento iniciado. ID: " & id)
+			ModGlobal.EscribirLog("EliminarDepartamento iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spDepartamentos_Eliminar"
@@ -561,7 +609,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al eliminar departamento: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al eliminar departamento: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -584,7 +632,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en EliminarDepartamento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en EliminarDepartamento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al eliminar departamento: " & ex.Message
@@ -598,7 +646,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ListarParentezcos(filtros As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ListarParentezcos iniciado")
+			ModGlobal.EscribirLog("ListarParentezcos iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spParentezcos_Listar"
@@ -614,7 +662,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al listar parentezcos: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al listar parentezcos: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -640,7 +688,7 @@ Public Class Mantenimientos
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ListarParentezcos: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ListarParentezcos: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -653,7 +701,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerParentezco(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerParentezco iniciado. ID: " & id)
+			ModGlobal.EscribirLog("ObtenerParentezco iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spParentezcos_Listar"
@@ -665,7 +713,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener parentezco: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener parentezco: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -702,7 +750,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerParentezco: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerParentezco: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -715,8 +763,8 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function GuardarParentezco(parentezcoData As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 GuardarParentezco iniciado")
-			ModGlobal.EscribirLog("📋 Datos recibidos: " & New JavaScriptSerializer().Serialize(parentezcoData))
+			ModGlobal.EscribirLog("GuardarParentezco iniciado")
+			ModGlobal.EscribirLog("Datos recibidos: " & New JavaScriptSerializer().Serialize(parentezcoData))
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spParentezcos_Guardar"
@@ -724,7 +772,7 @@ Public Class Mantenimientos
 			Dim id As Integer = If(parentezcoData.ContainsKey("IDParentezco"), Convert.ToInt32(parentezcoData("IDParentezco")), 0)
 			Dim parentezco As String = parentezcoData("Parentezco").ToString()
 
-			ModGlobal.EscribirLog($"📝 Valores extraídos - ID: {id}, Parentezco: {parentezco}")
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, Parentezco: {parentezco}")
 
 			With objSql.Parametros
 				If id > 0 Then
@@ -738,7 +786,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al guardar parentezco: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al guardar parentezco: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -761,7 +809,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GuardarParentezco: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GuardarParentezco: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al guardar parentezco: " & ex.Message
@@ -773,7 +821,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function EliminarParentezco(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 EliminarParentezco iniciado. ID: " & id)
+			ModGlobal.EscribirLog("EliminarParentezco iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spParentezcos_Eliminar"
@@ -787,7 +835,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al eliminar parentezco: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al eliminar parentezco: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -810,7 +858,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en EliminarParentezco: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en EliminarParentezco: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al eliminar parentezco: " & ex.Message
@@ -824,7 +872,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ListarRoles(filtros As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ListarRoles iniciado")
+			ModGlobal.EscribirLog("ListarRoles iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spRoles_Listar"
@@ -846,7 +894,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al listar roles: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al listar roles: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -879,7 +927,7 @@ Public Class Mantenimientos
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ListarRoles: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ListarRoles: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -892,7 +940,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerRol(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerRol iniciado. ID: " & id)
+			ModGlobal.EscribirLog("ObtenerRol iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spRoles_Listar"
@@ -904,7 +952,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener rol: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener rol: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -948,7 +996,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerRol: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerRol: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -961,8 +1009,8 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function GuardarRol(rolData As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 GuardarRol iniciado")
-			ModGlobal.EscribirLog("📋 Datos recibidos: " & New JavaScriptSerializer().Serialize(rolData))
+			ModGlobal.EscribirLog("GuardarRol iniciado")
+			ModGlobal.EscribirLog("Datos recibidos: " & New JavaScriptSerializer().Serialize(rolData))
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spRoles_Guardar"
@@ -973,7 +1021,7 @@ Public Class Mantenimientos
 			Dim nivelAcceso As Integer = Convert.ToInt32(rolData("NivelAcceso"))
 			Dim activo As Boolean = If(rolData.ContainsKey("Activo"), Convert.ToBoolean(rolData("Activo")), True)
 
-			ModGlobal.EscribirLog($"📝 Valores extraídos - ID: {id}, Nombre: {nombre}, Descripcion: {descripcion}, NivelAcceso: {nivelAcceso}, Activo: {activo}")
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, Nombre: {nombre}, Descripcion: {descripcion}, NivelAcceso: {nivelAcceso}, Activo: {activo}")
 
 			With objSql.Parametros
 				If id > 0 Then
@@ -992,7 +1040,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al guardar rol: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al guardar rol: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -1015,7 +1063,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GuardarRol: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GuardarRol: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al guardar rol: " & ex.Message
@@ -1027,7 +1075,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function EliminarRol(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 EliminarRol iniciado. ID: " & id)
+			ModGlobal.EscribirLog("EliminarRol iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spRoles_Eliminar"
@@ -1041,7 +1089,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al eliminar rol: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al eliminar rol: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -1064,7 +1112,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en EliminarRol: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en EliminarRol: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al eliminar rol: " & ex.Message
@@ -1078,7 +1126,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ListarRubros(filtros As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ListarRubros iniciado")
+			ModGlobal.EscribirLog("ListarRubros iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spRubros_Listar"
@@ -1097,7 +1145,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al listar rubros: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al listar rubros: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -1124,7 +1172,7 @@ Public Class Mantenimientos
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ListarRubros: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ListarRubros: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -1137,7 +1185,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerRubro(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerRubro iniciado. ID: " & id)
+			ModGlobal.EscribirLog("ObtenerRubro iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spRubros_Listar"
@@ -1149,7 +1197,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener rubro: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener rubro: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -1187,7 +1235,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerRubro: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerRubro: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -1200,8 +1248,8 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function GuardarRubro(rubroData As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 GuardarRubro iniciado")
-			ModGlobal.EscribirLog("📋 Datos recibidos: " & New JavaScriptSerializer().Serialize(rubroData))
+			ModGlobal.EscribirLog("GuardarRubro iniciado")
+			ModGlobal.EscribirLog("Datos recibidos: " & New JavaScriptSerializer().Serialize(rubroData))
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spRubros_Guardar"
@@ -1210,7 +1258,7 @@ Public Class Mantenimientos
 			Dim codigoRubro As String = rubroData("CodigoRubro").ToString()
 			Dim descripcion As String = rubroData("Descripcion").ToString()
 
-			ModGlobal.EscribirLog($"📝 Valores extraídos - ID: {id}, CodigoRubro: {codigoRubro}, Descripcion: {descripcion}")
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, CodigoRubro: {codigoRubro}, Descripcion: {descripcion}")
 
 			With objSql.Parametros
 				If id > 0 Then
@@ -1225,7 +1273,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al guardar rubro: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al guardar rubro: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -1248,7 +1296,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GuardarRubro: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GuardarRubro: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al guardar rubro: " & ex.Message
@@ -1260,7 +1308,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function EliminarRubro(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 EliminarRubro iniciado. ID: " & id)
+			ModGlobal.EscribirLog("EliminarRubro iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spRubros_Eliminar"
@@ -1274,7 +1322,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al eliminar rubro: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al eliminar rubro: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -1297,7 +1345,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en EliminarRubro: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en EliminarRubro: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al eliminar rubro: " & ex.Message
@@ -1311,7 +1359,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ListarStatusAsociados(filtros As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ListarStatusAsociados iniciado")
+			ModGlobal.EscribirLog("ListarStatusAsociados iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spStatusAsociado_Listar"
@@ -1330,7 +1378,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al listar estatus: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al listar estatus: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -1357,7 +1405,7 @@ Public Class Mantenimientos
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ListarStatusAsociados: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ListarStatusAsociados: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -1370,7 +1418,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerStatusAsociado(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerStatusAsociado iniciado. ID: " & id)
+			ModGlobal.EscribirLog("ObtenerStatusAsociado iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spStatusAsociado_Listar"
@@ -1382,7 +1430,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener estatus: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener estatus: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -1420,7 +1468,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerStatusAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerStatusAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -1433,8 +1481,8 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function GuardarStatusAsociado(statusData As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 GuardarStatusAsociado iniciado")
-			ModGlobal.EscribirLog("📋 Datos recibidos: " & New JavaScriptSerializer().Serialize(statusData))
+			ModGlobal.EscribirLog("GuardarStatusAsociado iniciado")
+			ModGlobal.EscribirLog("Datos recibidos: " & New JavaScriptSerializer().Serialize(statusData))
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spStatusAsociado_Guardar"
@@ -1443,7 +1491,7 @@ Public Class Mantenimientos
 			Dim codStatusAsociado As String = statusData("CodStatusAsociado").ToString()
 			Dim statusAsociado As String = statusData("StatusAsociado").ToString()
 
-			ModGlobal.EscribirLog($"📝 Valores extraídos - ID: {id}, CodStatusAsociado: {codStatusAsociado}, StatusAsociado: {statusAsociado}")
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, CodStatusAsociado: {codStatusAsociado}, StatusAsociado: {statusAsociado}")
 
 			With objSql.Parametros
 				If id > 0 Then
@@ -1458,7 +1506,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al guardar estatus: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al guardar estatus: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -1481,7 +1529,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GuardarStatusAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GuardarStatusAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al guardar estatus: " & ex.Message
@@ -1493,7 +1541,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function EliminarStatusAsociado(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 EliminarStatusAsociado iniciado. ID: " & id)
+			ModGlobal.EscribirLog("EliminarStatusAsociado iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spStatusAsociado_Eliminar"
@@ -1507,7 +1555,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al eliminar estatus: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al eliminar estatus: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -1530,7 +1578,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en EliminarStatusAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en EliminarStatusAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al eliminar estatus: " & ex.Message
@@ -1544,7 +1592,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ListarTipoAsociados(filtros As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ListarTipoAsociados iniciado")
+			ModGlobal.EscribirLog("ListarTipoAsociados iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spTipoAsociado_Listar"
@@ -1563,7 +1611,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al listar tipos de asociado: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al listar tipos de asociado: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -1590,7 +1638,7 @@ Public Class Mantenimientos
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ListarTipoAsociados: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ListarTipoAsociados: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -1603,7 +1651,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerTipoAsociado(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerTipoAsociado iniciado. ID: " & id)
+			ModGlobal.EscribirLog("ObtenerTipoAsociado iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spTipoAsociado_Listar"
@@ -1615,7 +1663,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener tipo de asociado: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener tipo de asociado: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -1653,7 +1701,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerTipoAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerTipoAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -1666,8 +1714,8 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function GuardarTipoAsociado(tipoAsociadoData As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 GuardarTipoAsociado iniciado")
-			ModGlobal.EscribirLog("📋 Datos recibidos: " & New JavaScriptSerializer().Serialize(tipoAsociadoData))
+			ModGlobal.EscribirLog("GuardarTipoAsociado iniciado")
+			ModGlobal.EscribirLog("Datos recibidos: " & New JavaScriptSerializer().Serialize(tipoAsociadoData))
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spTipoAsociado_Guardar"
@@ -1676,7 +1724,7 @@ Public Class Mantenimientos
 			Dim codTipoAsociado As String = tipoAsociadoData("CodTipoAsociado").ToString()
 			Dim tipoAsociado As String = tipoAsociadoData("TipoAsociado").ToString()
 
-			ModGlobal.EscribirLog($"📝 Valores extraídos - ID: {id}, CodTipoAsociado: {codTipoAsociado}, TipoAsociado: {tipoAsociado}")
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, CodTipoAsociado: {codTipoAsociado}, TipoAsociado: {tipoAsociado}")
 
 			With objSql.Parametros
 				If id > 0 Then
@@ -1691,7 +1739,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al guardar tipo de asociado: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al guardar tipo de asociado: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -1714,7 +1762,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GuardarTipoAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GuardarTipoAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al guardar tipo de asociado: " & ex.Message
@@ -1726,7 +1774,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function EliminarTipoAsociado(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 EliminarTipoAsociado iniciado. ID: " & id)
+			ModGlobal.EscribirLog("EliminarTipoAsociado iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spTipoAsociado_Eliminar"
@@ -1740,7 +1788,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al eliminar tipo de asociado: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al eliminar tipo de asociado: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -1763,7 +1811,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en EliminarTipoAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en EliminarTipoAsociado: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al eliminar tipo de asociado: " & ex.Message
@@ -1777,7 +1825,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ListarTipoDocumentos(filtros As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ListarTipoDocumentos iniciado")
+			ModGlobal.EscribirLog("ListarTipoDocumentos iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spTipoDocumentos_Listar"
@@ -1796,7 +1844,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al listar tipos de documento: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al listar tipos de documento: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -1823,7 +1871,7 @@ Public Class Mantenimientos
 				.Mensaje = ""
 			}
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ListarTipoDocumentos: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ListarTipoDocumentos: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -1836,7 +1884,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerTipoDocumento(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerTipoDocumento iniciado. ID: " & id)
+			ModGlobal.EscribirLog("ObtenerTipoDocumento iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spTipoDocumentos_Listar"
@@ -1848,7 +1896,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al obtener tipo de documento: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al obtener tipo de documento: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Datos = "",
@@ -1886,7 +1934,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en ObtenerTipoDocumento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en ObtenerTipoDocumento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Datos = "",
@@ -1899,8 +1947,8 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function GuardarTipoDocumento(tipoDocumentoData As Object) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 GuardarTipoDocumento iniciado")
-			ModGlobal.EscribirLog("📋 Datos recibidos: " & New JavaScriptSerializer().Serialize(tipoDocumentoData))
+			ModGlobal.EscribirLog("GuardarTipoDocumento iniciado")
+			ModGlobal.EscribirLog("Datos recibidos: " & New JavaScriptSerializer().Serialize(tipoDocumentoData))
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spTipoDocumentos_Guardar"
@@ -1909,7 +1957,7 @@ Public Class Mantenimientos
 			Dim codTipoDoc As String = tipoDocumentoData("CodTipoDoc").ToString()
 			Dim tipoDocumento As String = tipoDocumentoData("TipoDocumento").ToString()
 
-			ModGlobal.EscribirLog($"📝 Valores extraídos - ID: {id}, CodTipoDoc: {codTipoDoc}, TipoDocumento: {tipoDocumento}")
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, CodTipoDoc: {codTipoDoc}, TipoDocumento: {tipoDocumento}")
 
 			With objSql.Parametros
 				If id > 0 Then
@@ -1924,7 +1972,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al guardar tipo de documento: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al guardar tipo de documento: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -1947,7 +1995,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en GuardarTipoDocumento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en GuardarTipoDocumento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al guardar tipo de documento: " & ex.Message
@@ -1959,7 +2007,7 @@ Public Class Mantenimientos
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function EliminarTipoDocumento(id As Integer) As Object
 		Try
-			ModGlobal.EscribirLog("🔍 EliminarTipoDocumento iniciado. ID: " & id)
+			ModGlobal.EscribirLog("EliminarTipoDocumento iniciado. ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spTipoDocumentos_Eliminar"
@@ -1973,7 +2021,7 @@ Public Class Mantenimientos
 
 			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("❌ Error en BD al eliminar tipo de documento: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("Error en BD al eliminar tipo de documento: " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
@@ -1996,7 +2044,7 @@ Public Class Mantenimientos
 				}
 			End If
 		Catch ex As Exception
-			ModGlobal.EscribirLog("❌ Error en EliminarTipoDocumento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			ModGlobal.EscribirLog("Error en EliminarTipoDocumento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al eliminar tipo de documento: " & ex.Message
@@ -2575,5 +2623,2050 @@ Public Class Mantenimientos
 	End Function
 #End Region
 
+#Region "NIVELES DE ESTUDIO"
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ListarNivelesEstudio(filtros As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ListarNivelesEstudio iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "SELECT ID, Code, Descripcion FROM tbNivelesEstudio WHERE snEliminado = 0"
+
+			' Aplicar filtros si existen
+			If filtros IsNot Nothing Then
+				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
+				If filtrosDict IsNot Nothing Then
+					If Not String.IsNullOrEmpty(filtrosDict("Codigo")?.ToString()) Then
+						sSql += " AND Code = " & filtrosDict("Codigo").ToString()
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+						sSql += " AND Descripcion LIKE '%" & filtrosDict("Descripcion").ToString() & "%'"
+					End If
+				End If
+			End If
+
+			sSql += " ORDER BY Code"
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener niveles de estudio: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			' Crear lista de objetos
+			Dim niveles As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim nivel As New With {
+					.ID = row("ID").ToString(),
+					.Code = row("Code").ToString(),
+					.Descripcion = row("Descripcion").ToString()
+				}
+				niveles.Add(nivel)
+			Next
+
+			ModGlobal.EscribirLog($"Niveles de estudio obtenidos: {niveles.Count} registros")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Datos = serializer.Serialize(niveles),
+				.Mensaje = "Niveles de estudio obtenidos exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ListarNivelesEstudio: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener niveles de estudio: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GuardarNivelEstudio(nivelData As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("GuardarNivelEstudio iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim nivelDict As Dictionary(Of String, Object) = TryCast(nivelData, Dictionary(Of String, Object))
+
+			If nivelDict Is Nothing Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Datos de nivel inválidos"
+				})
+			End If
+
+			Dim id As String = nivelDict("ID")?.ToString()
+			Dim codigo As String = nivelDict("Code")?.ToString()
+			Dim descripcion As String = nivelDict("Descripcion")?.ToString()
+
+			' Validaciones
+			If String.IsNullOrEmpty(codigo) Or String.IsNullOrEmpty(descripcion) Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Código y descripción son requeridos"
+				})
+			End If
+
+			' Verificar si el código ya existe (excluyendo el registro actual si es actualización)
+			Dim sSqlVerificar As String
+			If String.IsNullOrEmpty(id) Then
+				' Para inserción: verificar si el código ya existe
+				sSqlVerificar = "SELECT COUNT(*) FROM tbNivelesEstudio WHERE Code = @Code AND snEliminado = 0"
+				objSql.Parametros.Add("@Code", codigo)
+			Else
+				' Para actualización: verificar si el código ya existe en otros registros
+				sSqlVerificar = "SELECT COUNT(*) FROM tbNivelesEstudio WHERE Code = @Code AND ID <> @ID AND snEliminado = 0"
+				objSql.Parametros.Add("@Code", codigo)
+				objSql.Parametros.Add("@ID", id)
+			End If
+
+			ModGlobal.EscribirLog($"Verificando código duplicado: {sSqlVerificar} {objSql.getParamList()}")
+			Dim existeCodigo As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
+
+			If existeCodigo > 0 Then
+				ModGlobal.EscribirLog("Código duplicado detectado")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "El código ingresado ya existe. Por favor, ingrese un código diferente."
+				})
+			End If
+
+			' Limpiar parámetros para la operación principal
+			objSql.Parametros.Clear()
+
+			Dim sSql As String
+			If String.IsNullOrEmpty(id) Then
+				' Insertar nuevo nivel
+				sSql = "INSERT INTO tbNivelesEstudio (Code, Descripcion, snEliminado) VALUES (@Code, @Descripcion, 0)"
+				objSql.Parametros.Add("@Code", codigo)
+				objSql.Parametros.Add("@Descripcion", descripcion)
+			Else
+				' Actualizar nivel existente
+				sSql = "UPDATE tbNivelesEstudio SET Code = @Code, Descripcion = @Descripcion WHERE ID = @ID"
+				objSql.Parametros.Add("@Code", codigo)
+				objSql.Parametros.Add("@Descripcion", descripcion)
+				objSql.Parametros.Add("@ID", id)
+			End If
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
+			objSql.ExecuteNonQuerySql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al guardar nivel: " & objSql.MensajeError)
+
+				' Verificar si es un error de clave única duplicada
+				If objSql.MensajeError.Contains("UNIQUE KEY constraint") Or objSql.MensajeError.Contains("duplicate key") Then
+					Return serializer.Serialize(New With {
+						.Resultado = "ERROR",
+						.Mensaje = "El código ingresado ya existe. Por favor, ingrese un código diferente."
+					})
+				End If
+
+				' Otros errores de base de datos
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Nivel de estudio guardado exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Nivel de estudio guardado exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GuardarNivelEstudio: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al guardar nivel de estudio: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function EliminarNivelEstudio(id As Integer) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog($"EliminarNivelEstudio iniciado para ID: {id}")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "UPDATE tbNivelesEstudio SET snEliminado = 1 WHERE ID = @ID"
+
+			objSql.Parametros.Add("@ID", id)
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
+			objSql.ExecuteNonQuerySql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al eliminar nivel: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Nivel de estudio eliminado exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Nivel de estudio eliminado exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en EliminarNivelEstudio: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al eliminar nivel de estudio: " & ex.Message
+			})
+		End Try
+	End Function
+#End Region
+
+#Region "PROFESIONES"
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ListarProfesiones(filtros As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ListarProfesiones iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "SELECT ID, Code, Descripcion FROM tbProfesiones WHERE snEliminado = 0"
+
+			' Aplicar filtros si existen
+			If filtros IsNot Nothing Then
+				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
+				If filtrosDict IsNot Nothing Then
+					If Not String.IsNullOrEmpty(filtrosDict("Codigo")?.ToString()) Then
+						sSql += " AND Code = " & filtrosDict("Codigo").ToString()
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+						sSql += " AND Descripcion LIKE '%" & filtrosDict("Descripcion").ToString() & "%'"
+					End If
+				End If
+			End If
+
+			sSql += " ORDER BY Code"
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener profesiones: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			' Crear lista de objetos
+			Dim profesiones As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim profesion As New With {
+					.ID = row("ID").ToString(),
+					.Code = row("Code").ToString(),
+					.Descripcion = row("Descripcion").ToString()
+				}
+				profesiones.Add(profesion)
+			Next
+
+			ModGlobal.EscribirLog($"Profesiones obtenidas: {profesiones.Count} registros")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Datos = serializer.Serialize(profesiones),
+				.Mensaje = "Profesiones obtenidas exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ListarProfesiones: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener profesiones: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GuardarProfesion(profesionData As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("GuardarProfesion iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim profesionDict As Dictionary(Of String, Object) = TryCast(profesionData, Dictionary(Of String, Object))
+
+			If profesionDict Is Nothing Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Datos de profesión inválidos"
+				})
+			End If
+
+			Dim id As String = profesionDict("ID")?.ToString()
+			Dim codigo As String = profesionDict("Code")?.ToString()
+			Dim descripcion As String = profesionDict("Descripcion")?.ToString()
+
+			' Validaciones
+			If String.IsNullOrEmpty(codigo) Or String.IsNullOrEmpty(descripcion) Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Código y descripción son requeridos"
+				})
+			End If
+
+			' Verificar si el código ya existe (excluyendo el registro actual si es actualización)
+			Dim sSqlVerificar As String
+			If String.IsNullOrEmpty(id) Then
+				' Para inserción: verificar si el código ya existe
+				sSqlVerificar = "SELECT COUNT(*) FROM tbProfesiones WHERE Code = @Code AND snEliminado = 0"
+				objSql.Parametros.Add("@Code", codigo)
+			Else
+				' Para actualización: verificar si el código ya existe en otros registros
+				sSqlVerificar = "SELECT COUNT(*) FROM tbProfesiones WHERE Code = @Code AND ID <> @ID AND snEliminado = 0"
+				objSql.Parametros.Add("@Code", codigo)
+				objSql.Parametros.Add("@ID", id)
+			End If
+
+			ModGlobal.EscribirLog($"Verificando código duplicado: {sSqlVerificar} {objSql.getParamList()}")
+			Dim existeCodigo As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
+
+			If existeCodigo > 0 Then
+				ModGlobal.EscribirLog("Código duplicado detectado")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "El código ingresado ya existe. Por favor, ingrese un código diferente."
+				})
+			End If
+
+			' Limpiar parámetros para la operación principal
+			objSql.Parametros.Clear()
+
+			Dim sSql As String
+			If String.IsNullOrEmpty(id) Then
+				' Insertar nueva profesión
+				sSql = "INSERT INTO tbProfesiones (Code, Descripcion, snEliminado) VALUES (@Code, @Descripcion, 0)"
+				objSql.Parametros.Add("@Code", codigo)
+				objSql.Parametros.Add("@Descripcion", descripcion)
+			Else
+				' Actualizar profesión existente
+				sSql = "UPDATE tbProfesiones SET Code = @Code, Descripcion = @Descripcion WHERE ID = @ID"
+				objSql.Parametros.Add("@Code", codigo)
+				objSql.Parametros.Add("@Descripcion", descripcion)
+				objSql.Parametros.Add("@ID", id)
+			End If
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
+			objSql.ExecuteNonQuerySql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al guardar profesión: " & objSql.MensajeError)
+
+				' Verificar si es un error de clave única duplicada
+				If objSql.MensajeError.Contains("UNIQUE KEY constraint") Or objSql.MensajeError.Contains("duplicate key") Then
+					Return serializer.Serialize(New With {
+						.Resultado = "ERROR",
+						.Mensaje = "El código ingresado ya existe. Por favor, ingrese un código diferente."
+					})
+				End If
+
+				' Otros errores de base de datos
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Profesión guardada exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Profesión guardada exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GuardarProfesion: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al guardar profesión: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function EliminarProfesion(id As Integer) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog($"EliminarProfesion iniciado para ID: {id}")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "UPDATE tbProfesiones SET snEliminado = 1 WHERE ID = @ID"
+
+			objSql.Parametros.Add("@ID", id)
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
+			objSql.ExecuteNonQuerySql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al eliminar profesión: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Profesión eliminada exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Profesión eliminada exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en EliminarProfesion: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al eliminar profesión: " & ex.Message
+			})
+		End Try
+	End Function
+#End Region
+
+#Region "EMPRESAS"
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ListarEmpresas(filtros As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ListarEmpresas iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "SELECT ID, Code, Descripcion FROM tbEmpresas WHERE snEliminado = 0"
+
+			' Aplicar filtros si existen
+			If filtros IsNot Nothing Then
+				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
+				If filtrosDict IsNot Nothing Then
+					If Not String.IsNullOrEmpty(filtrosDict("Codigo")?.ToString()) Then
+						sSql += " AND Code = " & filtrosDict("Codigo").ToString()
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+						sSql += " AND Descripcion LIKE '%" & filtrosDict("Descripcion").ToString() & "%'"
+					End If
+				End If
+			End If
+
+			sSql += " ORDER BY Code"
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener empresas: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			' Crear lista de objetos
+			Dim empresas As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim empresa As New With {
+					.ID = row("ID").ToString(),
+					.Code = row("Code").ToString(),
+					.Descripcion = row("Descripcion").ToString()
+				}
+				empresas.Add(empresa)
+			Next
+
+			ModGlobal.EscribirLog($"Empresas obtenidas: {empresas.Count} registros")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Datos = serializer.Serialize(empresas),
+				.Mensaje = "Empresas obtenidas exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ListarEmpresas: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener empresas: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GuardarEmpresa(empresaData As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("GuardarEmpresa iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim empresaDict As Dictionary(Of String, Object) = TryCast(empresaData, Dictionary(Of String, Object))
+
+			If empresaDict Is Nothing Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Datos de empresa inválidos"
+				})
+			End If
+
+			Dim id As String = empresaDict("ID")?.ToString()
+			Dim codigo As String = empresaDict("Code")?.ToString()
+			Dim descripcion As String = empresaDict("Descripcion")?.ToString()
+
+			' Validaciones
+			If String.IsNullOrEmpty(codigo) Or String.IsNullOrEmpty(descripcion) Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Código y descripción son requeridos"
+				})
+			End If
+
+			' Verificar si el código ya existe entre registros activos (excluyendo el registro actual si es actualización)
+			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbEmpresas WHERE Code = @Code AND snEliminado = 0"
+			If Not String.IsNullOrEmpty(id) Then
+				sSqlVerificar += " AND ID != @ID"
+			End If
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@Code", codigo)
+				If Not String.IsNullOrEmpty(id) Then
+					.Add("@ID", id)
+				End If
+			End With
+
+			Dim dtVerificar As DataTable = objSql.GetDataTableSql(sSqlVerificar)
+			If objSql.MensajeError <> "" Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al verificar código: " & objSql.MensajeError
+				})
+			End If
+
+			If Convert.ToInt32(dtVerificar.Rows(0)(0)) > 0 Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "El código ingresado ya existe"
+				})
+			End If
+
+			' Determinar si es inserción o actualización
+			If String.IsNullOrEmpty(id) Then
+				' Inserción
+				Dim sSqlInsert As String = "INSERT INTO tbEmpresas (Code, Descripcion, snEliminado) VALUES (@Code, @Descripcion, 0)"
+				With objSql.Parametros
+					.Clear()
+					.Add("@Code", codigo)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlInsert)
+				If objSql.MensajeError <> "" Then
+					Return serializer.Serialize(New With {
+						.Resultado = "ERROR",
+						.Mensaje = "Error al crear empresa: " & objSql.MensajeError
+					})
+				End If
+
+				ModGlobal.EscribirLog("Empresa creada exitosamente")
+				Return serializer.Serialize(New With {
+					.Resultado = "SUCCESS",
+					.Mensaje = "Empresa creada exitosamente"
+				})
+			Else
+				' Actualización
+				Dim sSqlUpdate As String = "UPDATE tbEmpresas SET Code = @Code, Descripcion = @Descripcion WHERE ID = @ID"
+				With objSql.Parametros
+					.Clear()
+					.Add("@Code", codigo)
+					.Add("@Descripcion", descripcion)
+					.Add("@ID", id)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlUpdate)
+				If objSql.MensajeError <> "" Then
+					Return serializer.Serialize(New With {
+						.Resultado = "ERROR",
+						.Mensaje = "Error al actualizar empresa: " & objSql.MensajeError
+					})
+				End If
+
+				ModGlobal.EscribirLog("Empresa actualizada exitosamente")
+				Return serializer.Serialize(New With {
+					.Resultado = "SUCCESS",
+					.Mensaje = "Empresa actualizada exitosamente"
+				})
+			End If
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GuardarEmpresa: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al guardar empresa: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function EliminarEmpresa(id As Integer) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("EliminarEmpresa iniciado para ID: " & id)
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "UPDATE tbEmpresas SET snEliminado = 1 WHERE ID = @ID"
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@ID", id)
+			End With
+
+			objSql.ExecuteNonQuerySql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al eliminar empresa: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al eliminar empresa: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Empresa eliminada exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Empresa eliminada exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en EliminarEmpresa: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al eliminar empresa: " & ex.Message
+			})
+		End Try
+	End Function
+#End Region
+
+#Region "OCUPACIONES"
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ListarOcupaciones(filtros As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ListarOcupaciones iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "SELECT ID, Code, Descripcion FROM tbOcupaciones WHERE snEliminado = 0"
+
+			' Aplicar filtros si existen
+			If filtros IsNot Nothing Then
+				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
+				If filtrosDict IsNot Nothing Then
+					If Not String.IsNullOrEmpty(filtrosDict("Codigo")?.ToString()) Then
+						sSql += " AND Code = " & filtrosDict("Codigo").ToString()
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+						sSql += " AND Descripcion LIKE '%" & filtrosDict("Descripcion").ToString() & "%'"
+					End If
+				End If
+			End If
+
+			sSql += " ORDER BY Code"
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener ocupaciones: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			' Crear lista de objetos
+			Dim ocupaciones As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim ocupacion As New With {
+					.ID = row("ID").ToString(),
+					.Code = row("Code").ToString(),
+					.Descripcion = row("Descripcion").ToString()
+				}
+				ocupaciones.Add(ocupacion)
+			Next
+
+			ModGlobal.EscribirLog($"Ocupaciones obtenidas: {ocupaciones.Count} registros")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Datos = serializer.Serialize(ocupaciones),
+				.Mensaje = "Ocupaciones obtenidas exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ListarOcupaciones: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener ocupaciones: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GuardarOcupacion(ocupacionData As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("GuardarOcupacion iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim ocupacionDict As Dictionary(Of String, Object) = TryCast(ocupacionData, Dictionary(Of String, Object))
+
+			If ocupacionDict Is Nothing Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Datos de ocupación no válidos"
+				})
+			End If
+
+			Dim id As String = ocupacionDict("ID")?.ToString()
+			Dim codigo As Integer = Convert.ToInt32(ocupacionDict("Code"))
+			Dim descripcion As String = ocupacionDict("Descripcion").ToString()
+
+			' Verificar si el código ya existe entre registros activos (excluyendo el registro actual si es actualización)
+			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbOcupaciones WHERE Code = @Code AND snEliminado = 0"
+			If Not String.IsNullOrEmpty(id) Then
+				sSqlVerificar += " AND ID != @ID"
+			End If
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@Code", codigo)
+				If Not String.IsNullOrEmpty(id) Then
+					.Add("@ID", Convert.ToInt32(id))
+				End If
+			End With
+
+			Dim count As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
+
+			If count > 0 Then
+				ModGlobal.EscribirLog("Código de ocupación ya existe")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "El código ingresado ya existe. Por favor, ingrese un código diferente."
+				})
+			End If
+
+			' Insertar o actualizar
+			If String.IsNullOrEmpty(id) Then
+				' Insertar nuevo
+				Dim sSqlInsert As String = "INSERT INTO tbOcupaciones (Code, Descripcion, snEliminado) VALUES (@Code, @Descripcion, 0)"
+				With objSql.Parametros
+					.Clear()
+					.Add("@Code", codigo)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlInsert)
+				ModGlobal.EscribirLog("Ocupación insertada exitosamente")
+			Else
+				' Actualizar existente
+				Dim sSqlUpdate As String = "UPDATE tbOcupaciones SET Code = @Code, Descripcion = @Descripcion WHERE ID = @ID"
+				With objSql.Parametros
+					.Clear()
+					.Add("@ID", Convert.ToInt32(id))
+					.Add("@Code", codigo)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlUpdate)
+				ModGlobal.EscribirLog("Ocupación actualizada exitosamente")
+			End If
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al guardar ocupación: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al guardar ocupación: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Ocupación guardada exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Ocupación guardada exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GuardarOcupacion: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al guardar ocupación: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function EliminarOcupacion(id As Integer) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("EliminarOcupacion iniciado para ID: " & id)
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "UPDATE tbOcupaciones SET snEliminado = 1 WHERE ID = @ID"
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@ID", id)
+			End With
+
+			objSql.ExecuteNonQuerySql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al eliminar ocupación: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al eliminar ocupación: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Ocupación eliminada exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Ocupación eliminada exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en EliminarOcupacion: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al eliminar ocupación: " & ex.Message
+			})
+		End Try
+	End Function
+#End Region
+
+#Region "PAÍSES"
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ListarPaises(filtros As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ListarPaises iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "SELECT ID, Code, Descripcion FROM tbPaises WHERE snEliminado = 0"
+
+			' Aplicar filtros si existen
+			If filtros IsNot Nothing Then
+				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
+				If filtrosDict IsNot Nothing Then
+					If Not String.IsNullOrEmpty(filtrosDict("CodigoISO")?.ToString()) Then
+						sSql += " AND Code LIKE '%" & filtrosDict("CodigoISO").ToString().Replace("'", "''") & "%'"
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+						sSql += " AND Descripcion LIKE '%" & filtrosDict("Descripcion").ToString().Replace("'", "''") & "%'"
+					End If
+				End If
+			End If
+
+			sSql += " ORDER BY Code"
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener países: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			' Crear lista de objetos
+			Dim paises As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim pais As New With {
+					.ID = Convert.ToInt32(row("ID")),
+					.Code = row("Code").ToString(),
+					.Descripcion = row("Descripcion").ToString()
+				}
+				paises.Add(pais)
+			Next
+
+			ModGlobal.EscribirLog($"Países obtenidos: {paises.Count} registros")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Datos = serializer.Serialize(paises),
+				.Mensaje = "Países obtenidos exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ListarPaises: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener países: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GuardarPais(paisData As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("GuardarPais iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim paisDict As Dictionary(Of String, Object) = TryCast(paisData, Dictionary(Of String, Object))
+
+			If paisDict Is Nothing Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Datos de país inválidos"
+				})
+			End If
+
+			Dim id As String = paisDict("ID")?.ToString()
+			Dim codigo As String = paisDict("Code")?.ToString().Trim().ToUpper()
+			Dim descripcion As String = paisDict("Descripcion")?.ToString().Trim()
+
+			' Validaciones
+			If String.IsNullOrEmpty(codigo) Or String.IsNullOrEmpty(descripcion) Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Código ISO y descripción son requeridos"
+				})
+			End If
+
+			' Verificar si el código ya existe (excluyendo el registro actual si es actualización)
+			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbPaises WHERE Code = @Code AND snEliminado = 0"
+			If Not String.IsNullOrEmpty(id) Then
+				sSqlVerificar += " AND ID != @ID"
+			End If
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@Code", codigo)
+				If Not String.IsNullOrEmpty(id) Then
+					.Add("@ID", Convert.ToInt32(id))
+				End If
+			End With
+
+			Dim count As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
+
+			If count > 0 Then
+				ModGlobal.EscribirLog("Código ISO ya existe")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "El código ISO ingresado ya existe. Por favor, ingrese un código diferente."
+				})
+			End If
+
+			' Insertar o actualizar
+			If String.IsNullOrEmpty(id) Then
+				' Insertar nuevo
+				Dim sSqlInsert As String = "INSERT INTO tbPaises (Code, Descripcion, snEliminado) VALUES (@Code, @Descripcion, 0)"
+				With objSql.Parametros
+					.Clear()
+					.Add("@Code", codigo)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlInsert)
+				ModGlobal.EscribirLog("País insertado exitosamente")
+			Else
+				' Actualizar existente
+				Dim sSqlUpdate As String = "UPDATE tbPaises SET Code = @Code, Descripcion = @Descripcion WHERE ID = @ID"
+				With objSql.Parametros
+					.Clear()
+					.Add("@ID", Convert.ToInt32(id))
+					.Add("@Code", codigo)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlUpdate)
+				ModGlobal.EscribirLog("País actualizado exitosamente")
+			End If
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al guardar país: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al guardar país: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("País guardado exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "País guardado exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GuardarPais: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al guardar país: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function EliminarPais(id As Integer) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("EliminarPais iniciado para ID: " & id)
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "UPDATE tbPaises SET snEliminado = 1 WHERE ID = @ID"
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@ID", id)
+			End With
+
+			objSql.ExecuteNonQuerySql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al eliminar país: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al eliminar país: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("País eliminado exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "País eliminado exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en EliminarPais: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al eliminar país: " & ex.Message
+			})
+		End Try
+	End Function
+#End Region
+
+#Region "PROVINCIAS"
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ListarProvincias(filtros As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ListarProvincias iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "SELECT p.ID, p.Code, p.CodePais, p.Descripcion, pa.Descripcion AS PaisDescripcion " &
+								"FROM tbProvincias p " &
+								"LEFT JOIN tbPaises pa ON p.CodePais = pa.Code " &
+								"WHERE p.snEliminado = 0"
+
+			' Aplicar filtros si existen
+			If filtros IsNot Nothing Then
+				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
+				If filtrosDict IsNot Nothing Then
+					If Not String.IsNullOrEmpty(filtrosDict("Code")?.ToString()) Then
+						sSql += " AND p.Code = " & filtrosDict("Code").ToString()
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("CodePais")?.ToString()) Then
+						sSql += " AND p.CodePais = '" & filtrosDict("CodePais").ToString().Replace("'", "''") & "'"
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+						sSql += " AND p.Descripcion LIKE '%" & filtrosDict("Descripcion").ToString().Replace("'", "''") & "%'"
+					End If
+				End If
+			End If
+
+			sSql += " ORDER BY p.CodePais, p.Code"
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener provincias: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			' Crear lista de objetos
+			Dim provincias As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim provincia As New With {
+					.ID = Convert.ToInt32(row("ID")),
+					.Code = Convert.ToInt32(row("Code")),
+					.CodePais = row("CodePais").ToString(),
+					.Descripcion = row("Descripcion").ToString(),
+					.PaisDescripcion = If(row("PaisDescripcion") IsNot DBNull.Value, row("PaisDescripcion").ToString(), "")
+				}
+				provincias.Add(provincia)
+			Next
+
+			ModGlobal.EscribirLog($"Provincias obtenidas: {provincias.Count} registros")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Datos = serializer.Serialize(provincias),
+				.Mensaje = "Provincias obtenidas exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ListarProvincias: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener provincias: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GuardarProvincia(provinciaData As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("GuardarProvincia iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim provinciaDict As Dictionary(Of String, Object) = TryCast(provinciaData, Dictionary(Of String, Object))
+
+			If provinciaDict Is Nothing Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Datos de provincia inválidos"
+				})
+			End If
+
+			Dim id As String = provinciaDict("ID")?.ToString()
+			Dim codigo As Integer = Convert.ToInt32(provinciaDict("Code"))
+			Dim codigoPais As String = provinciaDict("CodePais")?.ToString().Trim().ToUpper()
+			Dim descripcion As String = provinciaDict("Descripcion")?.ToString().Trim()
+
+			' Validaciones
+			If codigo <= 0 Or String.IsNullOrEmpty(codigoPais) Or String.IsNullOrEmpty(descripcion) Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Código, país y descripción son requeridos"
+				})
+			End If
+
+			' Verificar si el código ya existe para el mismo país (excluyendo el registro actual si es actualización)
+			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbProvincias WHERE Code = @Code AND CodePais = @CodePais AND snEliminado = 0"
+			If Not String.IsNullOrEmpty(id) Then
+				sSqlVerificar += " AND ID != @ID"
+			End If
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@Code", codigo)
+				.Add("@CodePais", codigoPais)
+				If Not String.IsNullOrEmpty(id) Then
+					.Add("@ID", Convert.ToInt32(id))
+				End If
+			End With
+
+			Dim count As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
+
+			If count > 0 Then
+				ModGlobal.EscribirLog("Código de provincia ya existe para este país")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "El código ingresado ya existe para este país. Por favor, ingrese un código diferente."
+				})
+			End If
+
+			' Insertar o actualizar
+			If String.IsNullOrEmpty(id) Then
+				' Insertar nuevo
+				Dim sSqlInsert As String = "INSERT INTO tbProvincias (Code, CodePais, Descripcion, snEliminado) VALUES (@Code, @CodePais, @Descripcion, 0)"
+				With objSql.Parametros
+					.Clear()
+					.Add("@Code", codigo)
+					.Add("@CodePais", codigoPais)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlInsert)
+				ModGlobal.EscribirLog("Provincia insertada exitosamente")
+			Else
+				' Actualizar existente
+				Dim sSqlUpdate As String = "UPDATE tbProvincias SET Code = @Code, CodePais = @CodePais, Descripcion = @Descripcion WHERE ID = @ID"
+				With objSql.Parametros
+					.Clear()
+					.Add("@ID", Convert.ToInt32(id))
+					.Add("@Code", codigo)
+					.Add("@CodePais", codigoPais)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlUpdate)
+				ModGlobal.EscribirLog("Provincia actualizada exitosamente")
+			End If
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al guardar provincia: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al guardar provincia: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Provincia guardada exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Provincia guardada exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GuardarProvincia: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al guardar provincia: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function EliminarProvincia(id As Integer) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("EliminarProvincia iniciado para ID: " & id)
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "UPDATE tbProvincias SET snEliminado = 1 WHERE ID = @ID"
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@ID", id)
+			End With
+
+			objSql.ExecuteNonQuerySql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al eliminar provincia: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al eliminar provincia: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Provincia eliminada exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Provincia eliminada exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en EliminarProvincia: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al eliminar provincia: " & ex.Message
+			})
+		End Try
+	End Function
+#End Region
+
+#Region "DISTRITOS"
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ListarDistritos(filtros As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ListarDistritos iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "SELECT d.ID, d.Code, d.CodePais, d.CodeProvincia, d.Descripcion, " &
+								"pa.Descripcion AS PaisDescripcion, pr.Descripcion AS ProvinciaDescripcion " &
+								"FROM tbDistritos d " &
+								"LEFT JOIN tbPaises pa ON d.CodePais = pa.Code " &
+								"LEFT JOIN tbProvincias pr ON d.CodeProvincia = pr.Code AND d.CodePais = pr.CodePais " &
+								"WHERE d.snEliminado = 0"
+
+			' Aplicar filtros si existen
+			If filtros IsNot Nothing Then
+				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
+				If filtrosDict IsNot Nothing Then
+					If Not String.IsNullOrEmpty(filtrosDict("Code")?.ToString()) Then
+						sSql += " AND d.Code = " & filtrosDict("Code").ToString()
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("CodePais")?.ToString()) Then
+						sSql += " AND d.CodePais = '" & filtrosDict("CodePais").ToString().Replace("'", "''") & "'"
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("CodeProvincia")?.ToString()) Then
+						sSql += " AND d.CodeProvincia = " & filtrosDict("CodeProvincia").ToString()
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+						sSql += " AND d.Descripcion LIKE '%" & filtrosDict("Descripcion").ToString().Replace("'", "''") & "%'"
+					End If
+				End If
+			End If
+
+			sSql += " ORDER BY d.CodePais, d.CodeProvincia, d.Code"
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener distritos: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			' Crear lista de objetos
+			Dim distritos As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim distrito As New With {
+					.ID = Convert.ToInt32(row("ID")),
+					.Code = Convert.ToInt32(row("Code")),
+					.CodePais = row("CodePais").ToString(),
+					.CodeProvincia = Convert.ToInt32(row("CodeProvincia")),
+					.Descripcion = row("Descripcion").ToString(),
+					.PaisDescripcion = If(row("PaisDescripcion") IsNot DBNull.Value, row("PaisDescripcion").ToString(), ""),
+					.ProvinciaDescripcion = If(row("ProvinciaDescripcion") IsNot DBNull.Value, row("ProvinciaDescripcion").ToString(), "")
+				}
+				distritos.Add(distrito)
+			Next
+
+			ModGlobal.EscribirLog($"Distritos obtenidos: {distritos.Count} registros")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Datos = serializer.Serialize(distritos),
+				.Mensaje = "Distritos obtenidos exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ListarDistritos: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener distritos: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GuardarDistrito(distritoData As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("GuardarDistrito iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim distritoDict As Dictionary(Of String, Object) = TryCast(distritoData, Dictionary(Of String, Object))
+
+			If distritoDict Is Nothing Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Datos de distrito inválidos"
+				})
+			End If
+
+			Dim id As String = distritoDict("ID")?.ToString()
+			Dim codigo As Integer? = Nothing
+			If distritoDict.ContainsKey("Code") AndAlso distritoDict("Code") IsNot Nothing Then
+				codigo = Convert.ToInt32(distritoDict("Code"))
+			End If
+			Dim codigoPais As String = distritoDict("CodePais")?.ToString().Trim().ToUpper()
+			Dim codigoProvincia As Integer = Convert.ToInt32(distritoDict("CodeProvincia"))
+			Dim descripcion As String = distritoDict("Descripcion")?.ToString().Trim()
+
+			' Validaciones
+			If String.IsNullOrEmpty(codigoPais) Or codigoProvincia <= 0 Or String.IsNullOrEmpty(descripcion) Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "País, provincia y descripción son requeridos"
+				})
+			End If
+
+			' Si es nuevo y no tiene código, obtener el siguiente código
+			If String.IsNullOrEmpty(id) AndAlso (Not codigo.HasValue OrElse codigo.Value <= 0) Then
+				Dim sSqlObtenerCodigo As String = "SELECT ISNULL(MAX(Code), 0) + 1 FROM tbDistritos WHERE snEliminado = 0"
+				objSql.Parametros.Clear()
+				codigo = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlObtenerCodigo))
+				ModGlobal.EscribirLog($"Código generado automáticamente: {codigo}")
+			End If
+
+			' Verificar si el código ya existe para la misma provincia (excluyendo el registro actual si es actualización)
+			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbDistritos WHERE Code = @Code AND CodeProvincia = @CodeProvincia AND CodePais = @CodePais AND snEliminado = 0"
+			If Not String.IsNullOrEmpty(id) Then
+				sSqlVerificar += " AND ID != @ID"
+			End If
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@Code", codigo.Value)
+				.Add("@CodeProvincia", codigoProvincia)
+				.Add("@CodePais", codigoPais)
+				If Not String.IsNullOrEmpty(id) Then
+					.Add("@ID", Convert.ToInt32(id))
+				End If
+			End With
+
+			Dim count As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
+
+			If count > 0 Then
+				ModGlobal.EscribirLog("Código de distrito ya existe para esta provincia")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "El código ingresado ya existe para esta provincia. Por favor, ingrese un código diferente."
+				})
+			End If
+
+			' Insertar o actualizar
+			If String.IsNullOrEmpty(id) Then
+				' Insertar nuevo
+				Dim sSqlInsert As String = "INSERT INTO tbDistritos (Code, CodePais, CodeProvincia, Descripcion, snEliminado) VALUES (@Code, @CodePais, @CodeProvincia, @Descripcion, 0)"
+				With objSql.Parametros
+					.Clear()
+					.Add("@Code", codigo.Value)
+					.Add("@CodePais", codigoPais)
+					.Add("@CodeProvincia", codigoProvincia)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlInsert)
+				ModGlobal.EscribirLog("Distrito insertado exitosamente")
+			Else
+				' Actualizar existente
+				Dim sSqlUpdate As String = "UPDATE tbDistritos SET Code = @Code, CodePais = @CodePais, CodeProvincia = @CodeProvincia, Descripcion = @Descripcion WHERE ID = @ID"
+				With objSql.Parametros
+					.Clear()
+					.Add("@ID", Convert.ToInt32(id))
+					.Add("@Code", codigo.Value)
+					.Add("@CodePais", codigoPais)
+					.Add("@CodeProvincia", codigoProvincia)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlUpdate)
+				ModGlobal.EscribirLog("Distrito actualizado exitosamente")
+			End If
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al guardar distrito: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al guardar distrito: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Distrito guardado exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Distrito guardado exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GuardarDistrito: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al guardar distrito: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function EliminarDistrito(id As Integer) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("EliminarDistrito iniciado para ID: " & id)
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "UPDATE tbDistritos SET snEliminado = 1 WHERE ID = @ID"
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@ID", id)
+			End With
+
+			objSql.ExecuteNonQuerySql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al eliminar distrito: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al eliminar distrito: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Distrito eliminado exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Distrito eliminado exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en EliminarDistrito: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al eliminar distrito: " & ex.Message
+			})
+		End Try
+	End Function
+#End Region
+
+#Region "CORREGIMIENTOS"
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ListarCorregimientos(filtros As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ListarCorregimientos iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "SELECT c.ID, c.Code, c.CodePais, c.CodeProvincia, c.CodeDistrito, c.Descripcion, " &
+								"pa.Descripcion AS PaisDescripcion, pr.Descripcion AS ProvinciaDescripcion, d.Descripcion AS DistritoDescripcion " &
+								"FROM tbCorregimientos c " &
+								"LEFT JOIN tbPaises pa ON c.CodePais = pa.Code " &
+								"LEFT JOIN tbProvincias pr ON c.CodeProvincia = pr.Code AND c.CodePais = pr.CodePais " &
+								"LEFT JOIN tbDistritos d ON c.CodeDistrito = d.Code AND c.CodeProvincia = d.CodeProvincia AND c.CodePais = d.CodePais " &
+								"WHERE c.snEliminado = 0"
+
+			' Aplicar filtros si existen
+			If filtros IsNot Nothing Then
+				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
+				If filtrosDict IsNot Nothing Then
+					If Not String.IsNullOrEmpty(filtrosDict("Code")?.ToString()) Then
+						sSql += " AND c.Code = " & filtrosDict("Code").ToString()
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("CodePais")?.ToString()) Then
+						sSql += " AND c.CodePais = '" & filtrosDict("CodePais").ToString().Replace("'", "''") & "'"
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("CodeProvincia")?.ToString()) Then
+						sSql += " AND c.CodeProvincia = " & filtrosDict("CodeProvincia").ToString()
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("CodeDistrito")?.ToString()) Then
+						sSql += " AND c.CodeDistrito = " & filtrosDict("CodeDistrito").ToString()
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+						sSql += " AND c.Descripcion LIKE '%" & filtrosDict("Descripcion").ToString().Replace("'", "''") & "%'"
+					End If
+				End If
+			End If
+
+			sSql += " ORDER BY c.CodePais, c.CodeProvincia, c.CodeDistrito, c.Code"
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener corregimientos: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+
+			' Crear lista de objetos
+			Dim corregimientos As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim corregimiento As New With {
+					.ID = Convert.ToInt32(row("ID")),
+					.Code = Convert.ToInt32(row("Code")),
+					.CodePais = row("CodePais").ToString(),
+					.CodeProvincia = Convert.ToInt32(row("CodeProvincia")),
+					.CodeDistrito = Convert.ToInt32(row("CodeDistrito")),
+					.Descripcion = row("Descripcion").ToString(),
+					.PaisDescripcion = If(row("PaisDescripcion") IsNot DBNull.Value, row("PaisDescripcion").ToString(), ""),
+					.ProvinciaDescripcion = If(row("ProvinciaDescripcion") IsNot DBNull.Value, row("ProvinciaDescripcion").ToString(), ""),
+					.DistritoDescripcion = If(row("DistritoDescripcion") IsNot DBNull.Value, row("DistritoDescripcion").ToString(), "")
+				}
+				corregimientos.Add(corregimiento)
+			Next
+
+			ModGlobal.EscribirLog($"Corregimientos obtenidos: {corregimientos.Count} registros")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Datos = serializer.Serialize(corregimientos),
+				.Mensaje = "Corregimientos obtenidos exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ListarCorregimientos: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener corregimientos: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GuardarCorregimiento(corregimientoData As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("GuardarCorregimiento iniciado")
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim corregimientoDict As Dictionary(Of String, Object) = TryCast(corregimientoData, Dictionary(Of String, Object))
+
+			If corregimientoDict Is Nothing Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Datos de corregimiento inválidos"
+				})
+			End If
+
+			Dim id As String = corregimientoDict("ID")?.ToString()
+			Dim codigo As Integer? = Nothing
+			If corregimientoDict.ContainsKey("Code") AndAlso corregimientoDict("Code") IsNot Nothing Then
+				codigo = Convert.ToInt32(corregimientoDict("Code"))
+			End If
+			Dim codigoPais As String = corregimientoDict("CodePais")?.ToString().Trim().ToUpper()
+			Dim codigoProvincia As Integer = Convert.ToInt32(corregimientoDict("CodeProvincia"))
+			Dim codigoDistrito As Integer = Convert.ToInt32(corregimientoDict("CodeDistrito"))
+			Dim descripcion As String = corregimientoDict("Descripcion")?.ToString().Trim()
+
+			' Validaciones
+			If String.IsNullOrEmpty(codigoPais) Or codigoProvincia <= 0 Or codigoDistrito <= 0 Or String.IsNullOrEmpty(descripcion) Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "País, provincia, distrito y descripción son requeridos"
+				})
+			End If
+
+			' Si es nuevo y no tiene código, obtener el siguiente código
+			If String.IsNullOrEmpty(id) AndAlso (Not codigo.HasValue OrElse codigo.Value <= 0) Then
+				Dim sSqlObtenerCodigo As String = "SELECT ISNULL(MAX(Code), 0) + 1 FROM tbCorregimientos WHERE snEliminado = 0"
+				objSql.Parametros.Clear()
+				codigo = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlObtenerCodigo))
+				ModGlobal.EscribirLog($"Código generado automáticamente: {codigo}")
+			End If
+
+			' Verificar si el código ya existe para el mismo distrito (excluyendo el registro actual si es actualización)
+			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbCorregimientos WHERE Code = @Code AND CodeDistrito = @CodeDistrito AND CodeProvincia = @CodeProvincia AND CodePais = @CodePais AND snEliminado = 0"
+			If Not String.IsNullOrEmpty(id) Then
+				sSqlVerificar += " AND ID != @ID"
+			End If
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@Code", codigo.Value)
+				.Add("@CodeDistrito", codigoDistrito)
+				.Add("@CodeProvincia", codigoProvincia)
+				.Add("@CodePais", codigoPais)
+				If Not String.IsNullOrEmpty(id) Then
+					.Add("@ID", Convert.ToInt32(id))
+				End If
+			End With
+
+			Dim count As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
+
+			If count > 0 Then
+				ModGlobal.EscribirLog("Código de corregimiento ya existe para este distrito")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "El código ingresado ya existe para este distrito. Por favor, ingrese un código diferente."
+				})
+			End If
+
+			' Insertar o actualizar
+			If String.IsNullOrEmpty(id) Then
+				' Insertar nuevo
+				Dim sSqlInsert As String = "INSERT INTO tbCorregimientos (Code, CodePais, CodeProvincia, CodeDistrito, Descripcion, snEliminado) VALUES (@Code, @CodePais, @CodeProvincia, @CodeDistrito, @Descripcion, 0)"
+				With objSql.Parametros
+					.Clear()
+					.Add("@Code", codigo.Value)
+					.Add("@CodePais", codigoPais)
+					.Add("@CodeProvincia", codigoProvincia)
+					.Add("@CodeDistrito", codigoDistrito)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlInsert)
+				ModGlobal.EscribirLog("Corregimiento insertado exitosamente")
+			Else
+				' Actualizar existente
+				Dim sSqlUpdate As String = "UPDATE tbCorregimientos SET Code = @Code, CodePais = @CodePais, CodeProvincia = @CodeProvincia, CodeDistrito = @CodeDistrito, Descripcion = @Descripcion WHERE ID = @ID"
+				With objSql.Parametros
+					.Clear()
+					.Add("@ID", Convert.ToInt32(id))
+					.Add("@Code", codigo.Value)
+					.Add("@CodePais", codigoPais)
+					.Add("@CodeProvincia", codigoProvincia)
+					.Add("@CodeDistrito", codigoDistrito)
+					.Add("@Descripcion", descripcion)
+				End With
+
+				objSql.ExecuteNonQuerySql(sSqlUpdate)
+				ModGlobal.EscribirLog("Corregimiento actualizado exitosamente")
+			End If
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al guardar corregimiento: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al guardar corregimiento: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Corregimiento guardado exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Corregimiento guardado exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GuardarCorregimiento: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al guardar corregimiento: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function EliminarCorregimiento(id As Integer) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("EliminarCorregimiento iniciado para ID: " & id)
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "UPDATE tbCorregimientos SET snEliminado = 1 WHERE ID = @ID"
+
+			With objSql.Parametros
+				.Clear()
+				.Add("@ID", id)
+			End With
+
+			objSql.ExecuteNonQuerySql(sSql)
+
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error al eliminar corregimiento: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error al eliminar corregimiento: " & objSql.MensajeError
+				})
+			End If
+
+			ModGlobal.EscribirLog("Corregimiento eliminado exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Mensaje = "Corregimiento eliminado exitosamente"
+			})
+
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en EliminarCorregimiento: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al eliminar corregimiento: " & ex.Message
+			})
+		End Try
+	End Function
+#End Region
+
+
+#Region "CUENTAS"
+	<WebMethod(EnableSession:=True)>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ObtenerGruposCuenta() As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO ObtenerGruposCuenta")
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "Exec spGrupoCuenta_ListarParaDropdown"
+			ModGlobal.EscribirLog($"Ejecutando SQL: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener grupos de cuenta: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+			ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
+			Dim grupos As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim grupo As New With {
+					.IDGrupo = row("IDGrupo").ToString(),
+					.Descripcion = row("GrupoCuenta").ToString()
+				}
+				grupos.Add(grupo)
+			Next
+			ModGlobal.EscribirLog("Metodo ObtenerGruposCuenta completado exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Datos = serializer.Serialize(grupos),
+				.Mensaje = ""
+			})
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ObtenerGruposCuenta: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener grupos de cuenta: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ListarCuentas(filtros As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO ListarCuentas")
+			ModGlobal.EscribirLog("Parametros recibidos: " & New JavaScriptSerializer().Serialize(filtros))
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "Exec spCuentas_Listar"
+			If filtros IsNot Nothing Then
+				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
+				If filtrosDict IsNot Nothing Then
+					If Not String.IsNullOrEmpty(filtrosDict("IDGrupo")?.ToString()) Then
+						objSql.Parametros.Add("@IDGrupo", Convert.ToInt32(filtrosDict("IDGrupo")))
+					End If
+					If Not String.IsNullOrEmpty(filtrosDict("Codigo")?.ToString()) Then
+						objSql.Parametros.Add("@Codigo", filtrosDict("Codigo").ToString())
+					End If
+				End If
+			End If
+			ModGlobal.EscribirLog($"Ejecutando SQL: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener cuentas: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+			ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
+			Dim cuentas As New List(Of Object)
+			For Each row As DataRow In dt.Rows
+				Dim cuenta As New With {
+					.ID = row("ID").ToString(),
+					.Codigo = row("Cuenta").ToString(),
+					.Nombre = If(row.Table.Columns.Contains("Nombre") AndAlso Not row.IsNull("Nombre"), row("Nombre").ToString(), ""),
+					.IDGrupo = row("IDGrupo").ToString(),
+					.GrupoDescripcion = If(row.Table.Columns.Contains("GrupoDescripcion") AndAlso Not row.IsNull("GrupoDescripcion"), row("GrupoDescripcion").ToString(), ""),
+					.Saldo = If(row.Table.Columns.Contains("Saldo") AndAlso Not row.IsNull("Saldo"), Convert.ToDecimal(row("Saldo")), 0)
+				}
+				cuentas.Add(cuenta)
+			Next
+			ModGlobal.EscribirLog("Metodo ListarCuentas completado exitosamente")
+			Return serializer.Serialize(New With {
+				.Resultado = "SUCCESS",
+				.Datos = serializer.Serialize(cuentas),
+				.Mensaje = "Cuentas obtenidas exitosamente"
+			})
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ListarCuentas: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener cuentas: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ObtenerCuenta(id As Integer) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO ObtenerCuenta")
+			ModGlobal.EscribirLog("Parametros recibidos: ID=" & id.ToString())
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "Exec spCuentas_Obtener"
+			objSql.Parametros.Add("@ID", id)
+			ModGlobal.EscribirLog($"Ejecutando SQL: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al obtener cuenta: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+			If dt.Rows.Count > 0 Then
+				Dim row As DataRow = dt.Rows(0)
+				Dim cuenta As New With {
+					.ID = row("ID").ToString(),
+					.Codigo = row("Cuenta").ToString(),
+					.Nombre = If(row.Table.Columns.Contains("Nombre") AndAlso Not row.IsNull("Nombre"), row("Nombre").ToString(), ""),
+					.IDGrupo = row("IDGrupo").ToString(),
+					.Saldo = If(row.Table.Columns.Contains("Saldo") AndAlso Not row.IsNull("Saldo"), Convert.ToDecimal(row("Saldo")), 0)
+				}
+				ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Cuenta obtenida exitosamente")
+				ModGlobal.EscribirLog("Metodo ObtenerCuenta completado exitosamente")
+				Return serializer.Serialize(New With {
+					.Resultado = "SUCCESS",
+					.Datos = serializer.Serialize(cuenta),
+					.Mensaje = ""
+				})
+			Else
+				ModGlobal.EscribirLog("Validacion: No se encontró la cuenta con ID=" & id.ToString())
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Datos = "",
+					.Mensaje = "No se encontró la cuenta"
+				})
+			End If
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ObtenerCuenta: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Datos = "",
+				.Mensaje = "Error al obtener cuenta: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GuardarCuenta(cuentaData As Object) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO GuardarCuenta")
+			ModGlobal.EscribirLog("Parametros recibidos: " & New JavaScriptSerializer().Serialize(cuentaData))
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "Exec spCuentas_Guardar"
+			Dim cuentaDict As Dictionary(Of String, Object) = TryCast(cuentaData, Dictionary(Of String, Object))
+			If cuentaDict Is Nothing Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Datos de cuenta inválidos"
+				})
+			End If
+			Dim id As Integer = If(cuentaDict.ContainsKey("ID") AndAlso cuentaDict("ID") IsNot Nothing, Convert.ToInt32(cuentaDict("ID")), 0)
+			Dim cuenta As String = cuentaDict("Codigo").ToString()
+			Dim nombre As String = cuentaDict("Nombre").ToString()
+			Dim idGrupo As Integer = Convert.ToInt32(cuentaDict("IDGrupo"))
+			Dim idSession As String = HttpContext.Current.Session(VariablesSesion.logID).ToString()
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, Cuenta: {cuenta}, Nombre: {nombre}, IDGrupo: {idGrupo}, IdSession: {idSession}")
+			With objSql.Parametros
+				If id > 0 Then
+					.Add("@ID", id)
+				End If
+				.Add("@Cuenta", cuenta)
+				.Add("@Nombre", nombre)
+				.Add("@IDGrupo", idGrupo)
+				.Add("@IdSession", idSession)
+			End With
+			ModGlobal.EscribirLog($"Ejecutando SQL: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al guardar cuenta: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Resultado: " & resultado)
+				ModGlobal.EscribirLog("Metodo GuardarCuenta completado exitosamente")
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				ModGlobal.EscribirLog("Validacion: No se recibió respuesta del servidor")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GuardarCuenta: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al guardar cuenta: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function EliminarCuenta(id As Integer) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO EliminarCuenta")
+			ModGlobal.EscribirLog("Parametros recibidos: ID=" & id.ToString())
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "Exec spCuentas_Eliminar"
+			Dim idSession As String = HttpContext.Current.Session(VariablesSesion.logID).ToString()
+			Dim usuarioId As Integer = If(HttpContext.Current.Session(VariablesSesion.UsuarioId) IsNot Nothing, Convert.ToInt32(HttpContext.Current.Session(VariablesSesion.UsuarioId)), 0)
+			ModGlobal.EscribirLog($"Usuario que elimina: {usuarioId}, SessionID: {idSession}")
+			With objSql.Parametros
+				.Add("@ID", id)
+				.Add("@IdSession", idSession)
+				.Add("@UsuarioElimina", usuarioId)
+			End With
+			ModGlobal.EscribirLog($"Ejecutando SQL: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al eliminar cuenta: " & objSql.MensajeError)
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Resultado: " & resultado)
+				ModGlobal.EscribirLog("Metodo EliminarCuenta completado exitosamente")
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				ModGlobal.EscribirLog("Validacion: No se recibió respuesta del servidor")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en EliminarCuenta: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al eliminar cuenta: " & ex.Message
+			})
+		End Try
+	End Function
+#End Region
 
 End Class

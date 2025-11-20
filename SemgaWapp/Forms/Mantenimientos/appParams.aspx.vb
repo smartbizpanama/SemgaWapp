@@ -87,7 +87,7 @@ Public Class appParams
             If String.IsNullOrEmpty(objSql.MensajeError) Then
                 Dim parametros As New List(Of Object)
 
-                ModGlobal.EscribirLog($"📊 Filas encontradas: {dt.Rows.Count}")
+                ModGlobal.EscribirLog($"Filas encontradas: {dt.Rows.Count}")
 
                 For Each row As DataRow In dt.Rows
                     Dim parametro As New With {
@@ -99,7 +99,7 @@ Public Class appParams
                     parametros.Add(parametro)
                 Next
 
-                ModGlobal.EscribirLog($"📊 Parámetros procesados: {parametros.Count}")
+                ModGlobal.EscribirLog($"Parámetros procesados: {parametros.Count}")
 
                 Dim json As New JavaScriptSerializer()
                 Return json.Serialize(New With {
@@ -108,7 +108,7 @@ Public Class appParams
                     .Datos = json.Serialize(parametros)
                 })
             Else
-                ModGlobal.EscribirLog($"❌ Error en BD: {objSql.MensajeError}")
+                ModGlobal.EscribirLog($"Error en BD: {objSql.MensajeError}")
                 Return New JavaScriptSerializer().Serialize(New With {
                     .Resultado = "ERROR",
                     .Mensaje = objSql.MensajeError

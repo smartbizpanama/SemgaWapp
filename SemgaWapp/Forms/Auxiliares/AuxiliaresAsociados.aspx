@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Gestión de Auxiliares Asociados - Cooperativa Segma</title>
+    <title>Gestión de Auxiliares Asociados - Cooperativa Coopsemga</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
@@ -98,6 +98,33 @@
             font-size: 12px;
             text-align: center;
         }
+        
+        /* Asegurar que el campo de fecha tenga el mismo tamaño que los demás */
+        .flatpickr-date {
+            width: 100% !important;
+            height: 38px !important;
+            font-size: 14px !important;
+            padding: 8px 12px !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 0.375rem !important;
+        }
+        
+        /* Asegurar que el input de fecha tenga el mismo estilo que otros form-control */
+        input.flatpickr-date.form-control {
+            display: block !important;
+            width: 100% !important;
+            padding: 8px 12px !important;
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            line-height: 1.5 !important;
+            color: #212529 !important;
+            background-color: #fff !important;
+            background-clip: padding-box !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 0.375rem !important;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+        }
+        
         
         .table tbody td:last-child {
             border-right: none;
@@ -244,6 +271,68 @@
             background: linear-gradient(135deg, #007bff, #0056b3);
             border-bottom: 2px solid #0056b3;
         }
+
+        /* Estilos para campos bloqueados */
+        .form-control[readonly] {
+            background-color: #f8f9fa !important;
+            border-color: #dee2e6 !important;
+            cursor: not-allowed !important;
+        }
+
+        .form-control[readonly]:focus {
+            box-shadow: none !important;
+            border-color: #dee2e6 !important;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+
+        /* Estilos para menú contextual */
+        .context-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 200px;
+            overflow: hidden;
+        }
+
+        .context-menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f3f4;
+            transition: background-color 0.2s;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .context-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .context-menu-item:hover {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .context-menu-item i {
+            width: 16px;
+            margin-right: 8px;
+        }
+        
+        /* Resaltado de fila seleccionada para menú contextual */
+        .fila-seleccionada-contextual {
+            background-color: #e3f2fd !important;
+            border-left: 3px solid #2196f3 !important;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .fila-seleccionada-contextual td {
+            background-color: #e3f2fd !important;
+        }
     </style>
 </head>
 <body>
@@ -312,6 +401,7 @@
                             <th class="text-center">Cuota</th>
                             <th class="text-center">Saldo</th>
                             <th class="text-center">Monto Original</th>
+                            <th class="text-center">Monto Pignorado</th>
                             <th class="text-center">Tasa Interés</th>
                             <th class="text-center">Pago Mensual</th>
                             <th class="text-center">Fecha Otorgado</th>
@@ -324,7 +414,7 @@
                     </thead>
                     <tbody id="tbodyAuxiliares">
                         <tr>
-                            <td colspan="17" class="text-center text-muted py-4">
+                            <td colspan="18" class="text-center text-muted py-4">
                                 <i class="fas fa-spinner fa-spin me-2"></i>Cargando auxiliares...
                             </td>
                         </tr>
@@ -432,15 +522,6 @@
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="mb-3">
-                                        <label for="txtTasaInteres" class="form-label fw-bold">Tasa de Interés (%)</label>
-                                        <div class="input-group">
-                                            <input type="number" id="txtTasaInteres" class="form-control" step="0.01" min="0" max="100"/>
-                                            <span class="input-group-text">%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-3">
                                         <label for="txtPagoMes" class="form-label fw-bold">Pago Mensual</label>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
@@ -454,12 +535,34 @@
                                         <input type="text" id="txtFechaOtorgado" class="form-control flatpickr-date" placeholder="dd/mm/yyyy"/>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Campos deshabilitados en la última fila -->
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="txtTasaInteres" class="form-label fw-bold">Tasa de Interés (%)</label>
+                                        <div class="input-group">
+                                            <input type="number" id="txtTasaInteres" class="form-control" step="0.01" min="0" max="100" readonly/>
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label for="txtSaldo" class="form-label fw-bold">Saldo Actual</label>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
-                                            <input type="number" id="txtSaldo" class="form-control" step="0.01" min="0"/>
+                                            <input type="number" id="txtSaldo" class="form-control" step="0.01" min="0" readonly/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="txtMontoPignorado" class="form-label fw-bold">Monto Pignorado</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" id="txtMontoPignorado" class="form-control" step="0.01" min="0" readonly/>
                                         </div>
                                     </div>
                                 </div>
@@ -539,6 +642,55 @@
     
     <!-- Contenedor para modales globales -->
     <div id="globalModalsContainer"></div>
+
+    <!-- Menú contextual para auxiliares -->
+    <div id="contextMenu" class="context-menu" style="display: none; position: absolute; background: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000; min-width: 200px;">
+        <div class="context-menu-item" id="modificarMontoPignorado" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;">
+            <i class="fas fa-edit me-2"></i>Modificar Monto Pignorado
+        </div>
+    </div>
+
+    <!-- Modal para modificar monto pignorado -->
+    <div class="modal fade" id="modalModificarMontoPignorado" tabindex="-1" aria-labelledby="modalModificarMontoPignoradoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalModificarMontoPignoradoLabel">
+                        <i class="fas fa-edit me-2"></i>Modificar Monto Pignorado
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formModificarMontoPignorado">
+                        <input type="hidden" id="hdnAuxiliarIDModificar" />
+                        <input type="hidden" id="hdnNumeroAsociadoModificar" />
+                        
+                        <div class="mb-3">
+                            <label for="txtMontoPignoradoModificar" class="form-label fw-bold">Nuevo Monto Pignorado</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="txtMontoPignoradoModificar" class="form-control" step="0.01" min="0" required/>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Información del Auxiliar:</strong>
+                            <div id="infoAuxiliarModificar"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" id="btnGuardarMontoPignorado" class="btn btn-success">
+                        <i class="fas fa-save me-1"></i>Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -624,9 +776,49 @@
                 guardarAuxiliar();
             });
 
+            // Event listeners para menú contextual
+            $('#modificarMontoPignorado').on('click', function() {
+                modificarMontoPignorado();
+            });
+
+            $('#btnGuardarMontoPignorado').on('click', function() {
+                guardarMontoPignorado();
+            });
+
+            // Ocultar menú contextual al hacer click fuera
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#contextMenu, .context-menu-trigger').length) {
+                    ocultarMenuContextual();
+                }
+            });
+
+            // Ocultar menú contextual al hacer scroll
+            $(window).on('scroll', function() {
+                ocultarMenuContextual();
+            });
+
             // Limpiar clases de Validación cuando se complete un campo
             $('#ddlRubroModal, #ddlTipoAuxiliarModal, #txtMontoOriginal, #txtCuota').on('change input', function() {
                 $(this).removeClass('is-invalid');
+            });
+
+            // Normalizar valores numéricos en tiempo real
+            $('.form-control[type="number"]').on('input blur', function() {
+                var valor = $(this).val();
+                if (valor && valor.includes(',')) {
+                    // Convertir coma a punto automáticamente
+                    var valorNormalizado = valor.replace(',', '.');
+                    $(this).val(valorNormalizado);
+                }
+            });
+
+            // Restringir Monto Pignorado a valores >= 0
+            $('#txtMontoPignorado').on('input blur', function() {
+                var valor = normalizarValorNumerico($(this).val());
+                if (valor < 0) {
+                    $(this).val(0);
+                    showToast('warning', 'Valor inválido', 'El Monto Pignorado no puede ser negativo');
+                }
             });
 
             // Limpiar modal al abrir solo si no está en modo edición
@@ -634,8 +826,10 @@
                 var modoEdicion = $('#hdnModoEdicion').val();
                 if (modoEdicion !== 'true') {
                     limpiarModal();
+                    // Asegurar que los campos estén bloqueados para nuevo auxiliar
+                    $('#txtSaldo').val('0').prop('readonly', true).addClass('bg-light');
+                    $('#txtMontoPignorado').val('0').prop('readonly', true).addClass('bg-light');
                 }
-                
             });
             
             // Limpiar modal al cerrar
@@ -647,6 +841,33 @@
             $('#ddlRubroModal').on('change', function() {
                 cargarTiposAuxiliaresModal();
             });
+
+            // Manejar cambio de tipo de auxiliar para cargar tasa automática
+            $('#ddlTipoAuxiliarModal').on('change', function() {
+                console.log('Cambio detectado en tipo de auxiliar');
+                cargarTasaAutomatica();
+            });
+
+            // También aplicar cuando se carga el modal
+            $('#modalAuxiliar').on('shown.bs.modal', function() {
+                console.log('Modal completamente abierto, aplicando configuración inicial');
+                console.log('Modal abierto - nivelAcceso:', nivelAcceso);
+                
+                // Asegurar que los campos estén bloqueados SIEMPRE
+                $('#txtSaldo').prop('readonly', true).addClass('bg-light');
+                $('#txtTasaInteres').prop('readonly', true).addClass('bg-light');
+                $('#txtPagoMes').prop('readonly', true).addClass('bg-light');
+                
+                // Monto Pignorado: solo habilitar si el usuario tiene permisos Y el rubro es "AH"
+                // Esta lógica se maneja en editarAuxiliar, aquí solo aplicamos bloqueo por defecto
+                $('#txtMontoPignorado').prop('readonly', true).addClass('bg-light');
+                console.log('🔒 Modal: Campo Monto Pignorado bloqueado por defecto (se habilitará solo para rubro AH)');
+                
+                // Aplicar tasa automática si hay un tipo seleccionado
+                setTimeout(function() {
+                    cargarTasaAutomatica();
+                }, 200);
+            });
         });
 
         // Variable global para almacenar todos los tipos de auxiliares
@@ -655,6 +876,113 @@
         
         // Variable global para almacenar todos los auxiliares
         var todosLosAuxiliares = [];
+        
+        // Variables para menú contextual
+        var nivelAcceso = <%= If(Session("NivelAcceso") IsNot Nothing, Session("NivelAcceso"), 999) %>;
+        var auxiliarSeleccionado = null;
+        
+        // Debug: Verificar nivel de acceso
+        console.log('Nivel de acceso cargado:', nivelAcceso);
+        console.log('Tipo de nivelAcceso:', typeof nivelAcceso);
+        
+        // Función para obtener información del equipo
+        function obtenerInformacionEquipo() {
+            var equipoInfo = {
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                screen: {
+                    width: screen.width,
+                    height: screen.height,
+                    colorDepth: screen.colorDepth,
+                    pixelDepth: screen.pixelDepth
+                },
+                window: {
+                    innerWidth: window.innerWidth,
+                    innerHeight: window.innerHeight,
+                    outerWidth: window.outerWidth,
+                    outerHeight: window.outerHeight
+                },
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                url: window.location.href,
+                referrer: document.referrer,
+                // Información adicional del sistema
+                hardwareConcurrency: navigator.hardwareConcurrency || 'N/A',
+                maxTouchPoints: navigator.maxTouchPoints || 0,
+                deviceMemory: navigator.deviceMemory || 'N/A',
+                connection: navigator.connection ? {
+                    effectiveType: navigator.connection.effectiveType,
+                    downlink: navigator.connection.downlink,
+                    rtt: navigator.connection.rtt
+                } : 'N/A',
+                // Información de geolocalización (si está disponible)
+                geolocation: 'N/A', // Se puede obtener con permiso del usuario
+                // Información del navegador
+                browser: {
+                    name: getBrowserName(),
+                    version: getBrowserVersion(),
+                    engine: getBrowserEngine()
+                },
+                // Información del sistema operativo
+                os: getOperatingSystem(),
+                // Información de red
+                network: {
+                    connection: navigator.connection ? navigator.connection.effectiveType : 'N/A',
+                    online: navigator.onLine
+                }
+            };
+            
+            return JSON.stringify(equipoInfo);
+        }
+        
+        // Función para obtener el nombre del navegador
+        function getBrowserName() {
+            var userAgent = navigator.userAgent;
+            if (userAgent.indexOf('Chrome') > -1) return 'Chrome';
+            if (userAgent.indexOf('Firefox') > -1) return 'Firefox';
+            if (userAgent.indexOf('Safari') > -1) return 'Safari';
+            if (userAgent.indexOf('Edge') > -1) return 'Edge';
+            if (userAgent.indexOf('Opera') > -1) return 'Opera';
+            return 'Unknown';
+        }
+        
+        // Función para obtener la versión del navegador
+        function getBrowserVersion() {
+            var userAgent = navigator.userAgent;
+            var match = userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera)\/(\d+\.\d+)/);
+            return match ? match[2] : 'Unknown';
+        }
+        
+        // Función para obtener el motor del navegador
+        function getBrowserEngine() {
+            var userAgent = navigator.userAgent;
+            if (userAgent.indexOf('WebKit') > -1) return 'WebKit';
+            if (userAgent.indexOf('Gecko') > -1) return 'Gecko';
+            if (userAgent.indexOf('Trident') > -1) return 'Trident';
+            return 'Unknown';
+        }
+        
+        // Función para obtener el sistema operativo
+        function getOperatingSystem() {
+            var userAgent = navigator.userAgent;
+            var platform = navigator.platform;
+            
+            if (userAgent.indexOf('Windows') > -1) {
+                if (userAgent.indexOf('Windows NT 10.0') > -1) return 'Windows 10';
+                if (userAgent.indexOf('Windows NT 6.3') > -1) return 'Windows 8.1';
+                if (userAgent.indexOf('Windows NT 6.2') > -1) return 'Windows 8';
+                if (userAgent.indexOf('Windows NT 6.1') > -1) return 'Windows 7';
+                return 'Windows';
+            }
+            if (userAgent.indexOf('Mac') > -1) return 'macOS';
+            if (userAgent.indexOf('Linux') > -1) return 'Linux';
+            if (userAgent.indexOf('Android') > -1) return 'Android';
+            if (userAgent.indexOf('iOS') > -1) return 'iOS';
+            return platform || 'Unknown';
+        }
         
         // Función para inicializar el componente global de búsqueda
         function inicializarBusquedaAsociadosGlobal() {
@@ -842,19 +1170,41 @@
                 });
                 
                 $.each(tiposFiltrados, function(index, item) {
-                    html += '<option value="' + item.TipoAuxiliar + '">' + item.Descripcion + '</option>';
+                    html += '<option value="' + item.IdTipoAuxiliar + '" data-tasa="' + (item.Tasa || 0) + '">' + item.Descripcion + '</option>';
                 });
                 
                 // Si solo hay un tipo, seleccionarlo automáticamente
                 if (tiposFiltrados.length === 1) {
-                    html = '<option value="' + tiposFiltrados[0].TipoAuxiliar + '">' + tiposFiltrados[0].Descripcion + '</option>';
+                    html = '<option value="' + tiposFiltrados[0].IdTipoAuxiliar + '" data-tasa="' + (tiposFiltrados[0].Tasa || 0) + '">' + tiposFiltrados[0].Descripcion + '</option>';
                     $('#ddlTipoAuxiliarModal').html(html);
-                    $('#ddlTipoAuxiliarModal').val(tiposFiltrados[0].TipoAuxiliar);
+                    $('#ddlTipoAuxiliarModal').val(tiposFiltrados[0].IdTipoAuxiliar);
+                    // Cargar tasa automática si hay un solo tipo
+                    cargarTasaAutomatica();
                 } else {
                     $('#ddlTipoAuxiliarModal').html(html);
                 }
             } else {
                 $('#ddlTipoAuxiliarModal').html(html);
+            }
+        }
+
+        function cargarTasaAutomatica() {
+            var tipoSeleccionado = $('#ddlTipoAuxiliarModal option:selected');
+            var tasa = parseFloat(tipoSeleccionado.data('tasa')) || 0;
+            
+            console.log('Tipo seleccionado:', tipoSeleccionado.val());
+            console.log('Tasa obtenida:', tasa);
+            
+            // Siempre mantener el campo bloqueado
+            $('#txtTasaInteres').prop('readonly', true);
+            $('#txtTasaInteres').addClass('bg-light');
+            
+            if (tasa > 0) {
+                $('#txtTasaInteres').val(tasa);
+                console.log('Tasa automática cargada:', tasa);
+            } else {
+                $('#txtTasaInteres').val('');
+                console.log('Tasa no definida, campo vacío pero bloqueado');
             }
         }
 
@@ -870,11 +1220,11 @@
                         todosLosAuxiliares = auxiliares; // Almacenar para búsqueda en cliente
                         mostrarAuxiliares(auxiliares);
                     } else {
-                        $('#tbodyAuxiliares').html('<tr><td colspan="17" class="text-center text-danger py-4">Error al cargar auxiliares</td></tr>');
+                        $('#tbodyAuxiliares').html('<tr><td colspan="18" class="text-center text-danger py-4">Error al cargar auxiliares</td></tr>');
                     }
                 },
                 error: function() {
-                    $('#tbodyAuxiliares').html('<tr><td colspan="17" class="text-center text-danger py-4">Error al cargar auxiliares</td></tr>');
+                    $('#tbodyAuxiliares').html('<tr><td colspan="18" class="text-center text-danger py-4">Error al cargar auxiliares</td></tr>');
                 }
             });
         }
@@ -899,22 +1249,23 @@
             
             if (auxiliares.length === 0) {
                 
-                $('#tbodyAuxiliares').html('<tr><td colspan="17" class="text-center text-muted py-4">No hay auxiliares registrados</td></tr>');
+                $('#tbodyAuxiliares').html('<tr><td colspan="18" class="text-center text-muted py-4">No hay auxiliares registrados</td></tr>');
                 return;
             }
 
             var html = '';
             $.each(auxiliares, function(index, item) {
-                html += '<tr>';
+                html += '<tr data-auxiliar=\'' + JSON.stringify(item).replace(/'/g, "&#39;") + '\'>';
                 html += '<td class="text-center">' + item.ID + '</td>';
                 html += '<td class="text-center">' + (item.Cuenta || '-') + '</td>';
-                html += '<td class="text-center">' + crearChipIdentificacion(item.CodTipoDoc, item.NumeroIdentificacion) + '</td>';
+                html += '<td class="text-start">' + crearChipIdentificacion(item.CodTipoDoc, item.NumeroIdentificacion) + '</td>';
                 html += '<td class="text-center">' + item.NombreAsociado + '</td>';
                 html += '<td class="text-center">' + crearChipRubroLocal(item.DescripcionRubro) + '</td>';
                 html += '<td class="text-center">' + item.DescripcionTipoAuxiliar + '</td>';
                 html += '<td class="text-center">$' + parseFloat(item.Cuota || 0).toFixed(2) + '</td>';
                 html += '<td class="text-center">$' + parseFloat(item.Saldo || 0).toFixed(2) + '</td>';
                 html += '<td class="text-center">$' + parseFloat(item.MontoOriginal || 0).toFixed(2) + '</td>';
+                html += '<td class="text-center">$' + parseFloat(item.MontoPignorado || 0).toFixed(2) + '</td>';
                 html += '<td class="text-center">' + parseFloat(item.TasaInteres || 0).toFixed(2) + '%</td>';
                 html += '<td class="text-center">$' + parseFloat(item.PagoMes || 0).toFixed(2) + '</td>';
                 html += '<td class="text-center">' + (item.FechaOtorgado || '-') + '</td>';
@@ -926,13 +1277,34 @@
                 html += '<button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editarAuxiliar(' + item.ID + ', ' + item.NumeroAsociado + ')">';
                 html += '<i class="fas fa-edit"></i>';
                 html += '</button>';
-                html += '<button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarAuxiliar(' + item.ID + ', ' + item.NumeroAsociado + ')">';
+                html += '<button type="button" class="btn btn-sm btn-outline-danger me-1" onclick="eliminarAuxiliar(' + item.ID + ', ' + item.NumeroAsociado + ')">';
                 html += '<i class="fas fa-trash"></i>';
                 html += '</button>';
+                
+                // No agregar botón de menú contextual - se maneja con clic derecho
                 html += '</td>';
                 html += '</tr>';
             });
             $('#tbodyAuxiliares').html(html);
+            
+            // Agregar evento de clic derecho a las filas para menú contextual
+            $('#tbodyAuxiliares tr').on('contextmenu', function(e) {
+                e.preventDefault();
+                var auxiliarDataStr = $(this).attr('data-auxiliar');
+                if (auxiliarDataStr && nivelAcceso <= 1) {
+                    try {
+                        var auxiliarData = JSON.parse(auxiliarDataStr.replace(/&#39;/g, "'"));
+                        // Solo mostrar menú contextual para auxiliares con rubro "AH"
+                        if (auxiliarData.CodigoRubro === 'AH') {
+                            mostrarMenuContextual(e, auxiliarData);
+                        } else {
+                            console.log('Menú contextual no disponible para rubro:', auxiliarData.CodigoRubro);
+                        }
+                    } catch (error) {
+                        console.error('Error al parsear datos del auxiliar:', error);
+                    }
+                }
+            });
         }
 
         function buscarAsociadosModal() {
@@ -1052,6 +1424,22 @@
             return valido;
         }
 
+        // Función para normalizar valores numéricos (convertir coma a punto)
+        function normalizarValorNumerico(valor) {
+            if (!valor || valor === '') return 0;
+            
+            // Convertir coma a punto para formato decimal
+            var valorNormalizado = valor.toString().replace(',', '.');
+            
+            // Parsear como float
+            var valorNumerico = parseFloat(valorNormalizado);
+            
+            // Si no es un número válido, retornar 0
+            if (isNaN(valorNumerico)) return 0;
+            
+            return valorNumerico;
+        }
+
         function guardarAuxiliar() {
             // Validaciones
             if (!$('#divAsociadoSeleccionado').is(':visible')) {
@@ -1064,18 +1452,33 @@
                 return;
             }
 
+            // Normalizar y validar Monto Pignorado (>= 0)
+            var montoPignoradoVal = normalizarValorNumerico($('#txtMontoPignorado').val());
+            if (montoPignoradoVal < 0) {
+                montoPignoradoVal = 0;
+                $('#txtMontoPignorado').val(0);
+                showToast('warning', 'Valor ajustado', 'El Monto Pignorado no puede ser negativo. Se ajustó a 0.');
+            }
+
+            // Obtener el IdTipoAuxiliar del dropdown seleccionado
+            var tipoAuxiliarSeleccionado = $('#ddlTipoAuxiliarModal option:selected');
+            var idTipoAuxiliar = tipoAuxiliarSeleccionado.val();
+            var descripcionTipoAuxiliar = tipoAuxiliarSeleccionado.text();
+
             var auxiliar = {
                 ID: $('#hdnAuxiliarID').val() || 0,
                 NumeroAsociado: $('#hdnNumeroAsociado').val(),
                 CodigoRubro: $('#ddlRubroModal').val(),
-                TipoAuxiliar: $('#ddlTipoAuxiliarModal').val(),
-                Cuota: parseFloat($('#txtCuota').val()) || 0,
-                Saldo: parseFloat($('#txtSaldo').val()) || 0,
-                MontoOriginal: parseFloat($('#txtMontoOriginal').val()) || 0,
+                TipoAuxiliar: idTipoAuxiliar, // Enviar el ID en lugar de la descripción
+                DescripcionTipoAuxiliar: descripcionTipoAuxiliar, // Para referencia
+                Cuota: normalizarValorNumerico($('#txtCuota').val()),
+                Saldo: normalizarValorNumerico($('#txtSaldo').val()),
+                MontoOriginal: normalizarValorNumerico($('#txtMontoOriginal').val()),
+                MontoPignorado: montoPignoradoVal,
                 FechaOtorgado: convertirFechaParaBD($('#txtFechaOtorgado').val()),
-                // Campos opcionales - guardar en cero si están vacíos
-                TasaInteres: $('#txtTasaInteres').val() ? parseFloat($('#txtTasaInteres').val()) : 0,
-                PagoMes: $('#txtPagoMes').val() ? parseFloat($('#txtPagoMes').val()) : 0
+                // Campos opcionales - normalizar valores numéricos
+                TasaInteres: normalizarValorNumerico($('#txtTasaInteres').val()),
+                PagoMes: normalizarValorNumerico($('#txtPagoMes').val())
             };
 
             $.ajax({
@@ -1130,18 +1533,38 @@
             cargarTiposAuxiliaresModal();
             
             setTimeout(function() {
-                $('#ddlTipoAuxiliarModal').val(auxiliar.TipoAuxiliar);
+                $('#ddlTipoAuxiliarModal').val(auxiliar.IdTipoAuxiliar);
             }, 500);
             
             $('#txtMontoOriginal').val(auxiliar.MontoOriginal);
+            
+            // Habilitar Monto Pignorado solo para usuarios con nivel 0 o 1 Y rubro "AH"
+            console.log('DEBUG editarAuxiliar - nivelAcceso:', nivelAcceso, 'tipo:', typeof nivelAcceso);
+            console.log('DEBUG editarAuxiliar - CodigoRubro:', auxiliar.CodigoRubro);
+            console.log('DEBUG editarAuxiliar - comparación nivelAcceso <= 1:', nivelAcceso <= 1);
+            console.log('DEBUG editarAuxiliar - parseInt(nivelAcceso) <= 1:', parseInt(nivelAcceso) <= 1);
+            
+            if (parseInt(nivelAcceso) <= 1 && auxiliar.CodigoRubro === 'AH') {
+                $('#txtMontoPignorado').val(auxiliar.MontoPignorado).prop('readonly', false).removeClass('bg-light');
+                console.log('Campo Monto Pignorado habilitado para edición (nivel:', nivelAcceso, ', rubro: AH)');
+            } else {
+                $('#txtMontoPignorado').val(auxiliar.MontoPignorado).prop('readonly', true).addClass('bg-light');
+                console.log('Campo Monto Pignorado bloqueado (nivel:', nivelAcceso, ', rubro:', auxiliar.CodigoRubro, ')');
+            }
+            
             $('#txtCuota').val(auxiliar.Cuota);
-            $('#txtSaldo').val(auxiliar.Saldo);
-            $('#txtTasaInteres').val(auxiliar.TasaInteres);
-            $('#txtPagoMes').val(auxiliar.PagoMes);
+            $('#txtSaldo').val(auxiliar.Saldo).prop('readonly', true).addClass('bg-light');
+            $('#txtTasaInteres').val(auxiliar.TasaInteres).prop('readonly', true).addClass('bg-light');
+            $('#txtPagoMes').val(auxiliar.PagoMes).prop('readonly', true).addClass('bg-light');
             $('#txtFechaOtorgado').val(formatearFecha(auxiliar.FechaOtorgado));
             
-            // Cambiar título del modal
-            $('#modalAuxiliarLabel').html('<i class="fas fa-edit me-2"></i>Editar Auxiliar');
+            // Aplicar tasa automática si corresponde
+            setTimeout(function() {
+                cargarTasaAutomatica();
+            }, 100);
+            
+            // Cambiar título del modal con cuenta del auxiliar
+            $('#modalAuxiliarLabel').html('<i class="fas fa-edit me-2"></i>Editar Auxiliar - Cuenta: ' + (auxiliar.Cuenta || 'Sin cuenta'));
             
             // Abrir modal
             $('#modalAuxiliar').modal('show');
@@ -1155,12 +1578,19 @@
                 '¿Está seguro de que desea eliminar este auxiliar? Esta acción no se puede deshacer.',
                 function() {
                     // Función de confirmación - ejecutar eliminación
+                    var equipoInfo = obtenerInformacionEquipo();
+                    console.log('Información del equipo para eliminación:', equipoInfo);
+                    
                     $.ajax({
                         type: "POST",
-                        url: "AuxiliaresAsociados.aspx/EliminarAuxiliar",
+						url: "AuxiliaresAsociados.aspx/EliminarAuxiliar",
                         contentType: "application/json; charset=utf-8",
                         dataType: "json",
-                        data: JSON.stringify({ id: id, numeroAsociado: numeroAsociado }),
+                        data: JSON.stringify({ 
+                            id: id, 
+                            numeroAsociado: numeroAsociado,
+                            equipoElimina: equipoInfo
+                        }),
                         success: function(response) {
                             if (response.d && response.d.Resultado === 'SUCCESS') {
                                 showToast('success', 'Éxito', 'Auxiliar eliminado correctamente');
@@ -1267,11 +1697,11 @@
                         todosLosAuxiliares = auxiliares; // Actualizar datos globales
                         mostrarAuxiliares(auxiliares);
                     } else {
-                        $('#tbodyAuxiliares').html('<tr><td colspan="17" class="text-center text-danger py-4">Error al filtrar auxiliares</td></tr>');
+                        $('#tbodyAuxiliares').html('<tr><td colspan="18" class="text-center text-danger py-4">Error al filtrar auxiliares</td></tr>');
                     }
                 },
                 error: function() {
-                    $('#tbodyAuxiliares').html('<tr><td colspan="17" class="text-center text-danger py-4">Error al filtrar auxiliares</td></tr>');
+                    $('#tbodyAuxiliares').html('<tr><td colspan="18" class="text-center text-danger py-4">Error al filtrar auxiliares</td></tr>');
                 }
             });
         }
@@ -1299,11 +1729,12 @@
             $('#ddlRubroModal').val('').trigger('change');
             $('#ddlTipoAuxiliarModal').val('').trigger('change');
             $('#txtMontoOriginal').val('');
+            $('#txtMontoPignorado').val('0').prop('readonly', true).addClass('bg-light');
             $('#txtCuota').val('');
-            $('#txtTasaInteres').val('');
-            $('#txtPagoMes').val('');
+            $('#txtTasaInteres').val('').prop('readonly', true).addClass('bg-light');
+            $('#txtPagoMes').val('').prop('readonly', true).addClass('bg-light');
             $('#txtFechaOtorgado').val('');
-            $('#txtSaldo').val('');
+            $('#txtSaldo').val('0').prop('readonly', true).addClass('bg-light');
             
             // Limpiar clases de Validación
             $('.form-control, .form-select').removeClass('is-invalid');
@@ -1395,6 +1826,119 @@
 
         function volverDashboard() {
             window.location.href = '../../Dashboard.aspx';
+        }
+
+        // Funciones para menú contextual
+        function mostrarMenuContextual(event, auxiliar) {
+            console.log('mostrarMenuContextual llamado');
+            console.log('nivelAcceso:', nivelAcceso);
+            console.log('auxiliar:', auxiliar);
+            
+            // Verificar nivel de acceso
+            if (nivelAcceso > 1) {
+                console.log('Usuario sin permisos para menú contextual. Nivel:', nivelAcceso);
+                return;
+            }
+
+            console.log('Usuario autorizado, mostrando menú contextual');
+            event.preventDefault();
+            event.stopPropagation();
+            
+            auxiliarSeleccionado = auxiliar;
+            
+            // Resaltar la fila seleccionada
+            $('.fila-seleccionada-contextual').removeClass('fila-seleccionada-contextual');
+            $(event.currentTarget).addClass('fila-seleccionada-contextual');
+            
+            // Posicionar menú contextual
+            var contextMenu = $('#contextMenu');
+            console.log('Elemento contextMenu encontrado:', contextMenu.length);
+            contextMenu.css({
+                'left': event.pageX + 'px',
+                'top': event.pageY + 'px',
+                'display': 'block'
+            });
+            console.log('Menú contextual posicionado');
+        }
+
+        function ocultarMenuContextual() {
+            $('#contextMenu').hide();
+            // Quitar resaltado de la fila
+            $('.fila-seleccionada-contextual').removeClass('fila-seleccionada-contextual');
+        }
+
+        function modificarMontoPignorado() {
+            if (!auxiliarSeleccionado) return;
+            
+            // Llenar información del auxiliar
+            $('#hdnAuxiliarIDModificar').val(auxiliarSeleccionado.ID);
+            $('#hdnNumeroAsociadoModificar').val(auxiliarSeleccionado.NumeroAsociado);
+            $('#txtMontoPignoradoModificar').val(auxiliarSeleccionado.MontoPignorado);
+            
+            // Mostrar información del auxiliar
+            var infoHtml = `
+                <strong>Asociado:</strong> ${auxiliarSeleccionado.NombreAsociado}<br>
+                <strong>Tipo:</strong> ${auxiliarSeleccionado.DescripcionTipoAuxiliar}<br>
+                <strong>Monto Original:</strong> $${parseFloat(auxiliarSeleccionado.MontoOriginal || 0).toFixed(2)}<br>
+                <strong>Monto Pignorado Actual:</strong> $${parseFloat(auxiliarSeleccionado.MontoPignorado || 0).toFixed(2)}
+            `;
+            $('#infoAuxiliarModificar').html(infoHtml);
+            
+            // Ocultar menú contextual y mostrar modal
+            ocultarMenuContextual();
+            $('#modalModificarMontoPignorado').modal('show');
+            
+            // Autofocus en el campo de monto cuando se abre el modal
+            $('#modalModificarMontoPignorado').on('shown.bs.modal', function() {
+                $('#txtMontoPignoradoModificar').focus();
+            });
+            
+            // Guardar al presionar Enter en el campo de monto
+            $('#txtMontoPignoradoModificar').on('keypress', function(e) {
+                if (e.which === 13) { // Tecla Enter
+                    e.preventDefault();
+                    guardarMontoPignorado();
+                }
+            });
+        }
+
+        function guardarMontoPignorado() {
+            var nuevoMonto = parseFloat($('#txtMontoPignoradoModificar').val()) || 0;
+            var auxiliarID = $('#hdnAuxiliarIDModificar').val();
+            var numeroAsociado = $('#hdnNumeroAsociadoModificar').val();
+            
+            if (nuevoMonto < 0) {
+                showToast('error', 'Error', 'El monto pignorado no puede ser negativo');
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "AuxiliaresAsociados.aspx/ModificarMontoPignorado",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify({ 
+                    auxiliarID: auxiliarID, 
+                    numeroAsociado: numeroAsociado, 
+                    nuevoMonto: nuevoMonto 
+                }),
+                success: function(response) {
+                    console.log('Respuesta del servidor para modificar monto pignorado:', response);
+                    var result = response.d;
+                    console.log('Resultado:', result.Resultado, 'Mensaje:', result.Mensaje);
+                    
+                    if (result && result.Resultado === 'OK') {
+                        showToast('success', 'Éxito', result.Mensaje || 'Monto pignorado actualizado correctamente');
+                        $('#modalModificarMontoPignorado').modal('hide');
+                        cargarAuxiliares(); // Recargar la tabla
+                    } else {
+                        showToast('error', 'Error', result.Mensaje || 'Error al actualizar monto pignorado');
+                    }
+                },
+                error: function() {
+                    showToast('error', 'Error', 'Error al actualizar monto pignorado');
+                }
+            });
         }
     </script>
 </body>

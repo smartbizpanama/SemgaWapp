@@ -29,6 +29,9 @@ Public Class Login
             ' Desencriptar cadena de conexión
             Dim connectionString As String = GetDecryptedConnectionString()
             Dim clientIP As String = GetClientIPAddress()
+            Dim sbEncr As New SBEncryption
+
+            password = sbEncr.Encrypt(password)
 
             ' Llamar al stored procedure
             Using conn As New SqlConnection(connectionString)
@@ -141,6 +144,7 @@ Public Class Login
             context.Session("NivelAcceso") = reader("NivelAcceso")
             context.Session("RolNombre") = reader("RolNombre")
             context.Session("DepartamentoNombre") = reader("DepartamentoNombre")
+            context.Session("IDSesion") = ModGlobal.logID
 
             ' Almacenar datos de la aplicación
             context.Session("IsAuthenticated") = True

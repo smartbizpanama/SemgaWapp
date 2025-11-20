@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
-    <title>Cooperativa Segma - Panel de Control</title>
+    <title>Cooperativa Coopsemga - Panel de Control</title>
     <meta charset="utf-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -64,6 +64,123 @@
         .welcome-text {
             color: #666;
             font-size: 14px;
+        }
+
+        /* Estilos para el tooltip de ID de sesión */
+        .user-name-tooltip {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .user-name-tooltip:hover {
+            color: #007bff;
+            text-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+
+        .session-tooltip {
+            position: absolute;
+            top: -10px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            min-width: 280px;
+            max-width: 350px;
+        }
+
+        .session-tooltip.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .tooltip-content {
+            padding: 0;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .tooltip-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .tooltip-header i {
+            font-size: 16px;
+        }
+
+        .tooltip-body {
+            padding: 16px;
+            background: white;
+        }
+
+        .session-id-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .session-id-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #495057;
+            padding: 4px 8px;
+            outline: none;
+            cursor: text;
+        }
+
+        .copy-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .copy-btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn.copied {
+            background: #28a745;
+        }
+
+        .copy-btn.copied i::before {
+            content: "\f00c";
         }
 
         .logout-btn {
@@ -157,6 +274,10 @@
 
         .reports-card .card-icon {
             background: linear-gradient(135deg, #6c757d, #545b62);
+        }
+
+        .finanzas-card .card-icon {
+            background: linear-gradient(135deg, #ffd700, #ffa500);
         }
 
         .logs-card .card-icon {
@@ -255,14 +376,30 @@
                 <div class="logo-icon">
                     <i class="fa-solid fa-vault"></i>
                 </div>
-                <div class="logo-text">Cooperativa Segma</div>
+                <div class="logo-text">Cooperativa Coopsemga</div>
             </div>
             
             <div class="user-info">
                 <div class="welcome-text">
-                    Bienvenido, <strong><%= Session("Nombre") & " " & Session("Apellido") %></strong>
+                    Bienvenido, <strong id="userName" class="user-name-tooltip" data-session-id="<%= Session("LogID") %>"><%= Session("Nombre") & " " & Session("Apellido") %></strong>
                 </div>
-                                 <asp:Button ID="btnLogout" runat="server" Text="Cerrar Sesi&#243;n" 
+                <div id="sessionTooltip" class="session-tooltip">
+                    <div class="tooltip-content">
+                        <div class="tooltip-header">
+                            <i class="fas fa-id-card"></i>
+                            <span>ID de Sesión</span>
+                        </div>
+                        <div class="tooltip-body">
+                            <div class="session-id-container">
+                                <input type="text" id="sessionIdInput" readonly class="session-id-input" />
+                                <button type="button" class="copy-btn" onclick="copySessionId()" title="Copiar ID">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <asp:Button ID="btnLogout" runat="server" Text="Cerrar Sesi&#243;n" 
                            CssClass="logout-btn" OnClick="btnLogout_Click" />
             </div>
         </div>
@@ -336,7 +473,7 @@
                 </div>
 
                                 <!-- Reports Card -->
-                <div class="card reports-card" onclick="window.location.href='Reportes.aspx'">
+                <div class="card reports-card" onclick="window.location.href='Forms/Reportes/Reportes.aspx'">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-chart-bar"></i>
@@ -371,8 +508,26 @@
                     </div>
                 </div>
 
+                <!-- Finanzas Card (solo para Gerentes y Administradores) -->
+                <div class="card finanzas-card" id="finanzasCard" onclick="window.location.href='Forms/Finanzas/Finanzas.aspx'" style="display: none;">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="card-title">Finanzas</div>
+                    </div>
+                    <div class="card-content">
+                        <div>
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0;">
+                                <i class="fas fa-money-bill-wave" style="margin-right: 5px;"></i>
+                                Transacciones
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Logs and Audit Card -->
-                <div class="card logs-card" onclick="window.location.href='LogsAuditoria.aspx'">
+                <div class="card logs-card" id="logsCard" onclick="accederLogs()" style="display: none;">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-clipboard-list"></i>
@@ -888,6 +1043,174 @@
             
             graficoBarras.after(etiquetasContainer);
             
+        }
+
+        // Función para verificar acceso a logs
+        function verificarAccesoLogs() {
+            // Obtener el nivel de acceso desde la sesión del servidor
+            const nivelAcceso = <%= If(Session("NivelAcceso") IsNot Nothing, Session("NivelAcceso"), 999) %>;
+            
+            if (nivelAcceso <= 1) {
+                // Usuario autorizado - mostrar mosaico de logs
+                $('#logsCard').show();
+            } else {
+                // Usuario no autorizado - mantener mosaico oculto
+                $('#logsCard').hide();
+            }
+        }
+
+        // Función para verificar acceso a finanzas (Gerentes y Administradores)
+        function verificarAccesoFinanzas() {
+            // Obtener el nivel de acceso desde la sesión del servidor
+            const nivelAcceso = <%= If(Session("NivelAcceso") IsNot Nothing, Session("NivelAcceso"), 999) %>;
+            
+            if (nivelAcceso <= 1) {
+                // Usuario autorizado (Gerente nivel 1 o Administrador nivel 0) - mostrar mosaico de finanzas
+                $('#finanzasCard').show();
+            } else {
+                // Usuario no autorizado - mantener mosaico oculto
+                $('#finanzasCard').hide();
+            }
+        }
+
+        // Función para acceder a logs (solo se muestra si tiene permisos)
+        function accederLogs() {
+            window.location.href = 'Forms/Logs/DetalleLogs.aspx';
+        }
+
+        // Funcionalidad del tooltip de ID de sesión
+        $(document).ready(function() {
+            // Verificar nivel de acceso para mostrar/ocultar mosaico de logs
+            verificarAccesoLogs();
+            // Verificar nivel de acceso para mostrar/ocultar mosaico de finanzas
+            verificarAccesoFinanzas();
+            
+            const userName = $('#userName');
+            const sessionTooltip = $('#sessionTooltip');
+            const sessionIdInput = $('#sessionIdInput');
+            
+            // Obtener el ID de sesión del atributo data
+            const sessionId = userName.data('session-id');
+            sessionIdInput.val(sessionId);
+            
+            // Mostrar tooltip al hacer clic en el nombre del usuario
+            userName.on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                sessionTooltip.addClass('show');
+            });
+            
+            // Ocultar tooltip al hacer clic fuera de él
+            $(document).on('click', function(e) {
+                if (!userName.is(e.target) && !sessionTooltip.is(e.target) && sessionTooltip.has(e.target).length === 0) {
+                    sessionTooltip.removeClass('show');
+                }
+            });
+            
+            // Mantener tooltip visible si está sobre él
+            sessionTooltip.on('mouseenter', function() {
+                sessionTooltip.addClass('show');
+            });
+            
+            sessionTooltip.on('mouseleave', function() {
+                sessionTooltip.removeClass('show');
+            });
+            
+            // Seleccionar todo el texto al hacer clic en el input
+            sessionIdInput.on('click', function() {
+                this.select();
+            });
+        });
+        
+        // Función para copiar el ID de sesión
+        function copySessionId() {
+            const sessionIdInput = document.getElementById('sessionIdInput');
+            const copyBtn = document.querySelector('.copy-btn');
+            const copyIcon = copyBtn.querySelector('i');
+            
+            // Seleccionar y copiar el texto
+            sessionIdInput.select();
+            sessionIdInput.setSelectionRange(0, 99999); // Para dispositivos móviles
+            
+            try {
+                document.execCommand('copy');
+                
+                // Cambiar el botón temporalmente
+                copyBtn.classList.add('copied');
+                copyIcon.className = 'fas fa-check';
+                
+                // Restaurar después de 2 segundos
+                setTimeout(function() {
+                    copyBtn.classList.remove('copied');
+                    copyIcon.className = 'fas fa-copy';
+                }, 2000);
+                
+                // Mostrar notificación
+                showNotification('ID de sesión copiado al portapapeles', 'success');
+                
+            } catch (err) {
+                // Fallback para navegadores modernos
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(sessionIdInput.value).then(function() {
+                        copyBtn.classList.add('copied');
+                        copyIcon.className = 'fas fa-check';
+                        
+                        setTimeout(function() {
+                            copyBtn.classList.remove('copied');
+                            copyIcon.className = 'fas fa-copy';
+                        }, 2000);
+                        
+                        showNotification('ID de sesión copiado al portapapeles', 'success');
+                    });
+                } else {
+                    showNotification('No se pudo copiar el ID de sesión', 'error');
+                }
+            }
+        }
+        
+        // Función para mostrar notificaciones
+        function showNotification(message, type) {
+            // Crear elemento de notificación
+            const notification = $('<div>').addClass('notification').addClass(type).text(message);
+            
+            // Estilos para la notificación
+            notification.css({
+                'position': 'fixed',
+                'top': '20px',
+                'right': '20px',
+                'background': type === 'success' ? '#28a745' : '#dc3545',
+                'color': 'white',
+                'padding': '12px 20px',
+                'border-radius': '8px',
+                'box-shadow': '0 4px 12px rgba(0,0,0,0.15)',
+                'z-index': '10000',
+                'font-size': '14px',
+                'font-weight': '500',
+                'opacity': '0',
+                'transform': 'translateX(100%)',
+                'transition': 'all 0.3s ease'
+            });
+            
+            $('body').append(notification);
+            
+            // Animar entrada
+            setTimeout(function() {
+                notification.css({
+                    'opacity': '1',
+                    'transform': 'translateX(0)'
+                });
+            }, 100);
+            
+            // Remover después de 3 segundos
+            setTimeout(function() {
+                notification.css({
+                    'opacity': '0',
+                    'transform': 'translateX(100%)'
+                });
+                setTimeout(function() {
+                    notification.remove();
+                }, 300);
+            }, 3000);
         }
     </script>
 </body>

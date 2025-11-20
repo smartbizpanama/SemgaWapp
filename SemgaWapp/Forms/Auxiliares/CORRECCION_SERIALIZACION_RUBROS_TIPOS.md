@@ -264,3 +264,18 @@ Tiempo: ~1-5ms por cambio
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
