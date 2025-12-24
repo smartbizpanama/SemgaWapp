@@ -195,15 +195,43 @@ function buscarAsociadosGlobal(config) {
     `);
 
     // Determinar la ruta del WebMethod
+    const pathname = window.location.pathname.toLowerCase();
+    const href = window.location.href.toLowerCase();
+    
+    console.log('🔍 [global-associate-search.js] Pathname:', pathname);
+    console.log('🔍 [global-associate-search.js] Href:', href);
+    
     let webMethodUrl = 'AuxiliaresAsociados.aspx/BuscarAsociados';
-    if (window.location.pathname.includes('/Forms/Socios/')) {
+    
+    // Verificar si estamos en Movimientos.aspx específicamente
+    if (pathname.includes('movimientos.aspx') || href.includes('movimientos.aspx')) {
+        webMethodUrl = 'Movimientos.aspx/BuscarAsociados';
+        console.log('🔍 [global-associate-search.js] Detectado: Movimientos.aspx directamente');
+    } else if (pathname.includes('/forms/socios/')) {
         webMethodUrl = '../Auxiliares/AuxiliaresAsociados.aspx/BuscarAsociados';
-    } else if (window.location.pathname.includes('/Forms/Auxiliares/')) {
+        console.log('🔍 [global-associate-search.js] Detectado: Socios');
+    } else if (pathname.includes('/forms/auxiliares/')) {
         webMethodUrl = 'AuxiliaresAsociados.aspx/BuscarAsociados';
-    } else if (window.location.pathname.includes('/Forms/Transacciones/')) {
+        console.log('🔍 [global-associate-search.js] Detectado: Auxiliares');
+    } else if (pathname.includes('/forms/transacciones/')) {
         webMethodUrl = 'Transacciones.aspx/BuscarAsociados';
+        console.log('🔍 [global-associate-search.js] Detectado: Transacciones');
+    } else if (pathname.includes('/forms/reportes/')) {
+        webMethodUrl = 'Movimientos.aspx/BuscarAsociados';
+        console.log('🔍 [global-associate-search.js] Detectado: Reportes -> Movimientos.aspx');
+    } else {
+        console.log('🔍 [global-associate-search.js] No se detectó ruta específica, usando default:', webMethodUrl);
     }
+    
+    console.log('🔍 [global-associate-search.js] URL final del WebMethod:', webMethodUrl);
 
+    console.log('🔍 [global-associate-search.js] Buscando asociados');
+    console.log('🔍 [global-associate-search.js] Búsqueda:', busqueda);
+    console.log('🔍 [global-associate-search.js] URL del WebMethod:', webMethodUrl);
+    console.log('🔍 [global-associate-search.js] Pathname actual:', window.location.pathname);
+    console.log('🔍 [global-associate-search.js] URL completa:', window.location.href);
+    console.log('🔍 [global-associate-search.js] jQuery disponible:', typeof $ !== 'undefined');
+    console.log('🔍 [global-associate-search.js] Configuración:', cfg);
 
     $.ajax({
         type: "POST",
@@ -211,16 +239,49 @@ function buscarAsociadosGlobal(config) {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         data: JSON.stringify({ busqueda: busqueda }),
+        beforeSend: function(xhr) {
+            console.log('[global-associate-search.js] Enviando petición AJAX a:', webMethodUrl);
+            console.log('[global-associate-search.js] Datos enviados:', { busqueda: busqueda });
+        },
         success: function (response) {
+            console.log('[global-associate-search.js] Respuesta recibida:', response);
+            console.log('[global-associate-search.js] response.d:', response.d);
+            console.log('[global-associate-search.js] Tipo de response.d:', typeof response.d);
+            
             if (response.d && response.d.Resultado === 'SUCCESS') {
+                console.log('[global-associate-search.js] Resultado: SUCCESS');
+                console.log('[global-associate-search.js] Data:', response.d.Data);
                 const asociados = JSON.parse(response.d.Data);
+                console.log('[global-associate-search.js] Asociados parseados:', asociados.length);
                 mostrarAsociadosGlobal(asociados, cfg);
             } else {
+                console.log('[global-associate-search.js] Resultado no es SUCCESS:', response.d);
                 mostrarErrorBusqueda(cfg, response.d?.Mensaje || 'Error al buscar asociados');
             }
         },
         error: function (xhr, status, error) {
-            mostrarErrorBusqueda(cfg, 'Error de conexión al buscar asociados');
+            console.error('[global-associate-search.js] Error en AJAX:');
+            console.error('Status:', xhr.status);
+            console.error('StatusText:', xhr.statusText);
+            console.error('ResponseText:', xhr.responseText);
+            console.error('URL intentada:', webMethodUrl);
+            console.error('Error:', error);
+            console.error('ReadyState:', xhr.readyState);
+            console.error('Headers:', xhr.getAllResponseHeaders());
+            
+            let mensajeError = 'Error de conexión al buscar asociados';
+            if (xhr.status === 404) {
+                mensajeError = 'No se encontró el servicio (404). Verifique la ruta: ' + webMethodUrl;
+                console.error('[global-associate-search.js] ERROR 404 - El WebMethod no se encontró');
+                console.error('[global-associate-search.js] Verifique que el método BuscarAsociados esté correctamente definido en Movimientos.aspx.vb');
+            } else if (xhr.status === 500) {
+                mensajeError = 'Error en el servidor (500): ' + (xhr.responseText || error);
+                console.error('[global-associate-search.js] ERROR 500 - Error en el servidor');
+            } else if (xhr.status === 0) {
+                mensajeError = 'No se pudo conectar al servidor. Verifique la conexión.';
+                console.error('[global-associate-search.js] ERROR 0 - No se pudo conectar');
+            }
+            mostrarErrorBusqueda(cfg, mensajeError);
         }
     });
 }
@@ -248,7 +309,9 @@ function mostrarAsociadosGlobal(asociados, config) {
 
         let html = '';
         $.each(asociados, function (index, item) {
-            const cantAuxiliares = parseInt(item.CantAuxiliares) || 0;
+            // El campo viene como "CantidadAuxiliares" desde el servidor
+            const cantAuxiliares = parseInt(item.CantidadAuxiliares || item.CantAuxiliares) || 0;
+            console.log('🔍 [mostrarAsociadosGlobal] Asociado:', item.NombreCompleto, 'CantidadAuxiliares:', item.CantidadAuxiliares, 'CantAuxiliares:', item.CantAuxiliares, 'cantAuxiliares final:', cantAuxiliares);
             const tieneAuxiliares = cantAuxiliares > 0;
 
             // Log para verificar si JsonAuxiliares está disponible
@@ -306,7 +369,8 @@ function mostrarAsociadosGlobal(asociados, config) {
                 const nombre = item.NombreCompleto;
                 const numeroIdentificacion = item.NumeroIdentificacion;
                 const codTipoDoc = item.CodTipoDoc;
-                const cantAuxiliares = item.CantAuxiliares;
+                // El campo viene como "CantidadAuxiliares" desde el servidor
+                const cantAuxiliares = item.CantidadAuxiliares || item.CantAuxiliares || 0;
                 const rubros = item.Rubros;
                 const auxiliaresPorRubro = item.AuxiliaresPorRubro;
                 const transaccionesPorRubro = item.TransaccionesPorRubro;

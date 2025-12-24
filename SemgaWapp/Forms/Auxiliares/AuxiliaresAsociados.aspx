@@ -288,6 +288,23 @@
             background-color: #f8f9fa !important;
         }
 
+        /* Estilos para switch más grande */
+        .form-check.form-switch {
+            font-size: 14px;
+        }
+
+        .form-check.form-switch .form-check-input {
+            width: 2.5em !important;
+            height: 1.5em !important;
+            cursor: pointer;
+        }
+
+        .form-check.form-switch .form-check-label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 6px;
+        }
+
         /* Estilos para menú contextual */
         .context-menu {
             position: absolute;
@@ -409,12 +426,13 @@
                             <th class="text-center">Fecha Creación</th>
                             <th class="text-center">Usuario Crea</th>
                             <th class="text-center">Usuario Modifica</th>
+                            <th class="text-center">Activo</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyAuxiliares">
                         <tr>
-                            <td colspan="18" class="text-center text-muted py-4">
+                            <td colspan="19" class="text-center text-muted py-4">
                                 <i class="fas fa-spinner fa-spin me-2"></i>Cargando auxiliares...
                             </td>
                         </tr>
@@ -482,87 +500,89 @@
                             </div>
 
                             <!-- Datos del Auxiliar -->
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="ddlRubroModal" class="form-label fw-bold">Rubro <span class="text-danger">*</span></label>
-                                        <select id="ddlRubroModal" class="form-select" required>
-                                            <option value="">Seleccionar rubro...</option>
-                                        </select>
+                            <div id="divDatosAuxiliar" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="ddlRubroModal" class="form-label fw-bold">Rubro <span class="text-danger">*</span></label>
+                                            <select id="ddlRubroModal" class="form-select" required>
+                                                <option value="">Seleccionar rubro...</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="ddlTipoAuxiliarModal" class="form-label fw-bold">Tipo de Auxiliar <span class="text-danger">*</span></label>
-                                        <select id="ddlTipoAuxiliarModal" class="form-select" required>
-                                            <option value="">Seleccionar tipo...</option>
-                                        </select>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="ddlTipoAuxiliarModal" class="form-label fw-bold">Tipo de Auxiliar <span class="text-danger">*</span></label>
+                                            <select id="ddlTipoAuxiliarModal" class="form-select" required>
+                                                <option value="">Seleccionar tipo...</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="txtMontoOriginal" class="form-label fw-bold">Monto Original <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" id="txtMontoOriginal" class="form-control" step="0.01" min="0" required/>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="txtMontoOriginal" class="form-label fw-bold">Monto Original <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" id="txtMontoOriginal" class="form-control" step="0.01" min="0" required/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="txtCuota" class="form-label fw-bold">Cuota <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" id="txtCuota" class="form-control" step="0.01" min="0" required/>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="txtCuota" class="form-label fw-bold">Cuota <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" id="txtCuota" class="form-control" step="0.01" min="0" required/>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="txtPagoMes" class="form-label fw-bold">Pago Mensual</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" id="txtPagoMes" class="form-control" step="0.01" min="0"/>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="txtPagoMes" class="form-label fw-bold">Pago Mensual</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" id="txtPagoMes" class="form-control" step="0.01" min="0"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="txtFechaOtorgado" class="form-label fw-bold">Fecha Otorgado</label>
+                                            <input type="text" id="txtFechaOtorgado" class="form-control flatpickr-date" placeholder="dd/mm/yyyy"/>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="txtFechaOtorgado" class="form-label fw-bold">Fecha Otorgado</label>
-                                        <input type="text" id="txtFechaOtorgado" class="form-control flatpickr-date" placeholder="dd/mm/yyyy"/>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Campos deshabilitados en la última fila -->
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="txtTasaInteres" class="form-label fw-bold">Tasa de Interés (%)</label>
-                                        <div class="input-group">
-                                            <input type="number" id="txtTasaInteres" class="form-control" step="0.01" min="0" max="100" readonly/>
-                                            <span class="input-group-text">%</span>
+                                <!-- Campos deshabilitados en la última fila -->
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="txtTasaInteres" class="form-label fw-bold">Tasa de Interés (%)</label>
+                                            <div class="input-group">
+                                                <input type="number" id="txtTasaInteres" class="form-control" step="0.01" min="0" max="100" readonly/>
+                                                <span class="input-group-text">%</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="txtSaldo" class="form-label fw-bold">Saldo Actual</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" id="txtSaldo" class="form-control" step="0.01" min="0" readonly/>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="txtSaldo" class="form-label fw-bold">Saldo Actual</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" id="txtSaldo" class="form-control" step="0.01" min="0" readonly/>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="txtMontoPignorado" class="form-label fw-bold">Monto Pignorado</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" id="txtMontoPignorado" class="form-control" step="0.01" min="0" readonly/>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="txtMontoPignorado" class="form-label fw-bold">Monto Pignorado</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" id="txtMontoPignorado" class="form-control" step="0.01" min="0" readonly/>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -614,12 +634,13 @@
                                         <th>Nombre Completo</th>
                                         <th>identificación</th>
                                         <th>Tipo</th>
+                                        <th class="text-center">Auxiliares</th>
                                         <th class="text-center">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyAsociadosModal">
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
+                                        <td colspan="6" class="text-center text-muted py-4">
                                             <i class="fas fa-search me-2"></i>Ingrese un término de búsqueda para comenzar
                                         </td>
                                     </tr>
@@ -844,15 +865,11 @@
 
             // Manejar cambio de tipo de auxiliar para cargar tasa automática
             $('#ddlTipoAuxiliarModal').on('change', function() {
-                console.log('Cambio detectado en tipo de auxiliar');
                 cargarTasaAutomatica();
             });
 
             // También aplicar cuando se carga el modal
             $('#modalAuxiliar').on('shown.bs.modal', function() {
-                console.log('Modal completamente abierto, aplicando configuración inicial');
-                console.log('Modal abierto - nivelAcceso:', nivelAcceso);
-                
                 // Asegurar que los campos estén bloqueados SIEMPRE
                 $('#txtSaldo').prop('readonly', true).addClass('bg-light');
                 $('#txtTasaInteres').prop('readonly', true).addClass('bg-light');
@@ -861,7 +878,6 @@
                 // Monto Pignorado: solo habilitar si el usuario tiene permisos Y el rubro es "AH"
                 // Esta lógica se maneja en editarAuxiliar, aquí solo aplicamos bloqueo por defecto
                 $('#txtMontoPignorado').prop('readonly', true).addClass('bg-light');
-                console.log('🔒 Modal: Campo Monto Pignorado bloqueado por defecto (se habilitará solo para rubro AH)');
                 
                 // Aplicar tasa automática si hay un tipo seleccionado
                 setTimeout(function() {
@@ -878,12 +894,14 @@
         var todosLosAuxiliares = [];
         
         // Variables para menú contextual
-        var nivelAcceso = <%= If(Session("NivelAcceso") IsNot Nothing, Session("NivelAcceso"), 999) %>;
+        var nivelAcceso = <%= If(Session("NivelAcceso") IsNot Nothing, CInt(Session("NivelAcceso")), 999) %>;
         var auxiliarSeleccionado = null;
         
-        // Debug: Verificar nivel de acceso
-        console.log('Nivel de acceso cargado:', nivelAcceso);
-        console.log('Tipo de nivelAcceso:', typeof nivelAcceso);
+        // El valor ya viene como número desde el servidor, no necesitamos conversión
+        // Solo validar que sea un número válido
+        if (typeof nivelAcceso !== 'number' || isNaN(nivelAcceso)) {
+            nivelAcceso = 999;
+        }
         
         // Función para obtener información del equipo
         function obtenerInformacionEquipo() {
@@ -1192,19 +1210,14 @@
             var tipoSeleccionado = $('#ddlTipoAuxiliarModal option:selected');
             var tasa = parseFloat(tipoSeleccionado.data('tasa')) || 0;
             
-            console.log('Tipo seleccionado:', tipoSeleccionado.val());
-            console.log('Tasa obtenida:', tasa);
-            
             // Siempre mantener el campo bloqueado
             $('#txtTasaInteres').prop('readonly', true);
             $('#txtTasaInteres').addClass('bg-light');
             
             if (tasa > 0) {
                 $('#txtTasaInteres').val(tasa);
-                console.log('Tasa automática cargada:', tasa);
             } else {
                 $('#txtTasaInteres').val('');
-                console.log('Tasa no definida, campo vacío pero bloqueado');
             }
         }
 
@@ -1220,11 +1233,11 @@
                         todosLosAuxiliares = auxiliares; // Almacenar para búsqueda en cliente
                         mostrarAuxiliares(auxiliares);
                     } else {
-                        $('#tbodyAuxiliares').html('<tr><td colspan="18" class="text-center text-danger py-4">Error al cargar auxiliares</td></tr>');
+                        $('#tbodyAuxiliares').html('<tr><td colspan="19" class="text-center text-danger py-4">Error al cargar auxiliares</td></tr>');
                     }
                 },
                 error: function() {
-                    $('#tbodyAuxiliares').html('<tr><td colspan="18" class="text-center text-danger py-4">Error al cargar auxiliares</td></tr>');
+                    $('#tbodyAuxiliares').html('<tr><td colspan="19" class="text-center text-danger py-4">Error al cargar auxiliares</td></tr>');
                 }
             });
         }
@@ -1249,9 +1262,17 @@
             
             if (auxiliares.length === 0) {
                 
-                $('#tbodyAuxiliares').html('<tr><td colspan="18" class="text-center text-muted py-4">No hay auxiliares registrados</td></tr>');
+                $('#tbodyAuxiliares').html('<tr><td colspan="19" class="text-center text-muted py-4">No hay auxiliares registrados</td></tr>');
                 return;
             }
+
+            // Verificar nivel de acceso antes de construir la tabla
+            // No usar || porque 0 es falsy, usar validación explícita
+            var nivelAccesoActual = nivelAcceso;
+            if (typeof nivelAccesoActual !== 'number' || isNaN(nivelAccesoActual)) {
+                nivelAccesoActual = 999;
+            }
+            var puedeEliminar = (nivelAccesoActual == 0 || nivelAccesoActual == 1);
 
             var html = '';
             $.each(auxiliares, function(index, item) {
@@ -1274,12 +1295,29 @@
                 html += '<td class="text-center">' + (item.UsuarioCrea || '-') + '</td>';
                 html += '<td class="text-center">' + (item.UsuarioModifica || '-') + '</td>';
                 html += '<td class="text-center">';
+                // Mostrar switch solo si tiene permisos, sino solo texto
+                var snActivo = item.snActivo === true || item.snActivo === 1 || item.snActivo === '1' || item.snActivo === 'true';
+                if (puedeEliminar) {
+                    var checkedAttr = snActivo ? 'checked' : '';
+                    html += '<div class="form-check form-switch d-inline-block">';
+                    html += '<input class="form-check-input" type="checkbox" role="switch" id="switchActivo_' + item.ID + '_' + item.NumeroAsociado + '" ' + checkedAttr + ' onchange="cambiarEstadoActivo(' + item.ID + ', ' + item.NumeroAsociado + ', this.checked)">';
+                    html += '<label class="form-check-label ms-1" for="switchActivo_' + item.ID + '_' + item.NumeroAsociado + '">' + (snActivo ? 'Sí' : 'No') + '</label>';
+                    html += '</div>';
+                } else {
+                    // Solo mostrar texto sin switch ni badge
+                    html += (snActivo ? 'Sí' : 'No');
+                }
+                html += '</td>';
+                html += '<td class="text-center">';
                 html += '<button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editarAuxiliar(' + item.ID + ', ' + item.NumeroAsociado + ')">';
                 html += '<i class="fas fa-edit"></i>';
                 html += '</button>';
-                html += '<button type="button" class="btn btn-sm btn-outline-danger me-1" onclick="eliminarAuxiliar(' + item.ID + ', ' + item.NumeroAsociado + ')">';
-                html += '<i class="fas fa-trash"></i>';
-                html += '</button>';
+                // Solo mostrar botón de eliminar si tiene permisos
+                if (puedeEliminar) {
+                    html += '<button type="button" class="btn btn-sm btn-outline-danger me-1" onclick="eliminarAuxiliar(' + item.ID + ', ' + item.NumeroAsociado + ')">';
+                    html += '<i class="fas fa-trash"></i>';
+                    html += '</button>';
+                }
                 
                 // No agregar botón de menú contextual - se maneja con clic derecho
                 html += '</td>';
@@ -1297,11 +1335,9 @@
                         // Solo mostrar menú contextual para auxiliares con rubro "AH"
                         if (auxiliarData.CodigoRubro === 'AH') {
                             mostrarMenuContextual(e, auxiliarData);
-                        } else {
-                            console.log('Menú contextual no disponible para rubro:', auxiliarData.CodigoRubro);
                         }
                     } catch (error) {
-                        console.error('Error al parsear datos del auxiliar:', error);
+                        // Error al parsear datos del auxiliar
                     }
                 }
             });
@@ -1332,28 +1368,31 @@
                         var asociados = JSON.parse(response.d.Data);
                         mostrarAsociadosModal(asociados);
                     } else {
-                        $('#tbodyAsociadosModal').html('<tr><td colspan="5" class="text-center text-muted">No se encontraron asociados</td></tr>');
+                        $('#tbodyAsociadosModal').html('<tr><td colspan="6" class="text-center text-muted">No se encontraron asociados</td></tr>');
                     }
                 },
                 error: function(xhr, status, error) {
                     
-                    $('#tbodyAsociadosModal').html('<tr><td colspan="5" class="text-center text-danger">Error al buscar asociados</td></tr>');
+                    $('#tbodyAsociadosModal').html('<tr><td colspan="6" class="text-center text-danger">Error al buscar asociados</td></tr>');
                 }
             });
         }
 
         function mostrarAsociadosModal(asociados) {
-            
             if (asociados.length === 0) {
-                $('#tbodyAsociadosModal').html('<tr><td colspan="5" class="text-center text-muted">No se encontraron asociados</td></tr>');
+                $('#tbodyAsociadosModal').html('<tr><td colspan="6" class="text-center text-muted">No se encontraron asociados</td></tr>');
             } else {
                 var html = '';
                 $.each(asociados, function(index, item) {
+                    var cantidadAuxiliares = item.CantidadAuxiliares || 0;
                     html += '<tr>';
-                html += '<td>' + item.NumeroAsociado + '</td>';
-                html += '<td>' + item.NombreCompleto + '</td>';
-                html += '<td>' + crearChipTipoDocumento(item.CodTipoDoc, item.NumeroIdentificacion) + '</td>';
-                html += '<td>' + item.TipoAsociado + '</td>';
+                    html += '<td>' + item.NumeroAsociado + '</td>';
+                    html += '<td>' + item.NombreCompleto + '</td>';
+                    html += '<td>' + crearChipTipoDocumento(item.CodTipoDoc, item.NumeroIdentificacion) + '</td>';
+                    html += '<td>' + item.TipoAsociado + '</td>';
+                    html += '<td class="text-center">';
+                    html += '<span class="badge bg-secondary">' + cantidadAuxiliares + '</span>';
+                    html += '</td>';
                     html += '<td class="text-center">';
                     html += '<button type="button" class="btn btn-sm btn-primary" onclick="seleccionarAsociado(' + item.NumeroAsociado + ', \'' + item.NombreCompleto + '\', \'' + item.NumeroIdentificacion + '\', \'' + (item.CodTipoDoc || '') + '\')">';
                     html += '<i class="fas fa-check me-1"></i>Seleccionar';
@@ -1376,6 +1415,9 @@
             $('#divSinAsociado').addClass('d-none');
             $('#divAsociadoSeleccionado').removeClass('d-none');
             
+            // Mostrar los campos del auxiliar cuando se selecciona un asociado
+            $('#divDatosAuxiliar').show();
+            
             // Asegurar que el botón está habilitado (modo crear nuevo)
             $('#btnEliminarAsociado').prop('disabled', false);
             
@@ -1392,6 +1434,9 @@
             // Cambiar visibilidad
             $('#divAsociadoSeleccionado').addClass('d-none');
             $('#divSinAsociado').removeClass('d-none');
+            
+            // Ocultar los campos del auxiliar cuando se elimina el asociado
+            $('#divDatosAuxiliar').hide();
             
         }
 
@@ -1525,6 +1570,9 @@
             $('#divAsociadoSeleccionado').removeClass('d-none');
             $('#divSinAsociado').addClass('d-none');
             
+            // Mostrar los campos del auxiliar en modo edición (ya tiene asociado)
+            $('#divDatosAuxiliar').show();
+            
             // Mantener botón habilitado para mostrar toast en modo edición
             $('#btnEliminarAsociado').prop('disabled', false);
             
@@ -1539,17 +1587,10 @@
             $('#txtMontoOriginal').val(auxiliar.MontoOriginal);
             
             // Habilitar Monto Pignorado solo para usuarios con nivel 0 o 1 Y rubro "AH"
-            console.log('DEBUG editarAuxiliar - nivelAcceso:', nivelAcceso, 'tipo:', typeof nivelAcceso);
-            console.log('DEBUG editarAuxiliar - CodigoRubro:', auxiliar.CodigoRubro);
-            console.log('DEBUG editarAuxiliar - comparación nivelAcceso <= 1:', nivelAcceso <= 1);
-            console.log('DEBUG editarAuxiliar - parseInt(nivelAcceso) <= 1:', parseInt(nivelAcceso) <= 1);
-            
             if (parseInt(nivelAcceso) <= 1 && auxiliar.CodigoRubro === 'AH') {
                 $('#txtMontoPignorado').val(auxiliar.MontoPignorado).prop('readonly', false).removeClass('bg-light');
-                console.log('Campo Monto Pignorado habilitado para edición (nivel:', nivelAcceso, ', rubro: AH)');
             } else {
                 $('#txtMontoPignorado').val(auxiliar.MontoPignorado).prop('readonly', true).addClass('bg-light');
-                console.log('Campo Monto Pignorado bloqueado (nivel:', nivelAcceso, ', rubro:', auxiliar.CodigoRubro, ')');
             }
             
             $('#txtCuota').val(auxiliar.Cuota);
@@ -1571,6 +1612,16 @@
         }
 
         function eliminarAuxiliar(id, numeroAsociado) {
+            // Validar que el usuario tenga permisos (rol 0 o 1)
+            var nivelAccesoActual = nivelAcceso;
+            if (typeof nivelAccesoActual !== 'number' || isNaN(nivelAccesoActual)) {
+                nivelAccesoActual = 999;
+            }
+            if (nivelAccesoActual !== 0 && nivelAccesoActual !== 1) {
+                showToast('error', 'Sin Permisos', 'No tiene permisos para eliminar auxiliares. Solo usuarios con nivel de acceso 0 o 1 pueden realizar esta acción.');
+                return;
+            }
+
             // Mostrar toast de confirmación elegante
             showConfirmToast(
                 'warning',
@@ -1579,7 +1630,6 @@
                 function() {
                     // Función de confirmación - ejecutar eliminación
                     var equipoInfo = obtenerInformacionEquipo();
-                    console.log('Información del equipo para eliminación:', equipoInfo);
                     
                     $.ajax({
                         type: "POST",
@@ -1607,6 +1657,75 @@
                 function() {
                     // Función de cancelación - no hacer nada
                     showToast('info', 'Cancelado', 'Eliminación cancelada');
+                }
+            );
+        }
+
+        function cambiarEstadoActivo(id, numeroAsociado, nuevoEstado) {
+            // Validar que el usuario tenga permisos (rol 0 o 1)
+            var nivelAccesoActual = nivelAcceso;
+            if (typeof nivelAccesoActual !== 'number' || isNaN(nivelAccesoActual)) {
+                nivelAccesoActual = 999;
+            }
+            if (nivelAccesoActual !== 0 && nivelAccesoActual !== 1) {
+                // Revertir el switch si no tiene permisos
+                var switchElement = $('#switchActivo_' + id + '_' + numeroAsociado);
+                switchElement.prop('checked', !nuevoEstado);
+                showToast('error', 'Sin Permisos', 'No tiene permisos para activar/desactivar auxiliares. Solo usuarios con nivel de acceso 0 o 1 pueden realizar esta acción.');
+                return;
+            }
+
+            // Determinar el mensaje de confirmación según el nuevo estado
+            var accion = nuevoEstado ? 'activar' : 'desactivar';
+            var mensajeConfirmacion = '¿Está seguro que desea ' + accion + ' este auxiliar?';
+
+            // Mostrar toast de confirmación elegante
+            showConfirmToast(
+                'warning',
+                'Confirmar Cambio de Estado',
+                mensajeConfirmacion,
+                function() {
+                    // Función de confirmación - ejecutar cambio de estado
+                    $.ajax({
+                        type: "POST",
+                        url: "AuxiliaresAsociados.aspx/ActivarDesactivarAuxiliar",
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        data: JSON.stringify({ 
+                            id: id, 
+                            numeroAsociado: numeroAsociado,
+                            snActivo: nuevoEstado
+                        }),
+                        success: function(response) {
+                            if (response.d && response.d.Resultado === 'SUCCESS') {
+                                var mensaje = nuevoEstado ? 'Auxiliar activado correctamente' : 'Auxiliar desactivado correctamente';
+                                showToast('success', 'Éxito', mensaje);
+                                // Actualizar el label del switch
+                                var labelElement = $('label[for="switchActivo_' + id + '_' + numeroAsociado + '"]');
+                                labelElement.text(nuevoEstado ? 'Sí' : 'No');
+                                cargarAuxiliares();
+                            } else {
+                                // Revertir el switch si hay error
+                                var switchElement = $('#switchActivo_' + id + '_' + numeroAsociado);
+                                switchElement.prop('checked', !nuevoEstado);
+                                showToast('error', 'Error', response.d.Mensaje || 'Error al cambiar el estado del auxiliar');
+                            }
+                        },
+                        error: function() {
+                            // Revertir el switch si hay error
+                            var switchElement = $('#switchActivo_' + id + '_' + numeroAsociado);
+                            switchElement.prop('checked', !nuevoEstado);
+                            showToast('error', 'Error', 'Error al cambiar el estado del auxiliar');
+                        }
+                    });
+                },
+                function() {
+                    // Función de cancelación - revertir el switch
+                    var switchElement = $('#switchActivo_' + id + '_' + numeroAsociado);
+                    switchElement.prop('checked', !nuevoEstado);
+                    var labelElement = $('label[for="switchActivo_' + id + '_' + numeroAsociado + '"]');
+                    labelElement.text(!nuevoEstado ? 'Sí' : 'No');
+                    showToast('info', 'Cancelado', 'Cambio de estado cancelado');
                 }
             );
         }
@@ -1697,11 +1816,11 @@
                         todosLosAuxiliares = auxiliares; // Actualizar datos globales
                         mostrarAuxiliares(auxiliares);
                     } else {
-                        $('#tbodyAuxiliares').html('<tr><td colspan="18" class="text-center text-danger py-4">Error al filtrar auxiliares</td></tr>');
+                        $('#tbodyAuxiliares').html('<tr><td colspan="19" class="text-center text-danger py-4">Error al filtrar auxiliares</td></tr>');
                     }
                 },
                 error: function() {
-                    $('#tbodyAuxiliares').html('<tr><td colspan="18" class="text-center text-danger py-4">Error al filtrar auxiliares</td></tr>');
+                    $('#tbodyAuxiliares').html('<tr><td colspan="19" class="text-center text-danger py-4">Error al filtrar auxiliares</td></tr>');
                 }
             });
         }
@@ -1745,9 +1864,12 @@
             $('#lblAsociadoInfo').text('');
             $('#lblAsociadoDetalle').text('');
             
+            // Ocultar los campos del auxiliar
+            $('#divDatosAuxiliar').hide();
+            
             // Limpiar modal de búsqueda
             $('#txtBuscarAsociadoModal').val('');
-            $('#tbodyAsociadosModal').html('<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-search me-2"></i>Ingrese un término de búsqueda para comenzar</td></tr>');
+            $('#tbodyAsociadosModal').html('<tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-search me-2"></i>Ingrese un término de búsqueda para comenzar</td></tr>');
             
             // Limpiar validaciones
             $('.form-control').removeClass('is-invalid');
@@ -1768,7 +1890,7 @@
             // Limpiar tabla de resultados
             $('#tbodyAsociadosModal').html(`
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                         <i class="fas fa-search me-2"></i>Ingrese un término de búsqueda para comenzar
                     </td>
                 </tr>
@@ -1830,17 +1952,11 @@
 
         // Funciones para menú contextual
         function mostrarMenuContextual(event, auxiliar) {
-            console.log('mostrarMenuContextual llamado');
-            console.log('nivelAcceso:', nivelAcceso);
-            console.log('auxiliar:', auxiliar);
-            
             // Verificar nivel de acceso
             if (nivelAcceso > 1) {
-                console.log('Usuario sin permisos para menú contextual. Nivel:', nivelAcceso);
                 return;
             }
 
-            console.log('Usuario autorizado, mostrando menú contextual');
             event.preventDefault();
             event.stopPropagation();
             
@@ -1852,13 +1968,11 @@
             
             // Posicionar menú contextual
             var contextMenu = $('#contextMenu');
-            console.log('Elemento contextMenu encontrado:', contextMenu.length);
             contextMenu.css({
                 'left': event.pageX + 'px',
                 'top': event.pageY + 'px',
                 'display': 'block'
             });
-            console.log('Menú contextual posicionado');
         }
 
         function ocultarMenuContextual() {
@@ -1923,9 +2037,7 @@
                     nuevoMonto: nuevoMonto 
                 }),
                 success: function(response) {
-                    console.log('Respuesta del servidor para modificar monto pignorado:', response);
                     var result = response.d;
-                    console.log('Resultado:', result.Resultado, 'Mensaje:', result.Mensaje);
                     
                     if (result && result.Resultado === 'OK') {
                         showToast('success', 'Éxito', result.Mensaje || 'Monto pignorado actualizado correctamente');

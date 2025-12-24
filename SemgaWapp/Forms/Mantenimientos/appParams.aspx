@@ -266,8 +266,6 @@
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log("Respuesta grupos:", response);
-                    
                     // Verificar si response.d es un string que necesita ser parseado
                     let responseData = response.d;
                     if (typeof responseData === 'string') {
@@ -277,12 +275,10 @@
                     if (responseData && responseData.Resultado === "SUCCESS") {
                         grupos = JSON.parse(responseData.Datos);
                         llenarDropdownGrupos();
-                    } else {
-                        console.log("Error cargando grupos:", responseData);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error cargando grupos:", error);
+                    // Error cargando grupos
                 }
             });
         }
@@ -310,8 +306,6 @@
                 dataType: "json",
                 success: function(response) {
                     mostrarLoading(false);
-                    console.log("Respuesta completa:", response);
-                    console.log("response.d:", response.d);
                     
                     // Verificar si response.d es un string que necesita ser parseado
                     let responseData = response.d;
@@ -320,17 +314,14 @@
                     }
                     
                     if (responseData && responseData.Resultado === "SUCCESS") {
-                        console.log("Datos recibidos:", responseData.Datos);
                         parametros = JSON.parse(responseData.Datos);
                         mostrarParametros();
                     } else {
-                        console.log("Error en respuesta:", responseData);
                         mostrarError("Error cargando parámetros: " + (responseData ? responseData.Mensaje : "Error desconocido"));
                     }
                 },
                 error: function(xhr, status, error) {
                     mostrarLoading(false);
-                    console.error("Error cargando parámetros:", error);
                     mostrarError("Error de conexión al cargar parámetros");
                 }
             });
@@ -488,7 +479,6 @@
                     },
                     error: function(xhr, status, error) {
                         errores++;
-                        console.error("Error guardando parámetro:", error);
                         
                         if (guardados + errores === total) {
                             mostrarToast(`${guardados} guardados, ${errores} errores`, "error");

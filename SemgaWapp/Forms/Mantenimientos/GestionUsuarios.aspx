@@ -1336,8 +1336,6 @@
             tbody.innerHTML = '';
 
             usuarios.forEach(function(user, index) {
-                console.log('Usuario completo:', user);
-                
                 const row = document.createElement('tr');
                 
                 const rolNombre = roles.find(r => r.Id === user.Rol)?.Nombre || 'N/A';
@@ -1355,15 +1353,10 @@
                     estadoClass = 'n-a';
                 }
                 
-                console.log('Estado:', estado, 'Clase:', estadoClass);
-                
-                console.log('Usuario:', user.Usuario, 'UltimoAcceso raw:', user.UltimoAcceso, 'Tipo:', typeof user.UltimoAcceso);
-                
                 let ultimoAcceso;
                 if (user.UltimoAcceso) {
                     try {
                         const fecha = parseNetDate(user.UltimoAcceso);
-                        console.log('Fecha parseada:', fecha, 'Es válida:', fecha && !isNaN(fecha.getTime()));
                         
                         if (fecha && !isNaN(fecha.getTime())) {
                             ultimoAcceso = fecha.toLocaleString('es-ES', {
@@ -1375,19 +1368,15 @@
                                 second: '2-digit',
                                 hour12: true
                             });
-                            console.log('Fecha formateada:', ultimoAcceso);
                         } else {
                             ultimoAcceso = 'Fecha inválida';
                         }
                     } catch (error) {
-                        console.log('Error al procesar fecha:', error);
                         ultimoAcceso = 'Error en fecha';
                     }
                 } else {
                     ultimoAcceso = 'Nunca';
                 }
-                
-                console.log('UltimoAcceso final:', ultimoAcceso);
 
                 row.innerHTML = `
                     <td><span class="user-username">${user.Usuario || ''}</span></td>
@@ -1535,9 +1524,6 @@
 
                     // Guardar usuario
                     PageMethods.GuardarUsuario(usuarioId, nombre, apellido, usuario, clave, email, telefono, rol, departamento, estado, function(result) {
-                        console.log('Resultado del servidor:', result);
-                        console.log('Tipo de resultado:', typeof result);
-                        
                         if (result.startsWith('ERROR:')) {
                             showToast('error', 'Error', 'Error al guardar usuario: ' + result);
                             return;

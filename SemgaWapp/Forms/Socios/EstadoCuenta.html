@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Cuenta</title>
+    <style>
+        @page {
+            size: 8.5in 11in;
+            margin: 0.5in;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+            line-height: 1.4;
+            background-color: white;
+            color: #333;
+        }
+        
+        .estado-cuenta {
+            width: 100%;
+            max-width: 8.5in;
+            margin: 0 auto;
+            background-color: white;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #2c3e50;
+        }
+        
+        .logo {
+            margin-bottom: 15px;
+        }
+        
+        .logo img {
+            max-width: 200px;
+            height: auto;
+        }
+        
+        .cooperativa-nombre {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .titulo-estado {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .datos-asociado {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .datos-asociado h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ced4da;
+            padding-bottom: 8px;
+        }
+        
+        .datos-asociado .campo {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        
+        .datos-asociado .campo-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 150px;
+        }
+        
+        .datos-asociado .campo-label::after {
+            content: ":";
+            margin-right: 10px;
+        }
+        
+        .datos-asociado .campo-valor {
+            color: #212529;
+        }
+        
+        .tabla-datos {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .tabla-datos thead {
+            background: #2c3e50;
+            color: white;
+        }
+        
+        .tabla-datos thead th {
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            border: 1px solid #1a252f;
+        }
+        
+        .tabla-datos thead th:nth-child(7) {
+            min-width: 120px;
+            width: 120px;
+        }
+        
+        .tabla-datos tbody td {
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            font-size: 11px;
+        }
+        
+        .tabla-datos tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .tabla-datos tbody tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        .celda-intereses {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-align: center;
+        }
+        
+        .btn-detalle-intereses {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 20px;
+        }
+        
+        .btn-detalle-intereses i {
+            color: #333;
+            font-size: 10px;
+        }
+        
+        .btn-detalle-intereses:hover {
+            background: #ffb300;
+            transform: scale(1.05);
+        }
+        
+        .monto-intereses {
+            font-weight: 500;
+        }
+        
+        @media print {
+            .btn-detalle-intereses {
+                display: none !important;
+            }
+            
+            .celda-intereses {
+                justify-content: center;
+            }
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #2c3e50;
+            text-align: center;
+            font-size: 10px;
+            color: #6c757d;
+        }
+        
+        .fecha-impresion {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="estado-cuenta">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <img src="/logo.png" alt="Logo Coopsemga" />
+            </div>
+            <div class="cooperativa-nombre">
+                COOPERATIVA DE SERVICIOS MÚLTIPLES GUARARÉ ARRIBA R,L.
+            </div>
+            <div class="titulo-estado">
+                ESTADO DE CUENTA RESUMEN
+            </div>
+        </div>
+        
+        <!-- Datos del Asociado -->
+        <div class="datos-asociado">
+            <h3>Datos del Asociado</h3>
+            <div class="campo">
+                <span class="campo-label">Nombres</span>
+                <span class="campo-valor">@NombreAsociado</span>
+            </div>
+            <div class="campo">
+                <span class="campo-label">Código de Asociado</span>
+                <span class="campo-valor">@NumeroAsociado</span>
+            </div>
+            <div class="campo">
+                <span class="campo-label">Identificación</span>
+                <span class="campo-valor">@TipoIdentificacion @NumeroIdentificacion</span>
+            </div>
+        </div>
+        
+        <!-- Tabla de Datos -->
+        <table class="tabla-datos">
+            <thead>
+                <tr>
+                    <th>Tipo Auxiliar</th>
+                    <th>Número de Cuenta</th>
+                    <th>Fecha Inicio</th>
+                    <th>Monto Original</th>
+                    <th>Fecha Último Pago</th>
+                    <th>Cuota</th>
+                    <th>Intereses</th>
+                    <th>Saldo Actual</th>
+                </tr>
+            </thead>
+            <tbody>
+                @FilasTabla
+            </tbody>
+        </table>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="fecha-impresion">
+                Fecha y Hora de Impresión: @FechaHoraImpresion
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

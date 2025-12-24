@@ -1,0 +1,11 @@
+========================================================= 
+[24/dic/2025 11:39:58.58] INICIO DE PROCESO 
+--------------------------------------------------------- 
+Ejecutando spAuxiliares_CalcularIntereses... 
+[24/dic/2025 11:39:58.73] spAuxiliares_CalcularIntereses ejecutado correctamente 
+--------------------------------------------------------- 
+Ejecutando spAuxiliares_CalcularInteresesAhorro... 
+[24/dic/2025 11:39:58.86] spAuxiliares_CalcularInteresesAhorro ejecutado correctamente 
+--------------------------------------------------------- 
+[24/dic/2025 11:39:58.92] FIN DEL PROCESO 
+========================================================= 

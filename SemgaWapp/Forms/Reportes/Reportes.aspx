@@ -882,9 +882,9 @@
                     </button>
                     <span>para visualizar los resultados.</span>
                 </div>
-                <a href="../../Dashboard.aspx" class="back-btn ms-auto">
+                <a href="dashboardReportes.aspx" class="back-btn ms-auto">
                     <i class="fas fa-arrow-left"></i>
-                    Volver al Menú
+                    Volver
                 </a>
             </div>
 
@@ -970,7 +970,6 @@
 
         // Inicializar DataTable
         function inicializarTabla() {
-            console.log('🔧 Inicializando DataTable...');
             
             tablaReportes = $('#tablaReportes').DataTable({
                 language: {
@@ -1001,14 +1000,10 @@
                     { title: 'Comando', visible: false }
                 ]
             });
-            
-            console.log('DataTable inicializado:', tablaReportes);
         }
 
         // Cargar reportes al inicializar
         function cargarReportes() {
-            console.log('Iniciando carga de reportes...');
-            
             $.ajax({
                 type: "POST",
                 url: "Reportes.aspx/ObtenerReportes",
@@ -1016,66 +1011,35 @@
                 dataType: "json",
                 data: JSON.stringify({}),
                 success: function(response) {
-                    console.log('Respuesta recibida del servidor:', response);
-                    
                     try {
                         let reportes = [];
-                        
-                        // Log de la estructura de la respuesta
-                        console.log('Estructura de response:', {
-                            'response': response,
-                            'response.d': response.d,
-                            'tipo de response.d': typeof response.d
-                        });
                         
                         // Parsear response.d si es string
                         let responseData;
                         if (typeof response.d === 'string') {
-                            console.log('response.d es string, parseando JSON...');
                             responseData = JSON.parse(response.d);
-                            console.log('response.d parseado:', responseData);
                         } else {
-                            console.log('📦 response.d es objeto, usando directamente...');
                             responseData = response.d;
                         }
                         
                         // Ahora acceder a Data del objeto parseado
                         if (responseData && responseData.Data) {
-                            console.log('Data encontrada, tipo:', typeof responseData.Data);
-                            
                             if (typeof responseData.Data === 'string') {
-                                console.log('Data es string, parseando JSON...');
                                 reportes = JSON.parse(responseData.Data);
-                                console.log('JSON parseado exitosamente:', reportes);
                             } else {
-                                console.log('📦 Data es objeto, usando directamente...');
                                 reportes = responseData.Data;
-                                console.log('Objeto usado directamente:', reportes);
                             }
-                        } else {
-                            console.log('⚠️ No se encontró Data en la respuesta parseada');
                         }
-                        
-                        console.log('Reportes finales:', reportes);
-                        console.log('Cantidad de reportes:', reportes.length);
                         
                         reportesData = reportes;
                         llenarDropdownTipos(reportes);
                         mostrarReportes(reportes);
                         
                     } catch (error) {
-                        console.error('Error al procesar reportes:', error);
-                        console.error('Stack trace:', error.stack);
                         mostrarReportes([]);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error en AJAX:', {
-                        'xhr': xhr,
-                        'status': status,
-                        'error': error,
-                        'responseText': xhr.responseText
-                    });
                     showToast('Error al cargar reportes', 'error');
                     mostrarReportes([]);
                 }
@@ -1084,15 +1048,9 @@
 
         // Mostrar reportes en la tabla
         function mostrarReportes(reportes) {
-            console.log('🎨 Iniciando mostrarReportes con:', reportes);
-            console.log('🎨 Tipo de reportes:', typeof reportes);
-            console.log('🎨 Es array:', Array.isArray(reportes));
-            console.log('🎨 Longitud:', reportes ? reportes.length : 'undefined');
-            
             tablaReportes.clear();
             
             if (!reportes || reportes.length === 0) {
-                console.log('⚠️ No hay reportes, mostrando mensaje vacío');
                 // Mostrar mensaje cuando no hay datos
                 tablaReportes.row.add([
                     '', // Columna ID oculta
@@ -1105,14 +1063,9 @@
                 tablaReportes.draw();
                 return;
             }
-
-            console.log('Procesando', reportes.length, 'reportes...');
             
             reportes.forEach(function(reporte, index) {
-                console.log(`📄 Procesando reporte ${index + 1}:`, reporte);
-                
                 const tipoClass = obtenerClaseTipo(normalizarTipo(reporte.Tipo));
-                console.log(`🏷️ Tipo class para "${reporte.Tipo}":`, tipoClass);
                 
                 const rowData = [
                     reporte.ID, // Columna oculta (ID)
@@ -1125,22 +1078,16 @@
                     reporte.Comando || '' // Columna oculta con el comando
                 ];
                 
-                console.log(`Agregando fila ${index + 1}:`, rowData);
                 tablaReportes.row.add(rowData);
             });
             
-            console.log('Dibujando tabla...');
             tablaReportes.draw();
-            console.log('🎉 Tabla dibujada exitosamente');
         }
 
         // Llenar dropdown con tipos únicos de los reportes
         function llenarDropdownTipos(reportes) {
-            console.log('🔽 Llenando dropdown con tipos de reportes...');
-            
             // Obtener tipos únicos
             const tiposUnicos = [...new Set(reportes.map(reporte => normalizarTipo(reporte.Tipo)))];
-            console.log('🔽 Tipos únicos encontrados:', tiposUnicos);
             
             // Limpiar dropdown actual
             const dropdown = $('#filtroTipo');
@@ -1153,10 +1100,7 @@
             tiposUnicos.forEach(tipo => {
                 const option = `<option value="${tipo}">${tipo}</option>`;
                 dropdown.append(option);
-                console.log(`🔽 Agregado tipo: ${tipo}`);
             });
-            
-            console.log('Dropdown llenado exitosamente');
         }
 
         function normalizarTipo(tipo) {
@@ -1199,7 +1143,6 @@
 
         // Abrir reporte y ejecutar comando
         function abrirReporte(id, nombre, comando) {
-            console.log('Abriendo reporte:', { id, nombre, comando });
             showToast(`Ejecutando reporte: ${nombre}`, 'info');
             
             // Ejecutar comando SQL
@@ -1208,8 +1151,6 @@
 
         // Ejecutar comando SQL del reporte
         function ejecutarComandoReporte(id, nombre, comando) {
-            console.log('Ejecutando comando SQL:', comando);
-            
             $.ajax({
                 type: "POST",
                 url: "Reportes.aspx/EjecutarComandoReporte",
@@ -1221,46 +1162,25 @@
                     comandoSQL: comando 
                 }),
                 success: function(response) {
-                    console.log('📡 RESPUESTA COMPLETA DEL SERVIDOR:', response);
-                    console.log('📡 Tipo de response:', typeof response);
-                    console.log('📡 response.d:', response.d);
-                    console.log('📡 Tipo de response.d:', typeof response.d);
-                    
                     try {
                         let datos = [];
                         
                         // Parsear response.d si es string
                         let responseData;
                         if (typeof response.d === 'string') {
-                            console.log('response.d es string, parseando JSON...');
                             responseData = JSON.parse(response.d);
-                            console.log('response.d parseado:', responseData);
                         } else {
-                            console.log('📦 response.d es objeto, usando directamente...');
                             responseData = response.d;
                         }
                         
                         // Acceder a Data del objeto parseado
                         if (responseData && responseData.Data) {
-                            console.log('Data encontrada, tipo:', typeof responseData.Data);
-                            console.log('Data contenido:', responseData.Data);
-                            
                             if (typeof responseData.Data === 'string') {
-                                console.log('Data es string, parseando JSON...');
                                 datos = JSON.parse(responseData.Data);
-                                console.log('Data parseado exitosamente:', datos);
                             } else {
-                                console.log('📦 Data es objeto, usando directamente...');
                                 datos = responseData.Data;
-                                console.log('Data usado directamente:', datos);
                             }
-                        } else {
-                            console.log('⚠️ No se encontró Data en la respuesta parseada');
                         }
-                        
-                        console.log('DATOS FINALES PARA EL REPORTE:', datos);
-                        console.log('Cantidad de registros:', datos.length);
-                        console.log('Estructura del primer registro:', datos.length > 0 ? datos[0] : 'No hay datos');
                         
                         if (datos && datos.length > 0) {
                             mostrarResultadosReporte(nombre, datos);
@@ -1269,13 +1189,10 @@
                         }
                         
                     } catch (error) {
-                        console.error('Error al procesar resultados:', error);
-                        console.error('Stack trace:', error.stack);
                         showToast('Error al procesar los resultados del reporte', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error al ejecutar comando:', error);
                     showToast('Error al ejecutar el comando del reporte', 'error');
                 }
             });
@@ -1283,14 +1200,6 @@
 
         // Mostrar resultados en ventana de tamaño completo
         function mostrarResultadosReporte(nombreReporte, datos) {
-            console.log('🎯 ===== INICIANDO MOSTRAR RESULTADOS =====');
-            console.log('Nombre del reporte:', nombreReporte);
-            console.log('Datos recibidos:', datos);
-            console.log('Tipo de datos:', typeof datos);
-            console.log('Es array:', Array.isArray(datos));
-            console.log('Longitud:', datos ? datos.length : 'undefined');
-            console.log('Primer elemento:', datos && datos.length > 0 ? datos[0] : 'No hay datos');
-            
             // Guardar datos globalmente para exportación
             datosReporteActual = datos;
             nombreReporteActual = nombreReporte;
@@ -1343,84 +1252,44 @@
 
         // Llenar tabla con los resultados
         function llenarTablaResultados(datos) {
-            console.log('🔧 ===== INICIANDO LLENAR TABLA =====');
-            console.log('🔧 Datos recibidos en llenarTablaResultados:', datos);
-            console.log('🔧 Tipo de datos:', typeof datos);
-            console.log('🔧 Es array:', Array.isArray(datos));
-            console.log('🔧 Longitud:', datos ? datos.length : 'undefined');
-            
             if (!datos || datos.length === 0) {
-                console.log('⚠️ No hay datos, mostrando mensaje vacío');
                 $('#tbodyResultados').html('<tr><td colspan="100%" class="text-center">No hay datos para mostrar</td></tr>');
                 return;
             }
             
             // Obtener columnas del primer objeto
             const columnas = Object.keys(datos[0]);
-            console.log('===== COLUMNAS ENCONTRADAS =====');
-            console.log('Columnas encontradas:', columnas);
-            console.log('Cantidad de columnas:', columnas.length);
-            console.log('Lista detallada de columnas:');
-            columnas.forEach((col, index) => {
-                console.log(`${index + 1}. "${col}"`);
-            });
-            console.log('Primer objeto completo:', datos[0]);
             
             // Crear encabezados con funcionalidad de ordenamiento
             let theadHTML = '<tr>';
-            console.log('Creando encabezados de tabla...');
             columnas.forEach((columna, index) => {
-                console.log(`Agregando columna ${index + 1}: "${columna}"`);
                 theadHTML += `<th class="sortable" data-column="${index}">${columna}</th>`;
             });
             theadHTML += '</tr>';
-            console.log('HTML de encabezados generado:', theadHTML.substring(0, 200) + '...');
             $('#theadResultados').html(theadHTML);
-            console.log('Encabezados agregados a la tabla');
             
             // Agregar event listeners para ordenamiento
             agregarFuncionalidadOrdenamiento();
             
             // Crear filas de datos
             let tbodyHTML = '';
-            console.log('Creando filas de datos...');
             datos.forEach((fila, index) => {
-                console.log(`Procesando fila ${index + 1}:`, fila);
                 tbodyHTML += '<tr>';
                 columnas.forEach(columna => {
                     const valor = fila[columna] || '';
-                    console.log(`Columna "${columna}": "${valor}"`);
                     tbodyHTML += `<td>${valor}</td>`;
                 });
                 tbodyHTML += '</tr>';
             });
             
-            console.log('HTML generado para tbody:', tbodyHTML.substring(0, 200) + '...');
             $('#tbodyResultados').html(tbodyHTML);
-            console.log('Tabla llenada exitosamente');
-            
-            // Verificar que todas las columnas se agregaron
-            const columnasEnTabla = $('#theadResultados th').length;
-            console.log('Verificación final:');
-            console.log('Columnas esperadas:', columnas.length);
-            console.log('Columnas en la tabla:', columnasEnTabla);
-            console.log('¿Coinciden?', columnas.length === columnasEnTabla);
-            
-            if (columnas.length !== columnasEnTabla) {
-                console.error('ERROR: No todas las columnas se agregaron a la tabla');
-            } else {
-                console.log('Todas las columnas se agregaron correctamente');
-            }
         }
 
         // Agregar funcionalidad de ordenamiento
         function agregarFuncionalidadOrdenamiento() {
-            console.log('🔄 Agregando funcionalidad de ordenamiento...');
-            
             $('.modal-resultados-body .table th.sortable').on('click', function() {
                 const columnIndex = parseInt($(this).data('column'));
                 const columnName = $(this).text().trim();
-                console.log(`🔄 Ordenando por columna ${columnIndex}: "${columnName}"`);
                 
                 // Determinar dirección de ordenamiento basada en la clase actual
                 let sortDirection = 'asc';
@@ -1429,8 +1298,6 @@
                 } else if ($(this).hasClass('sort-desc')) {
                     sortDirection = 'asc';
                 }
-                
-                console.log(`🔄 Dirección de ordenamiento: ${sortDirection}`);
                 
                 // Remover clases de ordenamiento de todas las columnas
                 $('.modal-resultados-body .table th').removeClass('sort-asc sort-desc');
@@ -1441,26 +1308,18 @@
                 // Ordenar datos
                 ordenarDatos(columnIndex, sortDirection);
             });
-            
-            console.log('Funcionalidad de ordenamiento agregada');
         }
 
         // Ordenar datos de la tabla
         function ordenarDatos(columnIndex, direction) {
-            console.log(`🔄 Ordenando datos por columna ${columnIndex}, dirección: ${direction}`);
-            
             // Obtener datos actuales
             const tbody = $('#tbodyResultados');
             const rows = tbody.find('tr').toArray();
-            
-            console.log(`🔄 Filas a ordenar: ${rows.length}`);
             
             // Ordenar filas
             rows.sort((a, b) => {
                 const aValue = $(a).find('td').eq(columnIndex).text().trim();
                 const bValue = $(b).find('td').eq(columnIndex).text().trim();
-                
-                console.log(`🔄 Comparando: "${aValue}" vs "${bValue}"`);
                 
                 // Intentar convertir a números si es posible para ordenamiento
                 // Solo para comparación, no para modificar los valores mostrados
@@ -1471,15 +1330,12 @@
                 if (!isNaN(aNum) && !isNaN(bNum)) {
                     // Comparación numérica
                     comparison = aNum - bNum;
-                    console.log(`🔄 Comparación numérica: ${aNum} - ${bNum} = ${comparison}`);
                 } else {
                     // Comparación de texto
                     comparison = aValue.localeCompare(bValue, 'es', { numeric: true });
-                    console.log(`🔄 Comparación de texto: "${aValue}" vs "${bValue}" = ${comparison}`);
                 }
                 
                 const result = direction === 'asc' ? comparison : -comparison;
-                console.log(`🔄 Resultado final: ${result} (dirección: ${direction})`);
                 return result;
             });
             
@@ -1487,10 +1343,7 @@
             tbody.empty();
             rows.forEach((row, index) => {
                 tbody.append(row);
-                console.log(`🔄 Fila ${index + 1} agregada`);
             });
-            
-            console.log('Datos ordenados exitosamente');
         }
 
         // Variables globales para los datos del reporte
@@ -1499,8 +1352,6 @@
 
         // Exportar a Excel
         function exportarAExcel() {
-            console.log('Exportando a Excel...');
-            
             if (!datosReporteActual || datosReporteActual.length === 0) {
                 showToast('No hay datos para exportar', 'warning');
                 return;
@@ -1508,7 +1359,6 @@
 
             // Obtener datos de la tabla actual (con el orden actual)
             const datosTablaActual = obtenerDatosTablaActual();
-            console.log('Datos de la tabla actual:', datosTablaActual);
 
             // Mostrar indicador de carga
             const botonExcel = $('.export-buttons-compact .btn-success');
@@ -1526,18 +1376,13 @@
                     datos: datosTablaActual
                 }),
                 success: function(response) {
-                    console.log('Respuesta de exportación:', response);
-                    
                     try {
                         let responseData;
                         
                         // Parsear response.d si es string
                         if (typeof response.d === 'string') {
-                            console.log('response.d es string, parseando JSON...');
                             responseData = JSON.parse(response.d);
-                            console.log('response.d parseado:', responseData);
                         } else {
-                            console.log('📦 response.d es objeto, usando directamente...');
                             responseData = response.d;
                         }
                         
@@ -1556,12 +1401,10 @@
                             showToast('Error al generar archivo Excel: ' + (responseData.Mensaje || 'Error desconocido'), 'error');
                         }
                     } catch (error) {
-                        console.error('Error al procesar respuesta:', error);
                         showToast('Error al procesar la exportación', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error en exportación:', error);
                     showToast('Error al exportar a Excel', 'error');
                 },
                 complete: function() {
@@ -1574,7 +1417,6 @@
 
         // Mostrar opciones de CSV
         function mostrarOpcionesCSV() {
-            console.log('Mostrando opciones de CSV...');
             $('#modalOpcionesCSV').fadeIn(300);
         }
 
@@ -1585,8 +1427,6 @@
 
         // Exportar CSV con opciones
         function exportarACSVConOpciones() {
-            console.log('Exportando CSV con opciones...');
-            
             if (!datosReporteActual || datosReporteActual.length === 0) {
                 showToast('No hay datos para exportar', 'warning');
                 return;
@@ -1604,11 +1444,8 @@
                 }
             }
 
-            console.log('Separador seleccionado:', separador);
-
             // Obtener datos de la tabla actual (con el orden actual)
             const datosTablaActual = obtenerDatosTablaActual();
-            console.log('Datos de la tabla actual:', datosTablaActual);
 
             // Mostrar indicador de carga
             const botonCSV = $('.modal-csv-footer .btn-info');
@@ -1627,18 +1464,13 @@
                     separador: separador
                 }),
                 success: function(response) {
-                    console.log('Respuesta de exportación CSV:', response);
-                    
                     try {
                         let responseData;
                         
                         // Parsear response.d si es string
                         if (typeof response.d === 'string') {
-                            console.log('response.d es string, parseando JSON...');
                             responseData = JSON.parse(response.d);
-                            console.log('response.d parseado:', responseData);
                         } else {
-                            console.log('📦 response.d es objeto, usando directamente...');
                             responseData = response.d;
                         }
                         
@@ -1658,12 +1490,10 @@
                             showToast('Error al generar archivo CSV: ' + (responseData.Mensaje || 'Error desconocido'), 'error');
                         }
                     } catch (error) {
-                        console.error('Error al procesar respuesta CSV:', error);
                         showToast('Error al procesar la exportación CSV', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error en exportación CSV:', error);
                     showToast('Error al exportar a CSV', 'error');
                 },
                 complete: function() {
@@ -1676,8 +1506,6 @@
 
         // Obtener datos de la tabla actual (con el orden actual)
         function obtenerDatosTablaActual() {
-            console.log('Obteniendo datos de la tabla actual...');
-            
             const datosTabla = [];
             const columnas = [];
             
@@ -1687,8 +1515,6 @@
                 if (index === 0) return; // Saltar columna ID (primera columna)
                 columnas.push($(this).text().trim());
             });
-            
-            console.log('Columnas encontradas:', columnas);
             
             // Obtener datos de cada fila (saltando la primera celda ID)
             $('#tbodyResultados tr').each(function(rowIndex) {
@@ -1707,9 +1533,6 @@
                     datosTabla.push(fila);
                 }
             });
-            
-            console.log('Datos extraídos de la tabla:', datosTabla);
-            console.log('Cantidad de filas:', datosTabla.length);
             
             return datosTabla;
         }

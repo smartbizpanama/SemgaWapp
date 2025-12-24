@@ -273,7 +273,7 @@
         }
 
         .reports-card .card-icon {
-            background: linear-gradient(135deg, #6c757d, #545b62);
+            background: linear-gradient(135deg, #3498db, #2980b9);
         }
 
         .finanzas-card .card-icon {
@@ -286,6 +286,10 @@
 
         .admin-card .card-icon {
             background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .help-card .card-icon {
+            background: linear-gradient(135deg, #17a2b8, #138496);
         }
 
         .welcome-banner {
@@ -473,7 +477,7 @@
                 </div>
 
                                 <!-- Reports Card -->
-                <div class="card reports-card" onclick="window.location.href='Forms/Reportes/Reportes.aspx'">
+                <div class="card reports-card" onclick="window.location.href='Forms/Reportes/dashboardReportes.aspx'">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-chart-bar"></i>
@@ -599,6 +603,24 @@
                     </div>
                 </div>
                 <% End If %>
+
+                <!-- Help Card -->
+                <div class="card help-card" onclick="window.location.href='Forms/Help/helpDashboard.aspx'">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="card-title">Ayuda</div>
+                    </div>
+                    <div class="card-content">
+                        <div>
+                            <a href="#" style="display: block; color: #666; text-decoration: none; padding: 3px 0;">
+                                <i class="fas fa-life-ring" style="margin-right: 5px;"></i>
+                                Centro de ayuda
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </form>

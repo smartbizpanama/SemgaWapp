@@ -107,8 +107,24 @@
         }
         
         .table tbody tr:hover {
-            background-color: #f8f9fa;
+            background-color: #A2F4FD !important;
             cursor: pointer;
+        }
+        
+        #tablaSocios tbody tr:hover,
+        #tablaSocios tbody tr:hover td {
+            background-color: #A2F4FD !important;
+        }
+        
+        .table-hover tbody tr:hover,
+        .table-hover tbody tr:hover td {
+            background-color: #A2F4FD !important;
+        }
+        
+        /* Estilos específicos para DataTables */
+        #tablaSocios_wrapper .dataTables_scrollBody tbody tr:hover,
+        #tablaSocios_wrapper .dataTables_scrollBody tbody tr:hover td {
+            background-color: #A2F4FD !important;
         }
         
         /* Forzar centrado en títulos y celdas de DataTables */
@@ -1057,6 +1073,7 @@
                             <th>Usuario Creó</th>
                             <th>Fecha Modificación</th>
                             <th>Usuario Modificó</th>
+                            <th>Estado de Cuenta</th>
                             <th>Editar</th>
                             <th>Eliminar</th>
                         </tr>
@@ -1691,7 +1708,6 @@
             datosCompletamenteCargados = Object.values(datosCargando).every(function(cargado) {
                 return cargado === true;
             });
-            console.log('Datos completamente cargados:', datosCompletamenteCargados);
             return datosCompletamenteCargados;
         }
         
@@ -1737,8 +1753,6 @@
         }
 
         $(document).ready(function() {
-            console.log('=== INICIO $(document).ready ===');
-            
             // Inicializar Flatpickr para fechas
             flatpickr(".flatpickr-date", {
                 locale: "es",
@@ -1747,8 +1761,6 @@
                 clickOpens: true,
                 placeholder: "dd/mm/yyyy"
             });
-            
-            console.log('=== INICIANDO CARGA DE DATOS ===');
             inicializarTablaConDelay();
             inicializarTablaMovimientos();
             cargarTiposAsociado();
@@ -1779,12 +1791,10 @@
                     datosCargando[key] = true;
                 });
                 verificarDatosCargados();
-                console.log('Todos los datos marcados como cargados');
             }, 2000);
             
             // Agregar evento para reinicializar Select2 cuando se abra el modal
             $('#modalSocio').on('shown.bs.modal', function() {
-                console.log('Modal abierto, reinicializando Select2...');
                 setTimeout(function() {
                     forzarSelect2();
                     configurarEventosSelect2();
@@ -1802,19 +1812,12 @@
             verificarEnvironment();
             
             // Configurar event listeners para dropdowns relacionados
-            console.log('=== CONFIGURANDO DROPDOWNS RELACIONADOS ===');
             configurarDropdownsRelacionados();
             configurarDropdownsResidencia();
             
             // Verificar el campo ocupación después de cargar
             setTimeout(function() {
-                console.log('Verificando campo ocupación después de cargar:');
                 const ocupacionField = $('#ocupacion');
-                console.log('Elemento encontrado:', ocupacionField.length);
-                console.log('Es select:', ocupacionField.is('select'));
-                console.log('Valor actual:', ocupacionField.val());
-                console.log('Opciones disponibles:', ocupacionField.find('option').length);
-                console.log('HTML del elemento:', ocupacionField[0]?.outerHTML);
             }, 2000);
             
             // Verificar mayúsculas automáticas y aplicar si está habilitado
@@ -1826,7 +1829,6 @@
             $('#loadingSocios').show();
 
             setTimeout(function() {
-                console.log('⏳ Inicializando tabla de socios después del delay inicial');
                 inicializarDataTable();
                 tablaSociosInicializada = true;
                 $('#tablaSocios').removeClass('tabla-socios-deshabilitada');
@@ -1852,8 +1854,8 @@
                 scrollCollapse: true, // Colapsar filas vacías
                 paging: true, // Mantener paginación
                 columnDefs: [
-                    { targets: [0, 10, 11], orderable: false }, // Columnas de acción no ordenables
-                    { targets: [0, 10, 11], className: 'text-center' }, // Centrar botones
+                    { targets: [0, 10, 11, 12], orderable: false }, // Columnas de acción no ordenables
+                    { targets: [0, 10, 11, 12], className: 'text-center' }, // Centrar botones
                     { targets: [5], className: 'text-left', createdCell: function (td, cellData, rowData, row, col) {
                         $(td).css('text-align', 'left');
                     }} // Columna de identificación alineada a la izquierda
@@ -1869,6 +1871,24 @@
                 if (data && data[1]) { // Verificar que hay datos y que el número de asociado existe
                     const numeroAsociado = parseInt(data[1]);
                     verSocio(numeroAsociado);
+                }
+            });
+            
+            // Aplicar estilos de hover personalizados (celeste claro) para la tabla de socios
+            $('#tablaSocios tbody').on('mouseenter', 'tr', function() {
+                $(this).css('background-color', '#A2F4FD');
+                $(this).find('td').css('background-color', '#A2F4FD');
+            });
+            
+            $('#tablaSocios tbody').on('mouseleave', 'tr', function() {
+                // Restaurar el color original (blanco o gris alternado)
+                const isEven = $(this).index() % 2 === 0;
+                if (isEven) {
+                    $(this).css('background-color', '#f8f9fa');
+                    $(this).find('td').css('background-color', '#f8f9fa');
+                } else {
+                    $(this).css('background-color', '');
+                    $(this).find('td').css('background-color', '');
                 }
             });
         }
@@ -2064,11 +2084,9 @@
 
         function cargarSocios() {
             if (!tablaSocios) {
-                console.warn('⚠️ Tabla de socios aún no está lista. Reintentando en 300 ms.');
                 setTimeout(cargarSocios, 300);
                 return;
             }
-            console.log('🔄 cargarSocios() iniciada');
             $('#loadingSocios').show();
             
             const filtros = {
@@ -2078,8 +2096,6 @@
                 FiltroTipoDocumento: $('#filtroTipoDocumento').val(),
                 FiltroIdentificacion: $('#filtroIdentificacion').val()
             };
-            
-            console.log('Filtros aplicados:', filtros);
 
             $.ajax({
                 type: "POST",
@@ -2093,16 +2109,13 @@
                     let payload = rawResponse;
                     if (typeof rawResponse === 'string') {
                         const trimmed = rawResponse.trim();
-                        console.log('Respuesta cruda de ObtenerSocios (primeros 200 chars):', trimmed.substring(0, 200));
                         if (trimmed.startsWith('<') || trimmed.startsWith('if')) {
-                            console.error('Respuesta inesperada al cargar socios (HTML/script):', trimmed.substring(0, 200));
                             mostrarToast('Respuesta inesperada al cargar socios.', 'error');
                             return;
                         }
                         try {
                             payload = JSON.parse(trimmed);
                         } catch (parseError) {
-                            console.error('No se pudo interpretar la respuesta de socios:', rawResponse, parseError);
                             mostrarToast('No se pudo interpretar la respuesta de socios.', 'error');
                             return;
                         }
@@ -2112,7 +2125,6 @@
                         try {
                             payload = typeof payload.d === 'string' ? JSON.parse(payload.d) : payload.d;
                         } catch (parseInnerError) {
-                            console.error('No se pudo interpretar el contenido de socios:', payload, parseInnerError);
                             mostrarToast('No se pudo interpretar el contenido de socios.', 'error');
                             return;
                         }
@@ -2121,11 +2133,6 @@
                     if (payload.Success) {
                         const socios = payload.Data;
                         const totalRegistros = payload.TotalRegistros;
-                        
-                        console.log('Datos recibidos:', {
-                            totalRegistros,
-                            socios
-                        });
                         
                         tablaSocios.clear();
                         
@@ -2151,6 +2158,9 @@
                                 socio.UsuarioCrea || 'N/A',
                                 fechaModificacion,
                                 socio.UsuarioModifica || 'N/A',
+                                `<button type="button" class="btn btn-sm btn-outline-info" onclick="event.preventDefault(); event.stopPropagation(); generarEstadoCuenta(${socio.NumeroAsociado})" title="Generar Estado de Cuenta">
+                                    <i class="fas fa-file-invoice"></i>
+                                </button>`,
                                 `<button type="button" class="btn btn-sm btn-outline-primary" onclick="event.preventDefault(); event.stopPropagation(); verSocio(${socio.NumeroAsociado})" title="Editar socio">
                                     <i class="fas fa-edit"></i>
                                 </button>`,
@@ -2164,9 +2174,7 @@
                             mostrarToast('No se encontraron socios.', 'info');
                         }
                         
-                        console.log('🔄 Actualizando tabla DataTables...');
                         tablaSocios.draw();
-                        console.log('Tabla actualizada correctamente');
                     } else {
                         // Mostrar error del servidor
 
@@ -2310,33 +2318,8 @@
         }
 
         function eliminarSocio(numeroAsociado, nombreCompleto) {
-            // Test de conexión primero
-            console.log('🧪 Probando conexión con WebMethod...');
-            testWebMethodConnection();
-            
             // Mostrar div de confirmación personalizado
             mostrarConfirmEliminarSocio(numeroAsociado, nombreCompleto);
-        }
-
-        function testWebMethodConnection() {
-            $.ajax({
-                type: "POST",
-                url: "GestionSocios.aspx/ObtenerTiposAsociado",
-                contentType: "application/json; charset=utf-8",
-                data: "{}",
-                dataType: "json",
-                success: function(response) {
-                    console.log('Conexión WebMethod OK:', response);
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error en conexión WebMethod:', {
-                        xhr: xhr,
-                        status: status,
-                        error: error,
-                        responseText: xhr.responseText
-                    });
-                }
-            });
         }
 
         function mostrarConfirmEliminarSocio(numeroAsociado, nombreCompleto) {
@@ -2522,8 +2505,6 @@
         }
 
         function confirmarEliminarSocio(numeroAsociado, nombreCompleto) {
-            console.log('confirmarEliminarSocio llamado con:', numeroAsociado, nombreCompleto);
-            
             // Cerrar el modal
             cerrarConfirmEliminarSocio();
             
@@ -2534,31 +2515,17 @@
                 numeroAsociado: numeroAsociado
             };
             
-            console.log('📤 Enviando datos:', requestData);
-            console.log('📤 URL:', 'GestionSocios.aspx/EliminarAsociado');
-            
-            // Test simple primero
-            console.log('🧪 Probando conexión básica...');
-            
             $.ajax({
                 type: "POST",
                 url: "GestionSocios.aspx/EliminarAsociado",
                 contentType: "application/json; charset=utf-8",
                 data: JSON.stringify(requestData),
                 dataType: "json",
-                beforeSend: function() {
-                    console.log('📡 Enviando petición AJAX...');
-                },
                 success: function(response) {
-                    console.log('📥 Respuesta del servidor:', response);
-                    console.log('📥 Tipo de respuesta:', typeof response);
-                    console.log('📥 response.d:', response.d);
-                    console.log('📥 Tipo de response.d:', typeof response.d);
                     $('#loadingSocios').hide();
                     
                     // Verificar si la respuesta es válida
                     if (!response || !response.d) {
-                        console.error('Respuesta inválida del servidor');
                         mostrarToast('Error: Respuesta inválida del servidor', 'error');
                         return;
                     }
@@ -2568,9 +2535,7 @@
                     if (typeof response.d === 'string') {
                         try {
                             serverResponse = JSON.parse(response.d);
-                            console.log('📥 response.d parseado:', serverResponse);
                         } catch (e) {
-                            console.error('Error al parsear response.d:', e);
                             mostrarToast('Error: Formato de respuesta inválido', 'error');
                             return;
                         }
@@ -2578,29 +2543,15 @@
                         serverResponse = response.d;
                     }
                     
-                    console.log('📥 serverResponse.Success:', serverResponse.Success);
-                    console.log('📥 serverResponse.Message:', serverResponse.Message);
-                    
                     if (serverResponse.Success === true) {
-                        console.log('Eliminación exitosa');
                         mostrarToast(`Socio ${numeroAsociado} - ${nombreCompleto} eliminado exitosamente`, 'success');
-                        console.log('🔄 Recargando lista de socios...');
                         cargarSocios(); // Recargar la lista
                     } else {
                         const errorMsg = serverResponse.Message || 'Error desconocido';
-                        console.log('⚠️ Error del servidor:', errorMsg);
                         mostrarToast(errorMsg, 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error AJAX completo:', {
-                        xhr: xhr,
-                        status: status,
-                        error: error,
-                        responseText: xhr.responseText,
-                        statusText: xhr.statusText,
-                        readyState: xhr.readyState
-                    });
                     $('#loadingSocios').hide();
                     
                     // Mostrar error más detallado
@@ -2654,12 +2605,7 @@
             
             // Verificar el estado del campo ocupación
             setTimeout(function() {
-                console.log('Verificando campo ocupación en modal:');
                 const ocupacionField = $('#ocupacion');
-                console.log('Elemento encontrado:', ocupacionField.length);
-                console.log('Es select:', ocupacionField.is('select'));
-                console.log('Valor actual:', ocupacionField.val());
-                console.log('Opciones disponibles:', ocupacionField.find('option').length);
             }, 500);
             
             // Aplicar mayúsculas automáticas cuando se abra el modal
@@ -3445,12 +3391,8 @@
         }
 
         function cargarOcupaciones() {
-            console.log('🔄 Cargando ocupaciones...');
-            
             // Verificar que el elemento existe y es un select
             const selectElement = $('#ocupacion');
-            console.log('Elemento ocupacion encontrado:', selectElement.length);
-            console.log('Es select:', selectElement.is('select'));
             
             $.ajax({
                 type: "POST",
@@ -3466,14 +3408,11 @@
                         const ocupaciones = response.d.Data;
                         const selectOcupacion = $('#ocupacion');
                         
-                        console.log('Ocupaciones cargadas:', ocupaciones);
                         selectOcupacion.empty().append('<option value="">Seleccionar ocupación...</option>');
                         
                         ocupaciones.forEach(function(ocupacion) {
                             selectOcupacion.append(`<option value="${ocupacion.Code}">${ocupacion.Descripcion}</option>`);
                         });
-                        
-                        console.log('Dropdown de ocupaciones poblado');
                     } else {
                         mostrarToast(response.d.Message || 'Error al cargar ocupaciones', 'error');
                     }
@@ -3485,32 +3424,20 @@
         }
 
         function cargarPaises() {
-            console.log('=== INICIO cargarPaises ===');
-            
             $.ajax({
                 type: "POST",
                 url: "GestionSocios.aspx/ObtenerPaises",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log('=== RESPUESTA AJAX cargarPaises ===');
-                    console.log('Response completa:', response);
-                    
                     if (typeof response.d === 'string') {
-                        console.log('Parseando response.d como string');
                         response.d = JSON.parse(response.d);
                     }
 
-                    console.log('Response.d después del parse:', response.d);
-                    console.log('Success:', response.d.Success);
-                    console.log('Data length:', response.d.Data ? response.d.Data.length : 'undefined');
-
                     if (response.d.Success) {
                         paisesData = response.d.Data;
-                        console.log('paisesData almacenado:', paisesData);
                         
                         const selectPais = $('#paisTrabajo');
-                        console.log('Elemento selectPais encontrado:', selectPais.length);
                         
                         selectPais.empty().append('<option value="">Seleccionar país...</option>');
                         
@@ -3522,88 +3449,56 @@
                         // Actualizar Select2 después de cargar datos
                         selectPais.trigger('change');
                         
-                        console.log('=== LLAMANDO cargarProvinciasPorPais ===');
                         cargarProvinciasPorPais('PA');
                     } else {
-                        console.log('ERROR en cargarPaises:', response.d.Message);
                         mostrarToast(response.d.Message || 'Error al cargar países', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('ERROR AJAX cargarPaises:', error);
-                    console.log('XHR:', xhr);
-                    console.log('Status:', status);
                     mostrarToast('Error al cargar países', 'error');
                 }
             });
         }
 
         function cargarProvincias() {
-            console.log('=== INICIO cargarProvincias ===');
-            
             $.ajax({
                 type: "POST",
                 url: "GestionSocios.aspx/ObtenerProvincias",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log('=== RESPUESTA AJAX cargarProvincias ===');
-                    console.log('Response completa:', response);
-                    
                     if (typeof response.d === 'string') {
-                        console.log('Parseando response.d como string');
                         response.d = JSON.parse(response.d);
                     }
 
-                    console.log('Response.d después del parse:', response.d);
-                    console.log('Success:', response.d.Success);
-                    console.log('Data length:', response.d.Data ? response.d.Data.length : 'undefined');
-
                     if (response.d.Success) {
                         provinciasData = response.d.Data;
-                        console.log('provinciasData almacenado:', provinciasData);
                         
-                        console.log('=== LLAMANDO cargarProvinciasPorPais ===');
                         cargarProvinciasPorPais('PA');
                     } else {
-                        console.log('ERROR en cargarProvincias:', response.d.Message);
                         mostrarToast(response.d.Message || 'Error al cargar provincias', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('ERROR AJAX cargarProvincias:', error);
-                    console.log('XHR:', xhr);
-                    console.log('Status:', status);
                     mostrarToast('Error al cargar provincias', 'error');
                 }
             });
         }
 
         function cargarProvinciasPorPais(codigoPais) {
-            console.log('=== INICIO cargarProvinciasPorPais ===');
-            console.log('Código país recibido:', codigoPais);
-            console.log('provinciasData disponible:', provinciasData);
-            console.log('provinciasData length:', provinciasData ? provinciasData.length : 'undefined');
-            
             // Limpiar inmediatamente los dropdowns dependientes
             $('#distritoTrabajo').empty().append('<option value="">Seleccionar distrito...</option>');
             $('#corregimientoTrabajo').empty().append('<option value="">Seleccionar corregimiento...</option>');
             
             if (!provinciasData || provinciasData.length === 0) {
-                console.log('ERROR: provinciasData está vacío o no definido');
                 return;
             }
             
             const provinciasFiltradas = provinciasData.filter(function(provincia) {
-                console.log('Filtrando provincia:', provincia.CodePais, 'vs', codigoPais);
                 return provincia.CodePais === codigoPais;
             });
             
-            console.log('Provincias filtradas encontradas:', provinciasFiltradas.length);
-            console.log('Provincias filtradas:', provinciasFiltradas);
-            
             const selectProvincia = $('#provinciaTrabajo');
-            console.log('Elemento selectProvincia encontrado:', selectProvincia.length);
             
             selectProvincia.empty().append('<option value="">Seleccionar provincia...</option>');
             
@@ -3615,80 +3510,50 @@
             // Actualizar Select2 después de cargar datos
             selectProvincia.trigger('change');
             
-            console.log('=== FIN cargarProvinciasPorPais ===');
-            
             // Si es Panamá, cargar distritos de la provincia por defecto
             if (codigoPais === 'PA') {
-                console.log('=== LLAMANDO cargarDistritosPorProvincia ===');
                 cargarDistritosPorProvincia(8);
             }
         }
 
         function cargarDistritos() {
-            console.log('=== INICIO cargarDistritos ===');
-            
             $.ajax({
                 type: "POST",
                 url: "GestionSocios.aspx/ObtenerDistritos",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log('=== RESPUESTA AJAX cargarDistritos ===');
-                    console.log('Response completa:', response);
-                    
                     if (typeof response.d === 'string') {
-                        console.log('Parseando response.d como string');
                         response.d = JSON.parse(response.d);
                     }
 
-                    console.log('Response.d después del parse:', response.d);
-                    console.log('Success:', response.d.Success);
-                    console.log('Data length:', response.d.Data ? response.d.Data.length : 'undefined');
-
                     if (response.d.Success) {
                         distritosData = response.d.Data;
-                        console.log('distritosData almacenado:', distritosData);
                         
-                        console.log('=== LLAMANDO cargarDistritosPorProvincia ===');
                         cargarDistritosPorProvincia(8);
                     } else {
-                        console.log('ERROR en cargarDistritos:', response.d.Message);
                         mostrarToast(response.d.Message || 'Error al cargar distritos', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('ERROR AJAX cargarDistritos:', error);
-                    console.log('XHR:', xhr);
-                    console.log('Status:', status);
                     mostrarToast('Error al cargar distritos', 'error');
                 }
             });
         }
 
         function cargarDistritosPorProvincia(codigoProvincia) {
-            console.log('=== INICIO cargarDistritosPorProvincia ===');
-            console.log('Código provincia recibido:', codigoProvincia);
-            console.log('distritosData disponible:', distritosData);
-            console.log('distritosData length:', distritosData ? distritosData.length : 'undefined');
-            
             // Limpiar inmediatamente el dropdown dependiente
             $('#corregimientoTrabajo').empty().append('<option value="">Seleccionar corregimiento...</option>');
             
             if (!distritosData || distritosData.length === 0) {
-                console.log('ERROR: distritosData está vacío o no definido');
                 return;
             }
             
             const distritosFiltrados = distritosData.filter(function(distrito) {
-                console.log('Filtrando distrito:', distrito.CodeProvincia, 'vs', codigoProvincia);
                 return distrito.CodeProvincia === codigoProvincia;
             });
             
-            console.log('Distritos filtrados encontrados:', distritosFiltrados.length);
-            console.log('Distritos filtrados:', distritosFiltrados);
-            
             const selectDistrito = $('#distritoTrabajo');
-            console.log('Elemento selectDistrito encontrado:', selectDistrito.length);
             
             selectDistrito.empty().append('<option value="">Seleccionar distrito...</option>');
             
@@ -3700,77 +3565,47 @@
             // Actualizar Select2 después de cargar datos
             selectDistrito.trigger('change');
             
-            console.log('=== FIN cargarDistritosPorProvincia ===');
-            
             // Si es Panamá (8), cargar corregimientos del distrito por defecto
             if (codigoProvincia === 8) {
-                console.log('=== LLAMANDO cargarCorregimientosPorDistrito ===');
                 cargarCorregimientosPorDistrito(47);
             }
         }
 
         function cargarCorregimientos() {
-            console.log('=== INICIO cargarCorregimientos ===');
-            
             $.ajax({
                 type: "POST",
                 url: "GestionSocios.aspx/ObtenerCorregimientos",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log('=== RESPUESTA AJAX cargarCorregimientos ===');
-                    console.log('Response completa:', response);
-                    
                     if (typeof response.d === 'string') {
-                        console.log('Parseando response.d como string');
                         response.d = JSON.parse(response.d);
                     }
 
-                    console.log('Response.d después del parse:', response.d);
-                    console.log('Success:', response.d.Success);
-                    console.log('Data length:', response.d.Data ? response.d.Data.length : 'undefined');
-
                     if (response.d.Success) {
                         corregimientosData = response.d.Data;
-                        console.log('corregimientosData almacenado:', corregimientosData);
                         
-                        console.log('=== LLAMANDO cargarCorregimientosPorDistrito ===');
                         cargarCorregimientosPorDistrito(47);
                     } else {
-                        console.log('ERROR en cargarCorregimientos:', response.d.Message);
                         mostrarToast(response.d.Message || 'Error al cargar corregimientos', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('ERROR AJAX cargarCorregimientos:', error);
-                    console.log('XHR:', xhr);
-                    console.log('Status:', status);
                     mostrarToast('Error al cargar corregimientos', 'error');
                 }
             });
         }
 
         function cargarCorregimientosPorDistrito(codigoDistrito) {
-            console.log('=== INICIO cargarCorregimientosPorDistrito ===');
-            console.log('Código distrito recibido:', codigoDistrito);
-            console.log('corregimientosData disponible:', corregimientosData);
-            console.log('corregimientosData length:', corregimientosData ? corregimientosData.length : 'undefined');
-            
             if (!corregimientosData || corregimientosData.length === 0) {
-                console.log('ERROR: corregimientosData está vacío o no definido');
                 return;
             }
             
             const corregimientosFiltrados = corregimientosData.filter(function(corregimiento) {
-                console.log('Filtrando corregimiento:', corregimiento.CodeDistrito, 'vs', codigoDistrito);
                 return corregimiento.CodeDistrito === codigoDistrito;
             });
             
-            console.log('Corregimientos filtrados encontrados:', corregimientosFiltrados.length);
-            console.log('Corregimientos filtrados:', corregimientosFiltrados);
-            
             const selectCorregimiento = $('#corregimientoTrabajo');
-            console.log('Elemento selectCorregimiento encontrado:', selectCorregimiento.length);
             
             selectCorregimiento.empty().append('<option value="">Seleccionar corregimiento...</option>');
             
@@ -3781,18 +3616,12 @@
             
             // Actualizar Select2 después de cargar datos
             selectCorregimiento.trigger('change');
-            
-            console.log('=== FIN cargarCorregimientosPorDistrito ===');
         }
 
         function configurarDropdownsRelacionados() {
-            console.log('=== INICIO configurarDropdownsRelacionados ===');
-            
             // Event listener para cambio de país
             $('#paisTrabajo').on('change', function() {
-                console.log('=== EVENTO: Cambio de país ===');
                 const codigoPais = $(this).val();
-                console.log('País seleccionado:', codigoPais);
                 
                 // Limpiar inmediatamente todos los dropdowns dependientes
                 $('#provinciaTrabajo').empty().append('<option value="">Seleccionar provincia...</option>');
@@ -3800,53 +3629,40 @@
                 $('#corregimientoTrabajo').empty().append('<option value="">Seleccionar corregimiento...</option>');
                 
                 if (codigoPais) {
-                    console.log('Llamando cargarProvinciasPorPais con:', codigoPais);
                     cargarProvinciasPorPais(codigoPais);
                 }
             });
             
             // Event listener para cambio de provincia
             $('#provinciaTrabajo').on('change', function() {
-                console.log('=== EVENTO: Cambio de provincia ===');
                 const codigoProvincia = parseInt($(this).val());
-                console.log('Provincia seleccionada:', codigoProvincia);
                 
                 // Limpiar inmediatamente los dropdowns dependientes
                 $('#distritoTrabajo').empty().append('<option value="">Seleccionar distrito...</option>');
                 $('#corregimientoTrabajo').empty().append('<option value="">Seleccionar corregimiento...</option>');
                 
                 if (codigoProvincia) {
-                    console.log('Llamando cargarDistritosPorProvincia con:', codigoProvincia);
                     cargarDistritosPorProvincia(codigoProvincia);
                 }
             });
             
             // Event listener para cambio de distrito
             $('#distritoTrabajo').on('change', function() {
-                console.log('=== EVENTO: Cambio de distrito ===');
                 const codigoDistrito = parseInt($(this).val());
-                console.log('Distrito seleccionado:', codigoDistrito);
                 
                 // Limpiar inmediatamente el dropdown dependiente
                 $('#corregimientoTrabajo').empty().append('<option value="">Seleccionar corregimiento...</option>');
                 
                 if (codigoDistrito) {
-                    console.log('Llamando cargarCorregimientosPorDistrito con:', codigoDistrito);
                     cargarCorregimientosPorDistrito(codigoDistrito);
                 }
             });
-            
-            console.log('=== FIN configurarDropdownsRelacionados ===');
         }
 
         function configurarDropdownsResidencia() {
-            console.log('=== INICIO configurarDropdownsResidencia ===');
-            
             // Event listener para cambio de país de residencia
             $('#paisResidencia').on('change', function() {
-                console.log('=== EVENTO: Cambio de país residencia ===');
                 const codigoPais = $(this).val();
-                console.log('País residencia seleccionado:', codigoPais);
                 
                 // Limpiar inmediatamente todos los dropdowns dependientes
                 $('#provinciaResidencia').empty().append('<option value="">Seleccionar provincia...</option>');
@@ -3854,43 +3670,34 @@
                 $('#corregimientoResidencia').empty().append('<option value="">Seleccionar corregimiento...</option>');
                 
                 if (codigoPais) {
-                    console.log('Llamando cargarProvinciasResidenciaPorPais con:', codigoPais);
                     cargarProvinciasResidenciaPorPais(codigoPais);
                 }
             });
             
             // Event listener para cambio de provincia de residencia
             $('#provinciaResidencia').on('change', function() {
-                console.log('=== EVENTO: Cambio de provincia residencia ===');
                 const codigoProvincia = parseInt($(this).val());
-                console.log('Provincia residencia seleccionada:', codigoProvincia);
                 
                 // Limpiar inmediatamente los dropdowns dependientes
                 $('#distritoResidencia').empty().append('<option value="">Seleccionar distrito...</option>');
                 $('#corregimientoResidencia').empty().append('<option value="">Seleccionar corregimiento...</option>');
                 
                 if (codigoProvincia) {
-                    console.log('Llamando cargarDistritosResidenciaPorProvincia con:', codigoProvincia);
                     cargarDistritosResidenciaPorProvincia(codigoProvincia);
                 }
             });
             
             // Event listener para cambio de distrito de residencia
             $('#distritoResidencia').on('change', function() {
-                console.log('=== EVENTO: Cambio de distrito residencia ===');
                 const codigoDistrito = parseInt($(this).val());
-                console.log('Distrito residencia seleccionado:', codigoDistrito);
                 
                 // Limpiar inmediatamente el dropdown dependiente
                 $('#corregimientoResidencia').empty().append('<option value="">Seleccionar corregimiento...</option>');
                 
                 if (codigoDistrito) {
-                    console.log('Llamando cargarCorregimientosResidenciaPorDistrito con:', codigoDistrito);
                     cargarCorregimientosResidenciaPorDistrito(codigoDistrito);
                 }
             });
-            
-            console.log('=== FIN configurarDropdownsResidencia ===');
         }
 
         // ===== CONFIGURACIÓN DE SELECT2 PARA COMBOBOXES =====
@@ -3903,24 +3710,16 @@
                     // Verificar si Select2 está inicializado
                     if (elemento.hasClass('select2-hidden-accessible') && typeof elemento.select2 === 'function') {
                         elemento.select2('destroy');
-                        console.log('Select2 destruido para:', selector);
-                    } else {
-                        console.log('Select2 no inicializado para:', selector);
                     }
-                } else {
-                    console.log('Elemento no encontrado:', selector);
                 }
             } catch (e) {
-                console.log('Error al destruir Select2 para:', selector, e);
+                // Error silencioso
             }
         }
 
         function configurarSelect2() {
-            console.log('=== INICIO configurarSelect2 ===');
-            
             // Verificar que jQuery y Select2 estén disponibles
             if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
-                console.log('jQuery o Select2 no están disponibles');
                 return;
             }
             
@@ -3972,16 +3771,11 @@
                 }
             });
             }
-            
-            console.log('=== FIN configurarSelect2 ===');
         }
 
         function reinicializarSelect2() {
-            console.log('=== INICIO reinicializarSelect2 ===');
-            
             // Verificar que jQuery y Select2 estén disponibles
             if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
-                console.log('jQuery o Select2 no están disponibles');
                 return;
             }
             
@@ -3996,7 +3790,6 @@
             // Configurar Select2 para comboboxes de trabajo
             elementosTrabajo.forEach(function(selector) {
                 if ($(selector).length > 0) {
-                    console.log('Configurando Select2 para:', selector);
                     try {
                         $(selector).select2({
                             theme: 'bootstrap-5',
@@ -4014,9 +3807,8 @@
                                 }
                             }
                         });
-                        console.log('Select2 configurado exitosamente para:', selector);
                     } catch (e) {
-                        console.log('Error al configurar Select2 para:', selector, e);
+                        // Error silencioso
                     }
                 }
             });
@@ -4024,7 +3816,6 @@
             // Configurar Select2 para comboboxes de residencia
             elementosResidencia.forEach(function(selector) {
                 if ($(selector).length > 0) {
-                    console.log('Configurando Select2 para:', selector);
                     try {
                         $(selector).select2({
                             theme: 'bootstrap-5',
@@ -4042,22 +3833,16 @@
                                 }
                             }
                         });
-                        console.log('Select2 configurado exitosamente para:', selector);
                     } catch (e) {
-                        console.log('Error al configurar Select2 para:', selector, e);
+                        // Error silencioso
                     }
                 }
             });
-            
-            console.log('=== FIN reinicializarSelect2 ===');
         }
 
         function forzarSelect2() {
-            console.log('=== INICIO forzarSelect2 ===');
-            
             // Verificar que jQuery y Select2 estén disponibles
             if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
-                console.log('jQuery o Select2 no están disponibles');
                 return;
             }
             
@@ -4072,8 +3857,6 @@
             elementos.forEach(function(selector) {
                 const elemento = $(selector);
                 if (elemento.length > 0) {
-                    console.log('Forzando Select2 para:', selector);
-                    
                     // Limpiar cualquier residuo de Select2
                     elemento.removeClass('select2-hidden-accessible');
                     elemento.next('.select2-container').remove();
@@ -4096,20 +3879,14 @@
                                 }
                             }
                         });
-                        
-                        console.log('Select2 forzado exitosamente para:', selector);
                     } catch (e) {
-                        console.log('Error al forzar Select2 para:', selector, e);
+                        // Error silencioso
                     }
                 }
             });
-            
-            console.log('=== FIN forzarSelect2 ===');
         }
 
         function configurarEventosSelect2() {
-            console.log('=== INICIO configurarEventosSelect2 ===');
-            
             const elementos = [
                 '#paisTrabajo', '#provinciaTrabajo', '#distritoTrabajo', '#corregimientoTrabajo', '#profesion', '#ocupacion', '#lugarTrabajo',
                 '#paisResidencia', '#provinciaResidencia', '#distritoResidencia', '#corregimientoResidencia'
@@ -4120,33 +3897,20 @@
                 if (elemento.length > 0) {
                     // Evento cuando se abre el dropdown
                     elemento.on('select2:open', function() {
-                        console.log('Dropdown abierto para:', selector);
                         setTimeout(function() {
                             // Forzar foco en el campo de búsqueda
                             $('.select2-search__field').focus();
-                            console.log('Foco aplicado al campo de búsqueda');
                         }, 100);
-                    });
-                    
-                    // Evento cuando se cierra el dropdown
-                    elemento.on('select2:close', function() {
-                        console.log('Dropdown cerrado para:', selector);
                     });
                 }
             });
-            
-            console.log('=== FIN configurarEventosSelect2 ===');
         }
 
         function asegurarCampoBusqueda() {
-            console.log('=== INICIO asegurarCampoBusqueda ===');
-            
             // Verificar que el campo de búsqueda esté presente y funcional
             setTimeout(function() {
                 const campoBusqueda = $('.select2-search__field');
                 if (campoBusqueda.length > 0) {
-                    console.log('Campo de búsqueda encontrado:', campoBusqueda.length);
-                    
                     // Asegurar que el campo sea clickeable y funcional
                     campoBusqueda.prop('readonly', false);
                     campoBusqueda.prop('disabled', false);
@@ -4156,55 +3920,27 @@
                         'background': 'white',
                         'color': '#212529'
                     });
-                    
-                    // Agregar evento de foco
-                    campoBusqueda.on('focus', function() {
-                        console.log('Campo de búsqueda enfocado');
-                    });
-                    
-                    // Agregar evento de input
-                    campoBusqueda.on('input', function() {
-                        console.log('Texto ingresado en búsqueda:', $(this).val());
-                    });
-                    
-                    console.log('Campo de búsqueda configurado correctamente');
-                } else {
-                    console.log('Campo de búsqueda no encontrado');
                 }
             }, 500);
-            
-            console.log('=== FIN asegurarCampoBusqueda ===');
         }
 
         // ===== FUNCIONES PARA DROPDOWNS DE RESIDENCIA =====
 
         function cargarPaisesResidencia() {
-            console.log('=== INICIO cargarPaisesResidencia ===');
-            
             $.ajax({
                 type: "POST",
                 url: "GestionSocios.aspx/ObtenerPaises",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log('=== RESPUESTA AJAX cargarPaisesResidencia ===');
-                    console.log('Response completa:', response);
-                    
                     if (typeof response.d === 'string') {
-                        console.log('Parseando response.d como string');
                         response.d = JSON.parse(response.d);
                     }
 
-                    console.log('Response.d después del parse:', response.d);
-                    console.log('Success:', response.d.Success);
-                    console.log('Data length:', response.d.Data ? response.d.Data.length : 'undefined');
-
                     if (response.d.Success) {
                         paisesResidenciaData = response.d.Data;
-                        console.log('paisesResidenciaData almacenado:', paisesResidenciaData);
                         
                         const selectPais = $('#paisResidencia');
-                        console.log('Elemento selectPaisResidencia encontrado:', selectPais.length);
                         
                         selectPais.empty().append('<option value="">Seleccionar país...</option>');
                         
@@ -4216,88 +3952,56 @@
                         // Actualizar Select2 después de cargar datos
                         selectPais.trigger('change');
                         
-                        console.log('=== LLAMANDO cargarProvinciasResidenciaPorPais ===');
                         cargarProvinciasResidenciaPorPais('PA');
                     } else {
-                        console.log('ERROR en cargarPaisesResidencia:', response.d.Message);
                         mostrarToast(response.d.Message || 'Error al cargar países de residencia', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('ERROR AJAX cargarPaisesResidencia:', error);
-                    console.log('XHR:', xhr);
-                    console.log('Status:', status);
                     mostrarToast('Error al cargar países de residencia', 'error');
                 }
             });
         }
 
         function cargarProvinciasResidencia() {
-            console.log('=== INICIO cargarProvinciasResidencia ===');
-            
             $.ajax({
                 type: "POST",
                 url: "GestionSocios.aspx/ObtenerProvincias",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log('=== RESPUESTA AJAX cargarProvinciasResidencia ===');
-                    console.log('Response completa:', response);
-                    
                     if (typeof response.d === 'string') {
-                        console.log('Parseando response.d como string');
                         response.d = JSON.parse(response.d);
                     }
 
-                    console.log('Response.d después del parse:', response.d);
-                    console.log('Success:', response.d.Success);
-                    console.log('Data length:', response.d.Data ? response.d.Data.length : 'undefined');
-
                     if (response.d.Success) {
                         provinciasResidenciaData = response.d.Data;
-                        console.log('provinciasResidenciaData almacenado:', provinciasResidenciaData);
                         
-                        console.log('=== LLAMANDO cargarProvinciasResidenciaPorPais ===');
                         cargarProvinciasResidenciaPorPais('PA');
                     } else {
-                        console.log('ERROR en cargarProvinciasResidencia:', response.d.Message);
                         mostrarToast(response.d.Message || 'Error al cargar provincias de residencia', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('ERROR AJAX cargarProvinciasResidencia:', error);
-                    console.log('XHR:', xhr);
-                    console.log('Status:', status);
                     mostrarToast('Error al cargar provincias de residencia', 'error');
                 }
             });
         }
 
         function cargarProvinciasResidenciaPorPais(codigoPais) {
-            console.log('=== INICIO cargarProvinciasResidenciaPorPais ===');
-            console.log('Código país recibido:', codigoPais);
-            console.log('provinciasResidenciaData disponible:', provinciasResidenciaData);
-            console.log('provinciasResidenciaData length:', provinciasResidenciaData ? provinciasResidenciaData.length : 'undefined');
-            
             // Limpiar inmediatamente los dropdowns dependientes
             $('#distritoResidencia').empty().append('<option value="">Seleccionar distrito...</option>');
             $('#corregimientoResidencia').empty().append('<option value="">Seleccionar corregimiento...</option>');
             
             if (!provinciasResidenciaData || provinciasResidenciaData.length === 0) {
-                console.log('ERROR: provinciasResidenciaData está vacío o no definido');
                 return;
             }
             
             const provinciasFiltradas = provinciasResidenciaData.filter(function(provincia) {
-                console.log('Filtrando provincia residencia:', provincia.CodePais, 'vs', codigoPais);
                 return provincia.CodePais === codigoPais;
             });
             
-            console.log('Provincias residencia filtradas encontradas:', provinciasFiltradas.length);
-            console.log('Provincias residencia filtradas:', provinciasFiltradas);
-            
             const selectProvincia = $('#provinciaResidencia');
-            console.log('Elemento selectProvinciaResidencia encontrado:', selectProvincia.length);
             
             selectProvincia.empty().append('<option value="">Seleccionar provincia...</option>');
             
@@ -4309,80 +4013,50 @@
             // Actualizar Select2 después de cargar datos
             selectProvincia.trigger('change');
             
-            console.log('=== FIN cargarProvinciasResidenciaPorPais ===');
-            
             // Si es Panamá, cargar distritos de la provincia por defecto
             if (codigoPais === 'PA') {
-                console.log('=== LLAMANDO cargarDistritosResidenciaPorProvincia ===');
                 cargarDistritosResidenciaPorProvincia(8);
             }
         }
 
         function cargarDistritosResidencia() {
-            console.log('=== INICIO cargarDistritosResidencia ===');
-            
             $.ajax({
                 type: "POST",
                 url: "GestionSocios.aspx/ObtenerDistritos",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log('=== RESPUESTA AJAX cargarDistritosResidencia ===');
-                    console.log('Response completa:', response);
-                    
                     if (typeof response.d === 'string') {
-                        console.log('Parseando response.d como string');
                         response.d = JSON.parse(response.d);
                     }
 
-                    console.log('Response.d después del parse:', response.d);
-                    console.log('Success:', response.d.Success);
-                    console.log('Data length:', response.d.Data ? response.d.Data.length : 'undefined');
-
                     if (response.d.Success) {
                         distritosResidenciaData = response.d.Data;
-                        console.log('distritosResidenciaData almacenado:', distritosResidenciaData);
                         
-                        console.log('=== LLAMANDO cargarDistritosResidenciaPorProvincia ===');
                         cargarDistritosResidenciaPorProvincia(8);
                     } else {
-                        console.log('ERROR en cargarDistritosResidencia:', response.d.Message);
                         mostrarToast(response.d.Message || 'Error al cargar distritos de residencia', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('ERROR AJAX cargarDistritosResidencia:', error);
-                    console.log('XHR:', xhr);
-                    console.log('Status:', status);
                     mostrarToast('Error al cargar distritos de residencia', 'error');
                 }
             });
         }
 
         function cargarDistritosResidenciaPorProvincia(codigoProvincia) {
-            console.log('=== INICIO cargarDistritosResidenciaPorProvincia ===');
-            console.log('Código provincia recibido:', codigoProvincia);
-            console.log('distritosResidenciaData disponible:', distritosResidenciaData);
-            console.log('distritosResidenciaData length:', distritosResidenciaData ? distritosResidenciaData.length : 'undefined');
-            
             // Limpiar inmediatamente el dropdown dependiente
             $('#corregimientoResidencia').empty().append('<option value="">Seleccionar corregimiento...</option>');
             
             if (!distritosResidenciaData || distritosResidenciaData.length === 0) {
-                console.log('ERROR: distritosResidenciaData está vacío o no definido');
                 return;
             }
             
             const distritosFiltrados = distritosResidenciaData.filter(function(distrito) {
-                console.log('Filtrando distrito residencia:', distrito.CodeProvincia, 'vs', codigoProvincia);
                 return distrito.CodeProvincia === codigoProvincia;
             });
             
-            console.log('Distritos residencia filtrados encontrados:', distritosFiltrados.length);
-            console.log('Distritos residencia filtrados:', distritosFiltrados);
-            
             const selectDistrito = $('#distritoResidencia');
-            console.log('Elemento selectDistritoResidencia encontrado:', selectDistrito.length);
             
             selectDistrito.empty().append('<option value="">Seleccionar distrito...</option>');
             
@@ -4394,77 +4068,47 @@
             // Actualizar Select2 después de cargar datos
             selectDistrito.trigger('change');
             
-            console.log('=== FIN cargarDistritosResidenciaPorProvincia ===');
-            
             // Si es Panamá (8), cargar corregimientos del distrito por defecto
             if (codigoProvincia === 8) {
-                console.log('=== LLAMANDO cargarCorregimientosResidenciaPorDistrito ===');
                 cargarCorregimientosResidenciaPorDistrito(47);
             }
         }
 
         function cargarCorregimientosResidencia() {
-            console.log('=== INICIO cargarCorregimientosResidencia ===');
-            
             $.ajax({
                 type: "POST",
                 url: "GestionSocios.aspx/ObtenerCorregimientos",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log('=== RESPUESTA AJAX cargarCorregimientosResidencia ===');
-                    console.log('Response completa:', response);
-                    
                     if (typeof response.d === 'string') {
-                        console.log('Parseando response.d como string');
                         response.d = JSON.parse(response.d);
                     }
 
-                    console.log('Response.d después del parse:', response.d);
-                    console.log('Success:', response.d.Success);
-                    console.log('Data length:', response.d.Data ? response.d.Data.length : 'undefined');
-
                     if (response.d.Success) {
                         corregimientosResidenciaData = response.d.Data;
-                        console.log('corregimientosResidenciaData almacenado:', corregimientosResidenciaData);
                         
-                        console.log('=== LLAMANDO cargarCorregimientosResidenciaPorDistrito ===');
                         cargarCorregimientosResidenciaPorDistrito(47);
                     } else {
-                        console.log('ERROR en cargarCorregimientosResidencia:', response.d.Message);
                         mostrarToast(response.d.Message || 'Error al cargar corregimientos de residencia', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('ERROR AJAX cargarCorregimientosResidencia:', error);
-                    console.log('XHR:', xhr);
-                    console.log('Status:', status);
                     mostrarToast('Error al cargar corregimientos de residencia', 'error');
                 }
             });
         }
 
         function cargarCorregimientosResidenciaPorDistrito(codigoDistrito) {
-            console.log('=== INICIO cargarCorregimientosResidenciaPorDistrito ===');
-            console.log('Código distrito recibido:', codigoDistrito);
-            console.log('corregimientosResidenciaData disponible:', corregimientosResidenciaData);
-            console.log('corregimientosResidenciaData length:', corregimientosResidenciaData ? corregimientosResidenciaData.length : 'undefined');
-            
             if (!corregimientosResidenciaData || corregimientosResidenciaData.length === 0) {
-                console.log('ERROR: corregimientosResidenciaData está vacío o no definido');
                 return;
             }
             
             const corregimientosFiltrados = corregimientosResidenciaData.filter(function(corregimiento) {
-                console.log('Filtrando corregimiento residencia:', corregimiento.CodeDistrito, 'vs', codigoDistrito);
                 return corregimiento.CodeDistrito === codigoDistrito;
             });
             
-            console.log('Corregimientos residencia filtrados encontrados:', corregimientosFiltrados.length);
-            console.log('Corregimientos residencia filtrados:', corregimientosFiltrados);
-            
             const selectCorregimiento = $('#corregimientoResidencia');
-            console.log('Elemento selectCorregimientoResidencia encontrado:', selectCorregimiento.length);
             
             selectCorregimiento.empty().append('<option value="">Seleccionar corregimiento...</option>');
             
@@ -4475,8 +4119,6 @@
             
             // Actualizar Select2 después de cargar datos
             selectCorregimiento.trigger('change');
-            
-            console.log('=== FIN cargarCorregimientosResidenciaPorDistrito ===');
         }
 
         // ===== FUNCIONES PARA BENEFICIARIOS =====
@@ -4830,7 +4472,7 @@
                             try {
                                 beneficiario = JSON.parse(dataBeneficiario);
                             } catch (e) {
-                                console.error('Error al parsear datos del beneficiario:', e);
+                                // Error silencioso
                             }
                         }
                         return false; // Salir del each
@@ -5104,7 +4746,6 @@
                             } else {
                                 $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
                             }
-                            console.error('Respuesta inesperada de movimientos (HTML/script):', rawResponse);
                             mostrarToast('Respuesta inesperada al solicitar movimientos.', 'error');
                             return;
                         }
@@ -5120,7 +4761,6 @@
                             } else {
                                 $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
                             }
-                            console.error('No se pudo interpretar la respuesta de movimientos (envoltura):', rawResponse, parseEnvelopeError);
                             mostrarToast('No se pudo interpretar la respuesta del servidor.', 'error');
                             return;
                         }
@@ -5144,7 +4784,6 @@
                             } else {
                                 $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
                             }
-                            console.error('No se pudo interpretar los datos de movimientos:', payload, parseDataError);
                             mostrarToast('No se pudo interpretar los datos de movimientos.', 'error');
                             return;
                         }
@@ -5164,7 +4803,6 @@
                         $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
                     }
 
-                    console.error('Error al cargar movimientos:', { xhr, status, error });
                     mostrarToast('Error al cargar movimientos: ' + error, 'error');
                 }
             });
@@ -5338,6 +4976,841 @@
             return $('<div>').text(texto ?? '').html();
         }
 
+        function generarEstadoCuenta(numeroAsociado) {
+            if (!numeroAsociado) {
+                mostrarToast('No se pudo determinar el asociado.', 'warning');
+                return;
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: 'GestionSocios.aspx/GenerarEstadoCuenta',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ numeroAsociado: numeroAsociado.toString() }),
+                dataType: 'json',
+                success: function(response) {
+                    if (typeof response.d === 'string') {
+                        response.d = JSON.parse(response.d);
+                    }
+
+                    if (response.d && response.d.Resultado === 'SUCCESS') {
+                        mostrarModalEstadoCuenta(response.d.Html);
+                    } else {
+                        const mensaje = response.d && response.d.Mensaje ? response.d.Mensaje : 'No fue posible generar el estado de cuenta.';
+                        mostrarToast(mensaje, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    mostrarToast('Error al generar el estado de cuenta: ' + error, 'error');
+                }
+            });
+        }
+
+        function mostrarModalEstadoCuenta(htmlContent) {
+            // Crear el modal del estado de cuenta
+            const modalHtml = `
+                <div id="modalEstadoCuenta" class="estado-cuenta-modal-overlay">
+                    <div class="estado-cuenta-modal">
+                        <div class="estado-cuenta-modal-header">
+                            <h5><i class="fas fa-file-invoice text-primary"></i> Estado de Cuenta</h5>
+                            <button type="button" class="btn-close-custom" onclick="cerrarModalEstadoCuenta()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="estado-cuenta-modal-body">
+                            <div class="estado-cuenta-container">
+                                ${htmlContent}
+                            </div>
+                        </div>
+                        <div class="estado-cuenta-modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="cerrarModalEstadoCuenta()">
+                                <i class="fas fa-times"></i> Cerrar
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="imprimirEstadoCuentaDesdeModal()">
+                                <i class="fas fa-print"></i> Imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Agregar el modal al body
+            $('body').append(modalHtml);
+            
+            // Agregar estilos si no existen
+            if (!$('#estadoCuentaModalStyles').length) {
+                $('head').append(`
+                    <style id="estadoCuentaModalStyles">
+                        .estado-cuenta-modal-overlay {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            background: rgba(0, 0, 0, 0.7);
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            z-index: 10000;
+                            backdrop-filter: blur(3px);
+                        }
+                        
+                        .estado-cuenta-modal {
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+                            width: 95%;
+                            max-width: 1000px;
+                            max-height: 95vh;
+                            overflow: hidden;
+                            animation: modalSlideIn 0.3s ease-out;
+                            display: flex;
+                            flex-direction: column;
+                        }
+                        
+                        @keyframes modalSlideIn {
+                            from {
+                                opacity: 0;
+                                transform: translateY(-50px) scale(0.9);
+                            }
+                            to {
+                                opacity: 1;
+                                transform: translateY(0) scale(1);
+                            }
+                        }
+                        
+                        .estado-cuenta-modal-header {
+                            background: linear-gradient(135deg, #2c3e50, #34495e);
+                            color: white;
+                            padding: 15px 20px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            flex-shrink: 0;
+                        }
+                        
+                        .estado-cuenta-modal-header h5 {
+                            margin: 0;
+                            font-size: 18px;
+                            font-weight: 600;
+                        }
+                        
+                        .btn-close-custom {
+                            background: rgba(255, 255, 255, 0.2);
+                            border: none;
+                            color: white;
+                            width: 30px;
+                            height: 30px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                            transition: background 0.3s;
+                        }
+                        
+                        .btn-close-custom:hover {
+                            background: rgba(255, 255, 255, 0.3);
+                        }
+                        
+                        .estado-cuenta-modal-body {
+                            flex: 1;
+                            overflow: auto;
+                            padding: 20px;
+                            background: #f8f9fa;
+                        }
+                        
+                        .estado-cuenta-container {
+                            background: white;
+                            border-radius: 8px;
+                            padding: 20px;
+                            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        .estado-cuenta-modal-footer {
+                            padding: 15px 20px;
+                            background: #f8f9fa;
+                            border-top: 1px solid #dee2e6;
+                            display: flex;
+                            justify-content: flex-end;
+                            gap: 10px;
+                            flex-shrink: 0;
+                        }
+                        
+                        /* Ocultar botones del estado de cuenta en el modal */
+                        .estado-cuenta-container .no-print {
+                            display: none !important;
+                        }
+                        
+                        /* Botones del modal */
+                        .estado-cuenta-modal-footer .btn {
+                            padding: 10px 20px;
+                            border: none;
+                            border-radius: 6px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+                        
+                        .estado-cuenta-modal-footer .btn-secondary {
+                            background: #6c757d;
+                            color: white;
+                        }
+                        
+                        .estado-cuenta-modal-footer .btn-secondary:hover {
+                            background: #5a6268;
+                        }
+                        
+                        .estado-cuenta-modal-footer .btn-primary {
+                            background: #007bff;
+                            color: white;
+                        }
+                        
+                        .estado-cuenta-modal-footer .btn-primary:hover {
+                            background: #0056b3;
+                        }
+                        
+                        /* Estilos para el modal de detalle de intereses */
+                        .detalle-intereses-modal-overlay {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            background: rgba(0, 0, 0, 0.7);
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            z-index: 10001;
+                            backdrop-filter: blur(3px);
+                        }
+                        
+                        .detalle-intereses-modal {
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+                            width: 95%;
+                            max-width: 1200px;
+                            max-height: 90vh;
+                            overflow: hidden;
+                            animation: modalSlideIn 0.3s ease-out;
+                            display: flex;
+                            flex-direction: column;
+                        }
+                        
+                        .detalle-intereses-modal-header {
+                            background: linear-gradient(135deg, #17a2b8, #138496);
+                            color: white;
+                            padding: 15px 20px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            flex-shrink: 0;
+                        }
+                        
+                        .detalle-intereses-modal-header h5 {
+                            margin: 0;
+                            font-size: 18px;
+                            font-weight: 600;
+                        }
+                        
+                        .detalle-intereses-modal-body {
+                            flex: 1;
+                            overflow: auto;
+                            padding: 20px;
+                            background: #f8f9fa;
+                        }
+                        
+                        .detalle-intereses-content {
+                            background: white;
+                            border-radius: 8px;
+                            padding: 20px;
+                            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        .detalle-intereses-content table {
+                            font-size: 12px;
+                        }
+                        
+                        .detalle-intereses-content table thead {
+                            background: #17a2b8;
+                            color: white;
+                        }
+                        
+                        .detalle-intereses-content table thead th {
+                            padding: 10px 8px;
+                            text-align: center;
+                            font-weight: 600;
+                            font-size: 11px;
+                            text-transform: uppercase;
+                        }
+                        
+                        .detalle-intereses-content table tbody td {
+                            padding: 8px;
+                            text-align: center;
+                            vertical-align: middle;
+                        }
+                    </style>
+                `);
+            }
+        }
+
+        function cerrarModalEstadoCuenta() {
+            $('#modalEstadoCuenta').remove();
+        }
+
+        function mostrarDetalleIntereses(idAuxiliar) {
+            if (!idAuxiliar) {
+                mostrarToast('No se pudo determinar el auxiliar.', 'warning');
+                return;
+            }
+
+            // Mostrar loading
+            const loadingHtml = `
+                <div id="modalDetalleIntereses" class="detalle-intereses-modal-overlay">
+                    <div class="detalle-intereses-modal">
+                        <div class="detalle-intereses-modal-header">
+                            <h5><i class="fas fa-info-circle text-info"></i> Detalle de Intereses</h5>
+                            <button type="button" class="btn-close-custom" onclick="cerrarModalDetalleIntereses()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="detalle-intereses-modal-body">
+                            <div class="text-center p-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2">Cargando historial de intereses...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('body').append(loadingHtml);
+
+            $.ajax({
+                type: 'POST',
+                url: 'GestionSocios.aspx/ObtenerHistorialIntereses',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ idAuxiliar: idAuxiliar.toString() }),
+                dataType: 'json',
+                success: function(response) {
+                    if (typeof response.d === 'string') {
+                        response.d = JSON.parse(response.d);
+                    }
+
+                    if (response.d && response.d.Resultado === 'SUCCESS') {
+                        mostrarDetalleInteresesContenido(response.d.Datos);
+                    } else {
+                        const mensaje = response.d && response.d.Mensaje ? response.d.Mensaje : 'No fue posible obtener el historial de intereses.';
+                        mostrarToast(mensaje, 'error');
+                        cerrarModalDetalleIntereses();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    mostrarToast('Error al obtener el historial de intereses: ' + error, 'error');
+                    cerrarModalDetalleIntereses();
+                }
+            });
+        }
+
+        function mostrarDetalleInteresesContenido(datos) {
+            let tablaHtml = '';
+            
+            // Determinar el rubro del auxiliar (todos los registros tienen el mismo rubro)
+            const codigoRubro = (datos && datos.length > 0) ? (datos[0].CodigoRubro || '') : '';
+            const esPrestamo = codigoRubro.toUpperCase() === 'PR';
+            
+            if (datos && datos.length > 0) {
+                
+                // Definir las columnas según el tipo de cuenta
+                let columnaInteresPagado = '';
+                let columnaSaldoGenerado = '';
+                
+                if (esPrestamo) {
+                    // Para préstamos: mostrar "Interés Pagado a Fecha"
+                    columnaInteresPagado = '<th>Interés Pagado a Fecha</th>';
+                } else {
+                    // Para otros rubros: mostrar "Nuevo Saldo" después de "Interés Calculado"
+                    columnaSaldoGenerado = '<th>Nuevo Saldo</th>';
+                }
+                
+                tablaHtml = `
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fecha Cálculo</th>
+                                <th>Hora</th>
+                                <th>Fecha Últ. Cálculo</th>
+                                <th>Saldo a Fecha</th>
+                                <th>Interés Calc. a Fecha</th>
+                                ${columnaInteresPagado}
+                                <th>Días Intereses</th>
+                                <th>Tasa</th>
+                                <th>Interés Calculado</th>
+                                ${columnaSaldoGenerado}
+                                <th>Usuario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                // Función auxiliar para formatear montos
+                function formatearMontoHistorial(valor) {
+                    if (!valor || valor === 'N/A' || valor === '') return formateadorMonedaSocios.format(0);
+                    // Si ya es un string con formato, convertir a número
+                    const valorStr = valor.toString().trim();
+                    // Remover comas y convertir a número
+                    const numero = parseFloat(valorStr.replace(/,/g, '')) || 0;
+                    return formateadorMonedaSocios.format(numero);
+                }
+                
+                datos.forEach(function(item) {
+                    // Construir las celdas según el tipo de cuenta
+                    let celdaInteresPagado = '';
+                    let celdaSaldoGenerado = '';
+                    
+                    if (esPrestamo) {
+                        celdaInteresPagado = `<td>${formatearMontoHistorial(item.InteresPagadoAFecha)}</td>`;
+                    } else {
+                        celdaSaldoGenerado = `<td><strong>${formatearMontoHistorial(item.SaldoGenerado)}</strong></td>`;
+                    }
+                    
+                    tablaHtml += `
+                        <tr>
+                            <td>${item.FechaCalculo || 'N/A'}</td>
+                            <td>${item.HoraCalculo || 'N/A'}</td>
+                            <td>${item.FechaUltCalculo || 'N/A'}</td>
+                            <td>${formatearMontoHistorial(item.SaldoAFecha)}</td>
+                            <td>${formatearMontoHistorial(item.InteresCalculadoAFecha)}</td>
+                            ${celdaInteresPagado}
+                            <td>${item.DiasIntereses || '0'}</td>
+                            <td>${item.Tasa || '0.00'}%</td>
+                            <td><strong>${formatearMontoHistorial(item.InteresCalculado)}</strong></td>
+                            ${celdaSaldoGenerado}
+                            <td>${item.NombreUsuario || 'N/A'}</td>
+                        </tr>
+                    `;
+                });
+                
+                tablaHtml += `
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                tablaHtml = '<div class="alert alert-info text-center">No se encontraron registros de intereses para este auxiliar.</div>';
+            }
+
+            // Guardar los datos globalmente para exportar
+            window.historialInteresesActual = datos;
+            window.codigoRubroActual = codigoRubro;
+            
+            const contenidoHtml = `
+                <div class="detalle-intereses-content">
+                    <div class="mb-3 text-end">
+                        <button type="button" id="btnExportarExcelHistorial" class="btn btn-success btn-sm" onclick="exportarHistorialInteresesAExcel()" title="Exportar a Excel">
+                            <i class="fas fa-file-excel me-1"></i>Exportar a Excel
+                        </button>
+                    </div>
+                    ${tablaHtml}
+                </div>
+            `;
+
+            $('#modalDetalleIntereses .detalle-intereses-modal-body').html(contenidoHtml);
+        }
+        
+        function exportarHistorialInteresesAExcel() {
+            if (!window.historialInteresesActual || window.historialInteresesActual.length === 0) {
+                mostrarToast('No hay datos para exportar', 'warning');
+                return;
+            }
+            
+            // Obtener referencia al botón
+            const btnExportar = $('#btnExportarExcelHistorial');
+            if (btnExportar.length === 0) {
+                return;
+            }
+            
+            // Deshabilitar botón y mostrar indicador de carga
+            btnExportar.prop('disabled', true);
+            const textoOriginal = btnExportar.html();
+            btnExportar.html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Generando...');
+            
+            // Mostrar loading
+            mostrarToast('Generando archivo Excel...', 'info');
+            
+            // Función para restaurar el botón
+            const restaurarBoton = function() {
+                btnExportar.prop('disabled', false);
+                btnExportar.html(textoOriginal);
+            };
+            
+            // Convertir los datos a un formato que el servidor pueda procesar
+            const datosParaEnviar = window.historialInteresesActual.map(function(item) {
+                const itemDict = {};
+                for (const key in item) {
+                    if (item.hasOwnProperty(key)) {
+                        itemDict[key] = item[key];
+                    }
+                }
+                return itemDict;
+            });
+            
+            const datosEnviar = {
+                datos: datosParaEnviar,
+                codigoRubro: window.codigoRubroActual || ''
+            };
+            
+            $.ajax({
+                type: 'POST',
+                url: 'GestionSocios.aspx/ExportarHistorialInteresesAExcel',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(datosEnviar),
+                dataType: 'json',
+                success: function(response) {
+                    try {
+                        if (typeof response.d === 'string') {
+                            try {
+                                response.d = JSON.parse(response.d);
+                            } catch (e) {
+                                mostrarToast('Error al procesar la respuesta del servidor', 'error');
+                                restaurarBoton();
+                                return;
+                            }
+                        }
+                        
+                        if (response.d && response.d.Resultado === 'SUCCESS') {
+                            // Descargar el archivo usando el método del servidor
+                            const nombreArchivo = response.d.NombreArchivo;
+                            const urlDescarga = 'GestionSocios.aspx?action=download&file=' + encodeURIComponent(nombreArchivo);
+                            
+                            // Crear un enlace temporal para descargar
+                            const link = document.createElement('a');
+                            link.href = urlDescarga;
+                            link.download = nombreArchivo;
+                            link.target = '_blank';
+                            document.body.appendChild(link);
+                            link.click();
+                            
+                            // Esperar un momento antes de remover el enlace
+                            setTimeout(function() {
+                                document.body.removeChild(link);
+                            }, 100);
+                            
+                            mostrarToast('Archivo Excel generado exitosamente', 'success');
+                        } else {
+                            const mensaje = response.d && response.d.Mensaje ? response.d.Mensaje : 'Error al generar el archivo Excel.';
+                            mostrarToast(mensaje, 'error');
+                        }
+                    } finally {
+                        // Restaurar botón siempre, incluso si hay error
+                        restaurarBoton();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    mostrarToast('Error al exportar historial de intereses: ' + error, 'error');
+                    // Restaurar botón en caso de error
+                    restaurarBoton();
+                }
+            });
+        }
+
+        function cerrarModalDetalleIntereses() {
+            $('#modalDetalleIntereses').remove();
+        }
+
+        function imprimirEstadoCuentaDesdeModal() {
+            // Crear una ventana temporal para imprimir (mismo proceso que comprobantes)
+            const ventanaImpresion = window.open('', '_blank', 'width=800,height=600');
+            
+            // Obtener el contenido del estado de cuenta del modal
+            const contenidoEstadoCuenta = $('#modalEstadoCuenta .estado-cuenta-container').html();
+            
+            // Leer los estilos completos del template HTML
+            const estilosCompletos = `
+                @page {
+                    size: 8.5in 11in;
+                    margin: 0.5in;
+                }
+                
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    font-size: 12px;
+                    line-height: 1.4;
+                    background-color: white;
+                    color: #333;
+                }
+                
+                .estado-cuenta {
+                    width: 100%;
+                    max-width: 8.5in;
+                    margin: 0 auto;
+                    background-color: white;
+                }
+                
+                .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                    padding-bottom: 20px;
+                    border-bottom: 2px solid #2c3e50;
+                }
+                
+                .logo {
+                    margin-bottom: 15px;
+                }
+                
+                .logo img {
+                    max-width: 200px;
+                    height: auto;
+                }
+                
+                .cooperativa-nombre {
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #2c3e50;
+                    margin-bottom: 10px;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+                
+                .titulo-estado {
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #2c3e50;
+                    margin-top: 15px;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                }
+                
+                .datos-asociado {
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    border: 1px solid #dee2e6;
+                    border-radius: 6px;
+                    padding: 15px;
+                    margin-bottom: 25px;
+                }
+                
+                .datos-asociado h3 {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #2c3e50;
+                    margin-bottom: 10px;
+                    text-transform: uppercase;
+                    border-bottom: 1px solid #ced4da;
+                    padding-bottom: 8px;
+                }
+                
+                .datos-asociado .campo {
+                    display: flex;
+                    margin-bottom: 8px;
+                }
+                
+                .datos-asociado .campo-label {
+                    font-weight: 600;
+                    color: #495057;
+                    min-width: 150px;
+                }
+                
+                .datos-asociado .campo-label::after {
+                    content: ":";
+                    margin-right: 10px;
+                }
+                
+                .datos-asociado .campo-valor {
+                    color: #212529;
+                }
+                
+                .tabla-datos {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 30px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                
+                .tabla-datos thead {
+                    background: #2c3e50;
+                    color: white;
+                }
+                
+                .tabla-datos thead th {
+                    padding: 12px 8px;
+                    text-align: center;
+                    font-weight: 600;
+                    font-size: 11px;
+                    text-transform: uppercase;
+                    border: 1px solid #1a252f;
+                }
+                
+                .tabla-datos thead th:nth-child(7) {
+                    min-width: 120px;
+                    width: 120px;
+                }
+                
+                .tabla-datos tbody td {
+                    padding: 10px 8px;
+                    text-align: center;
+                    border: 1px solid #dee2e6;
+                    font-size: 11px;
+                }
+                
+                .tabla-datos tbody tr:nth-child(even) {
+                    background-color: #f8f9fa;
+                }
+                
+                .tabla-datos tbody tr:hover {
+                    background-color: #e9ecef;
+                }
+                
+                .celda-intereses {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    text-align: center;
+                }
+                
+                .btn-detalle-intereses {
+                    background: #ffc107;
+                    color: #333;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 4px 8px;
+                    font-size: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 24px;
+                    height: 20px;
+                }
+                
+                .btn-detalle-intereses i {
+                    color: #333;
+                    font-size: 10px;
+                }
+                
+                .btn-detalle-intereses:hover {
+                    background: #ffb300;
+                    transform: scale(1.05);
+                }
+                
+                .monto-intereses {
+                    font-weight: 500;
+                }
+                
+                .footer {
+                    margin-top: 40px;
+                    padding-top: 20px;
+                    border-top: 2px solid #2c3e50;
+                    text-align: center;
+                    font-size: 10px;
+                    color: #6c757d;
+                }
+                
+                .fecha-impresion {
+                    font-weight: 600;
+                    color: #495057;
+                }
+                
+                @media print {
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
+                    
+                    .no-print {
+                        display: none;
+                    }
+                    
+                    .btn-detalle-intereses {
+                        display: none !important;
+                    }
+                    
+                    .celda-intereses {
+                        justify-content: center;
+                    }
+                    
+                    /* Forzar colores de fondo en impresión */
+                    .datos-asociado {
+                        background: #f8f9fa !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                        color-adjust: exact;
+                    }
+                    
+                    .tabla-datos thead {
+                        background: #2c3e50 !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                        color-adjust: exact;
+                    }
+                    
+                    .tabla-datos thead th {
+                        background: #2c3e50 !important;
+                        color: white !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                        color-adjust: exact;
+                    }
+                    
+                    .tabla-datos tbody tr:nth-child(even) {
+                        background-color: #f8f9fa !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                        color-adjust: exact;
+                    }
+                }
+                
+                /* Forzar colores fuera de media print también */
+                .datos-asociado {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                    color-adjust: exact;
+                }
+                
+                .tabla-datos thead {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                    color-adjust: exact;
+                }
+                
+                .tabla-datos thead th {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                    color-adjust: exact;
+                }
+            `;
+            
+            // Escribir el contenido en la ventana de impresión con todos los estilos
+            ventanaImpresion.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Estado de Cuenta</title>
+                    <style>
+                        ${estilosCompletos}
+                    </style>
+                </head>
+                <body>
+                    ${contenidoEstadoCuenta}
+                </body>
+                </html>
+            `);
+            
+            ventanaImpresion.document.close();
+            
+            // Esperar a que se cargue el contenido y luego imprimir
+            setTimeout(function() {
+                ventanaImpresion.print();
+            }, 250);
+        }
+
         function reimprimirComprobanteMovimiento(movimientoId) {
             if (!movimientoId) {
                 mostrarToast('No se pudo determinar el movimiento a imprimir.', 'warning');
@@ -5363,7 +5836,6 @@
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error al generar comprobante:', { xhr, status, error });
                     mostrarToast('Error al generar el comprobante: ' + error, 'error');
                 }
             });

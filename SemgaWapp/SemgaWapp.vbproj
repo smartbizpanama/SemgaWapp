@@ -146,20 +146,30 @@
     <Content Include="Dashboard.aspx" />
     <Content Include="Forms\Auxiliares\AuxiliaresAsociados.aspx" />
     <Content Include="Forms\Finanzas\Finanzas.aspx" />
+    <Content Include="Forms\Help\helpDashboard.aspx" />
+    <Content Include="Forms\Help\procesosTecnicos.aspx" />
     <Content Include="Forms\Logs\DetalleLogs.aspx" />
+    <Content Include="Forms\Logs\historialTablas.aspx" />
     <Content Include="Forms\Logs\Logs.aspx" />
     <Content Include="Forms\Logs\LogsAccesos.aspx" />
     <Content Include="Forms\Logs\LogsAplicacion.aspx" />
     <Content Include="Forms\Logs\LogsAuditoria.aspx" />
+    <Content Include="Forms\Logs\tabla.html" />
     <Content Include="Forms\Mantenimientos\appParams.aspx" />
     <Content Include="Forms\Mantenimientos\Mantenimientos.aspx" />
     <Content Include="Forms\Mantenimientos\dashboardSistemas.aspx" />
     <Content Include="Forms\Mantenimientos\GestionUsuarios.aspx" />
+    <Content Include="Forms\Mantenimientos\TestMantenimientos.aspx" />
+    <Content Include="Forms\Reportes\dashboardReportes.aspx" />
+    <Content Include="Forms\Reportes\Movimientos.aspx" />
+    <Content Include="Forms\Reportes\ReporteMovimientos.html" />
     <Content Include="Forms\Reportes\Reportes.aspx" />
+    <Content Include="Forms\Help\Documentacion.aspx" />
     <Content Include="Forms\Sistemas\Respaldos.aspx" />
     <Content Include="Forms\Socios\GestionSocios.aspx" />
     <Content Include="Forms\Transacciones\comprobanteText.aspx" />
     <Content Include="Forms\Transacciones\ComprobanteTransaccion.html" />
+    <Content Include="Forms\Transacciones\plantillaComprobante.html" />
     <Content Include="Forms\Transacciones\Transacciones.aspx" />
     <Content Include="Global.asax" />
     <Content Include="Login.aspx" />
@@ -192,9 +202,30 @@
       <DependentUpon>Finanzas.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="Forms\Help\helpDashboard.aspx.designer.vb">
+      <DependentUpon>helpDashboard.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Help\helpDashboard.aspx.vb">
+      <DependentUpon>helpDashboard.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
+    <Compile Include="Forms\Help\procesosTecnicos.aspx.designer.vb">
+      <DependentUpon>procesosTecnicos.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Help\procesosTecnicos.aspx.vb">
+      <DependentUpon>procesosTecnicos.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
     <Compile Include="Forms\Logs\DetalleLogs.aspx.vb">
       <DependentUpon>DetalleLogs.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Forms\Logs\historialTablas.aspx.designer.vb">
+      <DependentUpon>historialTablas.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Logs\historialTablas.aspx.vb">
+      <DependentUpon>historialTablas.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
     </Compile>
     <Compile Include="Forms\Logs\Logs.aspx.designer.vb">
       <DependentUpon>Logs.aspx</DependentUpon>
@@ -243,11 +274,36 @@
       <DependentUpon>GestionUsuarios.aspx</DependentUpon>
       <SubType>ASPXCodebehind</SubType>
     </Compile>
+    <Compile Include="Forms\Mantenimientos\TestMantenimientos.aspx.vb">
+      <DependentUpon>TestMantenimientos.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Forms\Reportes\dashboardReportes.aspx.designer.vb">
+      <DependentUpon>dashboardReportes.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Reportes\dashboardReportes.aspx.vb">
+      <DependentUpon>dashboardReportes.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
+    <Compile Include="Forms\Reportes\Movimientos.aspx.designer.vb">
+      <DependentUpon>Movimientos.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Reportes\Movimientos.aspx.vb">
+      <DependentUpon>Movimientos.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
     <Compile Include="Forms\Reportes\Reportes.aspx.designer.vb">
       <DependentUpon>Reportes.aspx</DependentUpon>
     </Compile>
     <Compile Include="Forms\Reportes\Reportes.aspx.vb">
       <DependentUpon>Reportes.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
+    <Compile Include="Forms\Help\Documentacion.aspx.designer.vb">
+      <DependentUpon>Documentacion.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Help\Documentacion.aspx.vb">
+      <DependentUpon>Documentacion.aspx</DependentUpon>
       <SubType>ASPXCodebehind</SubType>
     </Compile>
     <Compile Include="Forms\Sistemas\Respaldos.aspx.designer.vb">

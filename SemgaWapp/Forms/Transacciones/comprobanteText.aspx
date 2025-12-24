@@ -273,8 +273,6 @@
 
         // Función para marcar el comprobante como impreso
         function marcarComprobanteComoImpreso(movimientoId) {
-            console.log('🖨️ Marcando comprobante como impreso para movimiento:', movimientoId);
-            
             $.ajax({
                 type: 'POST',
                 url: 'comprobanteText.aspx/MarcarComprobanteImpreso',
@@ -283,15 +281,12 @@
                 dataType: 'json',
                 success: function(response) {
                     if (response.d.Resultado === 'SUCCESS') {
-                        console.log('Comprobante marcado como impreso correctamente');
                         showToast('success', 'Éxito', 'Comprobante marcado como impreso');
                     } else {
-                        console.error('Error al marcar como impreso:', response.d.Mensaje);
                         showToast('error', 'Error', 'Error al marcar comprobante como impreso: ' + response.d.Mensaje);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error AJAX al marcar como impreso:', error);
                     showToast('error', 'Error', 'Error al marcar comprobante como impreso: ' + error);
                 }
             });

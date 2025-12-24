@@ -17,6 +17,17 @@ Public Class AuxiliaresAsociados
 		End If
 	End Sub
 
+	' Propiedad pública para exponer el nivel de acceso al JavaScript
+	Public ReadOnly Property NivelAccesoUsuario() As Integer
+		Get
+			If Session(VariablesSesion.NivelAcceso) IsNot Nothing Then
+				Return Convert.ToInt32(Session(VariablesSesion.NivelAcceso))
+			Else
+				Return 999
+			End If
+		End Get
+	End Property
+
 	<WebMethod()>
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function ObtenerRubros() As Object
@@ -156,7 +167,8 @@ Public Class AuxiliaresAsociados
 					.FechaUltimoPago = If(row("FechaUltimoPago") Is DBNull.Value, "", row("FechaUltimoPago").ToString()),
 					.FechaCreacion = If(row("FechaCreacion") Is DBNull.Value, "", row("FechaCreacion").ToString()),
 					.UsuarioCrea = If(row("UsuarioCrea") Is DBNull.Value, "", row("UsuarioCrea").ToString()),
-					.UsuarioModifica = If(row("UsuarioModifica") Is DBNull.Value, "", row("UsuarioModifica").ToString())
+					.UsuarioModifica = If(row("UsuarioModifica") Is DBNull.Value, "", row("UsuarioModifica").ToString()),
+					.snActivo = If(row("snActivo") Is DBNull.Value, False, Convert.ToBoolean(row("snActivo")))
 				}
 				auxiliares.Add(auxiliar)
 			Next
@@ -221,7 +233,8 @@ Public Class AuxiliaresAsociados
 					.FechaUltimoPago = If(row("FechaUltimoPago") Is DBNull.Value, "", row("FechaUltimoPago").ToString()),
 					.FechaCreacion = If(row("FechaCreacion") Is DBNull.Value, "", row("FechaCreacion").ToString()),
 					.UsuarioCrea = If(row("UsuarioCrea") Is DBNull.Value, "", row("UsuarioCrea").ToString()),
-					.UsuarioModifica = If(row("UsuarioModifica") Is DBNull.Value, "", row("UsuarioModifica").ToString())
+					.UsuarioModifica = If(row("UsuarioModifica") Is DBNull.Value, "", row("UsuarioModifica").ToString()),
+					.snActivo = If(row("snActivo") Is DBNull.Value, False, Convert.ToBoolean(row("snActivo")))
 				}
 				auxiliares.Add(auxiliar)
 			Next
@@ -302,7 +315,8 @@ Public Class AuxiliaresAsociados
 					.FechaUltimoPago = If(row("FechaUltimoPago") Is DBNull.Value, "", row("FechaUltimoPago").ToString()),
 					.FechaCreacion = If(row("FechaCreacion") Is DBNull.Value, "", row("FechaCreacion").ToString()),
 					.UsuarioCrea = If(row("UsuarioCrea") Is DBNull.Value, "", row("UsuarioCrea").ToString()),
-					.UsuarioModifica = If(row("UsuarioModifica") Is DBNull.Value, "", row("UsuarioModifica").ToString())
+					.UsuarioModifica = If(row("UsuarioModifica") Is DBNull.Value, "", row("UsuarioModifica").ToString()),
+					.snActivo = If(row("snActivo") Is DBNull.Value, False, Convert.ToBoolean(row("snActivo")))
 				}
 				auxiliares.Add(auxiliar)
 			Next
@@ -344,13 +358,13 @@ Public Class AuxiliaresAsociados
 			Dim sSql As String
 			If esNumero Then
 				sSql = "Exec spBuscarAsociadoPorID"
-				ModGlobal.EscribirLog("📡 Ejecutando SQL por ID: " & sSql)
+				ModGlobal.EscribirLog("Ejecutando SQL por ID: " & sSql)
 				With objSql.Parametros
 					.Add("@NumeroAsociado", numeroAsociado)
 				End With
 			Else
 				sSql = "Exec spBuscarAsociados"
-				ModGlobal.EscribirLog("📡 Ejecutando SQL por texto: " & sSql)
+				ModGlobal.EscribirLog("Ejecutando SQL por texto: " & sSql)
 				With objSql.Parametros
 					.Add("@Busqueda", busqueda)
 				End With
@@ -375,19 +389,38 @@ Public Class AuxiliaresAsociados
 			Dim asociados As New List(Of Object)
 
 			If dt.Rows.Count > 0 Then
+				' Log de columnas disponibles para debugging
+				Dim columnasDisponibles As String = String.Join(", ", dt.Columns.Cast(Of DataColumn)().Select(Function(c) c.ColumnName))
+				ModGlobal.EscribirLog("📋 Columnas disponibles en DataTable: " & columnasDisponibles)
+				
 				For i As Integer = 0 To dt.Rows.Count - 1
 					Dim row As DataRow = dt.Rows(i)
+					Dim cantidadAuxiliares As Integer = 0
+					
+					' Verificar si la columna existe antes de leerla
+					If dt.Columns.Contains("CantAuxiliares") Then
+						If Not IsDBNull(row("CantAuxiliares")) Then
+							Integer.TryParse(row("CantAuxiliares").ToString(), cantidadAuxiliares)
+							ModGlobal.EscribirLog("CantAuxiliares leído para asociado " & row("NumeroAsociado").ToString() & ": " & cantidadAuxiliares)
+						Else
+							ModGlobal.EscribirLog("CantAuxiliares es NULL para asociado " & row("NumeroAsociado").ToString())
+						End If
+					Else
+						ModGlobal.EscribirLog("Columna 'CantAuxiliares' no existe en el DataTable")
+					End If
+					
 					Dim asociado As New With {
 						.NumeroAsociado = row("NumeroAsociado").ToString(),
 						.NombreCompleto = row("NombreCompleto").ToString(),
 						.NumeroIdentificacion = row("NumeroIdentificacion").ToString(),
 						.TipoAsociado = row("TipoAsociado").ToString(),
-						.CodTipoDoc = If(row("CodTipoDoc") Is DBNull.Value, "", row("CodTipoDoc").ToString())
+						.CodTipoDoc = If(row("CodTipoDoc") Is DBNull.Value, "", row("CodTipoDoc").ToString()),
+						.CantidadAuxiliares = cantidadAuxiliares
 					}
 					asociados.Add(asociado)
 
 					If i < 5 Then
-						ModGlobal.EscribirLog("👤 Asociado #" & (i + 1) & ": " & row("NombreCompleto").ToString() & " - " & row("NumeroAsociado").ToString())
+						ModGlobal.EscribirLog("👤 Asociado #" & (i + 1) & ": " & row("NombreCompleto").ToString() & " - " & row("NumeroAsociado").ToString() & " - Auxiliares: " & cantidadAuxiliares)
 					End If
 				Next
 			End If
@@ -520,6 +553,20 @@ Public Class AuxiliaresAsociados
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function EliminarAuxiliar(id As Integer, numeroAsociado As Integer) As Object
 		Try
+			' Verificar nivel de acceso - solo permitir si el nivel es 0 o 1
+			Dim nivelAcceso As Integer = 999
+			If HttpContext.Current.Session("NivelAcceso") IsNot Nothing Then
+				nivelAcceso = Convert.ToInt32(HttpContext.Current.Session("NivelAcceso"))
+			End If
+
+			If nivelAcceso <> 0 AndAlso nivelAcceso <> 1 Then
+				ModGlobal.EscribirLog($"Intento de eliminación denegado. Usuario ID: {HttpContext.Current.Session(VariablesSesion.UsuarioId)}, NivelAcceso: {nivelAcceso}")
+				Return New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No tiene permisos para eliminar auxiliares. Solo usuarios con nivel de acceso 0 o 1 pueden realizar esta acción."
+				}
+			End If
+
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spAuxiliares_EliminarAuxiliar"
 
@@ -559,6 +606,73 @@ Public Class AuxiliaresAsociados
 			Return New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al eliminar auxiliar: " & ex.Message
+			}
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function ActivarDesactivarAuxiliar(id As Integer, numeroAsociado As Integer, snActivo As Boolean) As Object
+		Try
+			' Verificar nivel de acceso - solo permitir si el nivel es 0 o 1
+			Dim nivelAcceso As Integer = 999
+			If HttpContext.Current.Session("NivelAcceso") IsNot Nothing Then
+				nivelAcceso = Convert.ToInt32(HttpContext.Current.Session("NivelAcceso"))
+			End If
+
+			If nivelAcceso <> 0 AndAlso nivelAcceso <> 1 Then
+				ModGlobal.EscribirLog($"Intento de activar/desactivar denegado. Usuario ID: {HttpContext.Current.Session(VariablesSesion.UsuarioId)}, NivelAcceso: {nivelAcceso}")
+				Return New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No tiene permisos para activar/desactivar auxiliares. Solo usuarios con nivel de acceso 0 o 1 pueden realizar esta acción."
+				}
+			End If
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "Exec spAuxiliares_ActivarDesactivar"
+
+			Dim idSession As String = ""
+			If HttpContext.Current.Session(VariablesSesion.logID) IsNot Nothing Then
+				idSession = HttpContext.Current.Session(VariablesSesion.logID).ToString()
+			End If
+
+			With objSql.Parametros
+				.Add("@ID", id)
+				.Add("@NumeroAsociado", numeroAsociado)
+				.Add("@UsuarioID", HttpContext.Current.Session(VariablesSesion.UsuarioId))
+				.Add("@snActivo", snActivo)
+				.Add("@IdSession", idSession)
+			End With
+
+			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+
+			' Verificar si hubo error en la base de datos
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("Error en BD al activar/desactivar auxiliar: " & objSql.MensajeError)
+				Return New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				}
+			End If
+
+			If dt.Rows.Count > 0 Then
+				Dim row As DataRow = dt.Rows(0)
+				Return New With {
+					.Resultado = row("Resultado").ToString(),
+					.Mensaje = row("Mensaje").ToString()
+				}
+			Else
+				Return New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del procedimiento almacenado"
+				}
+			End If
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en ActivarDesactivarAuxiliar: " & ex.Message)
+			Return New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al cambiar el estado del auxiliar: " & ex.Message
 			}
 		End Try
 	End Function

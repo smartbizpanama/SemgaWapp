@@ -453,6 +453,7 @@
     <script src="../../Scripts/smart-chips.js"></script>
     <script src="../../Scripts/global-associate-search.js?v=1.3"></script>
     <script src="../../Scripts/inactivity-monitor-final.js?v=2.6"></script>
+    <script src="../../Scripts/notifications.js"></script>
     <!-- Flatpickr Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
@@ -470,7 +471,10 @@
             // Escuchar mensajes de la ventana del comprobante
             window.addEventListener('message', function(event) {
                 if (event.data && event.data.tipo === 'marcarImpreso') {
-                    marcarComprobanteComoImpreso(event.data.movimientoId);
+                    marcarComprobanteComoImpreso(
+                        event.data.capitalMovimientoId || '',
+                        event.data.interesesMovimientoId || ''
+                    );
                 }
             });
 
@@ -553,7 +557,8 @@
         var asociadoSeleccionado = null;
         var globalSearchConfig = null;
         var jsonAuxiliares = null; // Almacenar el JSON de auxiliares del asociado
-        var ultimoMovimientoId = null; // Almacenar el ID del último movimiento guardado
+        var ultimoCapitalMovimientoId = null; // Almacenar el ID del último movimiento de capital guardado
+        var ultimoInteresesMovimientoId = null; // Almacenar el ID del último movimiento de intereses guardado
         var guardandoTransaccion = false; // Prevenir múltiples ejecuciones simultáneas
 
         // Función para inicializar el componente global de búsqueda
@@ -633,193 +638,20 @@
         }
 
         function mostrarConfirmEliminarAsociado() {
-            // Asegurar que los estilos de modales estén disponibles
-            if (!$('#customModalStyles').length) {
-                $('head').append(`
-                    <style id="customModalStyles">
-                        .custom-modal-overlay {
-                            position: fixed;
-                            top: 0;
-                            left: 0;
-                            width: 100%;
-                            height: 100%;
-                            background: rgba(0, 0, 0, 0.5);
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            z-index: 9999;
-                            backdrop-filter: blur(3px);
-                        }
-                        
-                        .custom-modal {
-                            background: white;
-                            border-radius: 12px;
-                            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-                            width: 90%;
-                            max-width: 450px;
-                            max-height: 90vh;
-                            overflow: hidden;
-                            animation: modalSlideIn 0.3s ease-out;
-                        }
-                        
-                        @keyframes modalSlideIn {
-                            from {
-                                opacity: 0;
-                                transform: translateY(-50px) scale(0.9);
-                            }
-                            to {
-                                opacity: 1;
-                                transform: translateY(0) scale(1);
-                            }
-                        }
-                        
-                        .custom-modal-header {
-                            background: linear-gradient(135deg, #667eea, #764ba2);
-                            color: white;
-                            padding: 20px;
-                            border-radius: 12px 12px 0 0;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                        }
-                        
-                        .custom-modal-header h5 {
-                            margin: 0;
-                            font-weight: 600;
-                            font-size: 18px;
-                        }
-                        
-                        .btn-close-custom {
-                            background: rgba(255, 255, 255, 0.2);
-                            border: none;
-                            color: white;
-                            width: 30px;
-                            height: 30px;
-                            border-radius: 50%;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            cursor: pointer;
-                            transition: background 0.3s;
-                        }
-                        
-                        .btn-close-custom:hover {
-                            background: rgba(255, 255, 255, 0.3);
-                        }
-                        
-                        .custom-modal-body {
-                            padding: 25px;
-                        }
-                        
-                        .pregunta-confirm {
-                            text-align: center;
-                            font-size: 16px;
-                            color: #495057;
-                            margin-bottom: 15px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            gap: 10px;
-                        }
-                        
-                        .pregunta-confirm i {
-                            font-size: 24px;
-                            color: #ffc107;
-                        }
-                        
-                        .texto-adicional {
-                            text-align: center;
-                            font-size: 14px;
-                            color: #6c757d;
-                            font-weight: 500;
-                        }
-                        
-                        .custom-modal-footer {
-                            padding: 20px 25px;
-                            background: #f8f9fa;
-                            border-radius: 0 0 12px 12px;
-                            display: flex;
-                            gap: 10px;
-                            justify-content: flex-end;
-                        }
-                        
-                        .btn-cancel, .btn-confirm {
-                            padding: 10px 20px;
-                            border-radius: 6px;
-                            border: none;
-                            font-weight: 500;
-                            cursor: pointer;
-                            transition: all 0.3s;
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                        }
-                        
-                        .btn-cancel {
-                            background: #6c757d;
-                            color: white;
-                        }
-                        
-                        .btn-cancel:hover {
-                            background: #5a6268;
-                        }
-                        
-                        .btn-confirm {
-                            background: #dc3545;
-                            color: white;
-                        }
-                        
-                        .btn-confirm:hover {
-                            background: #c82333;
-                        }
-                    </style>
-                `);
-            }
-
-            const modalHtml = `
-                <div id="modalConfirmEliminar" class="custom-modal-overlay">
-                    <div class="custom-modal">
-                        <div class="custom-modal-header">
-                            <h5>Advertencia</h5>
-                            <button type="button" class="btn-close-custom" onclick="cerrarConfirmEliminarModal()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="custom-modal-body">
-                            <div class="pregunta-confirm">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Eliminar al asociado borrará los datos de la transacción.
-                            </div>
-                            <div class="texto-adicional">
-                                ¿Desea continuar?
-                            </div>
-                        </div>
-                        <div class="custom-modal-footer">
-                            <button type="button" class="btn btn-cancel" onclick="cerrarConfirmEliminarModal()">
-                                <i class="fas fa-times"></i> Cancelar
-                            </button>
-                            <button type="button" class="btn btn-confirm" onclick="confirmarEliminarAsociado()">
-                                <i class="fas fa-trash"></i> Eliminar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Agregar el modal al body
-            $('body').append(modalHtml);
-        }
-
-        function cerrarConfirmEliminarModal() {
-            $('#modalConfirmEliminar').remove();
-        }
-
-        function confirmarEliminarAsociado() {
-            // Cerrar el modal
-            cerrarConfirmEliminarModal();
-            
-            // Redirigir a la misma página para reiniciar todo
-            window.location.href = 'Transacciones.aspx';
+            // Usar el sistema global de notificaciones
+            showConfirmToast(
+                'warning',
+                'Advertencia',
+                'Eliminar al asociado borrará los datos de la transacción.<br><strong>¿Desea continuar?</strong>',
+                function() {
+                    // Función de confirmación - redirigir para reiniciar todo
+                    window.location.href = 'Transacciones.aspx';
+                },
+                function() {
+                    // Función de cancelación - no hacer nada
+                    showToast('info', 'Operación cancelada', 'El asociado no fue eliminado.');
+                }
+            );
         }
 
         function eliminarAsociadoSeleccionado() {
@@ -891,8 +723,6 @@
 
 		function cargarCuentasPorAuxiliar(auxiliarId) {
 			const [cuenta, idTipoAuxiliar] = auxiliarId.split('-');
-			console.log('cargarCuentasPorAuxiliar - auxiliarId:', auxiliarId);
-			console.log('cargarCuentasPorAuxiliar - cuenta:', cuenta, 'idTipoAuxiliar:', idTipoAuxiliar);
 
 			$('#ddlCuenta').empty();
 
@@ -903,18 +733,13 @@
 				// Buscar en todos los rubros
 				Object.keys(jsonAuxiliares.AuxiliaresPorRubro).forEach(codigoRubro => {
 					const auxiliares = jsonAuxiliares.AuxiliaresPorRubro[codigoRubro];
-					console.log('Procesando rubro:', codigoRubro, 'auxiliares:', auxiliares);
 					auxiliares.forEach(auxiliar => {
-						console.log('Verificando auxiliar:', auxiliar, 'IdTipoAuxiliar:', auxiliar.IdTipoAuxiliar, 'vs buscado:', idTipoAuxiliar);
 						if (auxiliar.IdTipoAuxiliar === idTipoAuxiliar) {
-							console.log('Auxiliar coincide, IdAuxiliar:', auxiliar.IdAuxiliar, 'Cuenta:', auxiliar.Cuenta);
 							// Si tiene lista de cuentas, usar todas
 							if (auxiliar.Cuentas && Array.isArray(auxiliar.Cuentas)) {
-								console.log('Procesando lista de cuentas:', auxiliar.Cuentas);
 								auxiliar.Cuentas.forEach(cuentaItem => {
 									if (typeof cuentaItem === 'object' && cuentaItem.IdAuxiliar && cuentaItem.Cuenta) {
 										// Ya es un objeto con IdAuxiliar y Cuenta
-										console.log('Agregando cuenta de lista:', cuentaItem);
 										todasLasCuentas.push(cuentaItem);
 									} else if (typeof cuentaItem === 'string') {
 										// Es un string, crear objeto
@@ -922,7 +747,6 @@
 											IdAuxiliar: auxiliar.IdAuxiliar,
 											Cuenta: cuentaItem
 										};
-										console.log('Agregando cuenta string:', cuentaObj);
 										todasLasCuentas.push(cuentaObj);
 									}
 								});
@@ -932,14 +756,11 @@
 									IdAuxiliar: auxiliar.IdAuxiliar,
 									Cuenta: auxiliar.Cuenta
 								};
-								console.log('Agregando cuenta única:', cuentaObj);
 								todasLasCuentas.push(cuentaObj);
 							}
 						}
 					});
 				});
-
-				console.log('Todas las cuentas encontradas:', todasLasCuentas);
 				
 				// Eliminar duplicados por IdAuxiliar
 				const cuentasUnicas = [];
@@ -953,27 +774,20 @@
 						idsVistos.add(cuentaItem);
 					}
 				});
-				
-				console.log('Cuentas únicas después de eliminar duplicados:', cuentasUnicas);
 
 				if (cuentasUnicas.length === 1) {
 					// Si solo hay una cuenta, seleccionarla automáticamente
 					const cuentaItem = cuentasUnicas[0];
-					console.log('Una sola cuenta encontrada:', cuentaItem);
 					$('#ddlCuenta').append(`<option value="${cuentaItem.IdAuxiliar}">${cuentaItem.Cuenta}</option>`);
 					$('#ddlCuenta').val(cuentaItem.IdAuxiliar);
-					console.log('Dropdown cuenta valor seleccionado:', cuentaItem.IdAuxiliar);
 				} else {
 					// Si hay múltiples cuentas, mostrar opción de seleccionar
-					console.log('Múltiples cuentas encontradas, agregando opciones...');
 					$('#ddlCuenta').append('<option value="">Seleccionar cuenta...</option>');
 					cuentasUnicas.forEach(cuentaItem => {
-						console.log('Agregando opción:', cuentaItem.IdAuxiliar, '->', cuentaItem.Cuenta);
 						$('#ddlCuenta').append(`<option value="${cuentaItem.IdAuxiliar}">${cuentaItem.Cuenta}</option>`);
 					});
 					// Seleccionar automáticamente la opción "Seleccionar cuenta..."
 					$('#ddlCuenta').val('');
-					console.log('Dropdown cuenta valor seleccionado: (vacío)');
 				}
 			} else {
 				// Fallback: usar la cuenta original
@@ -1022,21 +836,28 @@
                 return;
             }
             
-            guardandoTransaccion = true;
+            // NO establecer guardandoTransaccion = true aquí, solo cuando realmente se proceda con el guardado
 
+            try {
             const idAuxiliarSeleccionado = $('#ddlCuenta').val();
-            console.log('IDAuxiliar seleccionado en dropdown:', idAuxiliarSeleccionado);
-            console.log('Tipo de IDAuxiliar:', typeof idAuxiliarSeleccionado);
-            console.log('Opciones disponibles en dropdown cuenta:', $('#ddlCuenta option').map(function() { return $(this).val() + ':' + $(this).text(); }).get());
 
             // Obtener datos para el confirm
             const datosConfirm = obtenerDatosParaConfirm();
             
             // Mostrar confirm dialog con los datos
             mostrarConfirmGuardado(datosConfirm);
+            } catch (error) {
+                mostrarErrorValidacion(error.message || 'Error al preparar los datos para guardar');
+                guardandoTransaccion = false;
+            }
         }
 
         function obtenerDatosParaConfirm() {
+            // Validar que haya un asociado seleccionado
+            if (!asociadoSeleccionado || !asociadoSeleccionado.numeroAsociado) {
+                throw new Error('No hay un asociado seleccionado');
+            }
+            
             const rubroSeleccionado = $('#ddlRubro option:selected').text();
             const auxiliarSeleccionado = $('#ddlAuxiliar option:selected').text();
             const cuentaSeleccionada = $('#ddlCuenta option:selected').text();
@@ -1045,7 +866,7 @@
             const montoInput = $('#txtMonto').val().replace(',', '.');
             const monto = parseFloat(montoInput);
             
-            return {
+            const datos = {
                 asociado: asociadoSeleccionado.nombre,
                 numeroAsociado: asociadoSeleccionado.numeroAsociado,
                 rubro: rubroSeleccionado,
@@ -1055,6 +876,8 @@
                 monto: monto,
                 observaciones: $('#txtObservaciones').val()
             };
+            
+            return datos;
         }
 
         function mostrarConfirmGuardado(datos) {
@@ -1295,9 +1118,21 @@
 
         function cerrarConfirmModal() {
             $('#modalConfirm').remove();
+            // Resetear la variable de control si el usuario cancela
+            guardandoTransaccion = false;
         }
 
         function procederConGuardado() {
+            // Establecer la variable de control AHORA que realmente se procede con el guardado
+            guardandoTransaccion = true;
+            
+            // Validar que haya un asociado seleccionado
+            if (!asociadoSeleccionado || !asociadoSeleccionado.numeroAsociado) {
+                mostrarErrorValidacion('No hay un asociado seleccionado');
+                guardandoTransaccion = false;
+                return;
+            }
+            
             const idAuxiliarSeleccionado = $('#ddlCuenta').val();
             
             // Normalizar el monto para usar punto decimal
@@ -1315,8 +1150,6 @@
                 Saldo: 0,
                 Observaciones: $('#txtObservaciones').val()
             };
-            
-            console.log('📤 Datos de transacción a enviar:', transaccionData);
 
             $.ajax({
                 type: "POST",
@@ -1325,24 +1158,25 @@
                 data: JSON.stringify({ movimientoData: JSON.stringify(transaccionData) }),
                 dataType: "json",
                 success: function(response) {
-                    console.log('📥 Respuesta del servidor (GuardarMovimiento):', response);
-                    console.log('📥 response.d:', response.d);
-                    
                     if (response.d && response.d.Resultado === 'SUCCESS') {
-                        // Almacenar el ID del movimiento para el comprobante
-                        ultimoMovimientoId = response.d.MovimientoID;
-                        console.log('Movimiento guardado exitosamente. ID almacenado:', ultimoMovimientoId);
-                        console.log('Tipo de ultimoMovimientoId:', typeof ultimoMovimientoId);
-                        console.log('Valor de ultimoMovimientoId:', ultimoMovimientoId);
+                        // Almacenar los IDs de los movimientos para el comprobante
+                        ultimoCapitalMovimientoId = response.d.CapitalMovimientoID || null;
+                        ultimoInteresesMovimientoId = response.d.InteresesMovimientoID || null;
                         
-                        // Formatear el ID con ceros a la izquierda (12 dígitos)
-                        const idFormateado = ultimoMovimientoId.toString().padStart(12, '0');
-                        console.log('🔢 ID formateado:', idFormateado);
+                        // Construir mensaje de éxito con los IDs formateados
+                        let mensajeExito = 'Movimiento guardado correctamente.';
+                        if (ultimoCapitalMovimientoId) {
+                            const idCapitalFormateado = ultimoCapitalMovimientoId.toString().padStart(12, '0');
+                            mensajeExito += ` Capital: ${idCapitalFormateado}`;
+                        }
+                        if (ultimoInteresesMovimientoId) {
+                            const idInteresesFormateado = ultimoInteresesMovimientoId.toString().padStart(12, '0');
+                            mensajeExito += ` Intereses: ${idInteresesFormateado}`;
+                        }
                         
-                        mostrarExitoValidacion(`Movimiento guardado correctamente. ID: ${idFormateado}`);
+                        mostrarExitoValidacion(mensajeExito);
                         bloquearFormularioPostGuardado();
                     } else {
-                        console.error('Error en respuesta del servidor:', response.d);
                         // Mostrar error en el div de validación en lugar del toast
                         mostrarErrorValidacion(response.d.Mensaje || 'Error al guardar movimiento');
                     }
@@ -1358,11 +1192,18 @@
         }
 
         function validarFormularioTransaccion() {
+            // Validar que haya un asociado seleccionado
+            if (!asociadoSeleccionado || !asociadoSeleccionado.numeroAsociado) {
+                mostrarErrorValidacion('Por favor seleccione un asociado');
+                return false;
+            }
+            
             const camposRequeridos = ['#ddlRubro', '#ddlAuxiliar', '#ddlCuenta', '#ddlCodigoTransaccion', '#txtMonto'];
             let valido = true;
 
             camposRequeridos.forEach(function(campo) {
-                if (!$(campo).val()) {
+                const valor = $(campo).val();
+                if (!valor) {
                     $(campo).addClass('is-invalid');
                     valido = false;
                 } else {
@@ -1378,9 +1219,40 @@
         }
 
         function limpiarFormularioTransaccion() {
+            // Resetear la variable de control
+            guardandoTransaccion = false;
+            
+            // Limpiar todas las variables globales
+            asociadoSeleccionado = null;
+            jsonAuxiliares = null;
+            ultimoCapitalMovimientoId = null;
+            ultimoInteresesMovimientoId = null;
+            
+            // Limpiar el formulario
             $('#formTransaccion')[0].reset();
             $('#ddlRubro, #ddlAuxiliar, #ddlCuenta, #ddlCodigoTransaccion').empty().append('<option value="">Seleccionar...</option>');
             $('.form-control, .form-select').removeClass('is-invalid');
+            
+            // Habilitar todos los campos (por si estaban bloqueados)
+            $('#ddlRubro, #ddlAuxiliar, #ddlCuenta, #ddlCodigoTransaccion, #txtMonto, #txtObservaciones').prop('disabled', false);
+            
+            // Limpiar la UI del asociado
+            $('#lblAsociadoInfo').text('');
+            $('#lblAsociadoDetalle').text('');
+            $('#divAsociadoSeleccionado').addClass('d-none');
+            $('#divSinAsociado').removeClass('d-none');
+            $('#btnBuscarAsociado').prop('disabled', false).html('<i class="fas fa-search me-1"></i>Buscar Asociado');
+            $('#btnEliminarAsociado').show();
+            $('#divAsociadoSeleccionado').removeClass('asociado-bloqueado');
+            
+            // Ocultar formulario de transacción
+            $('#divFormularioTransaccion').addClass('d-none');
+            
+            // Asegurar que los botones de guardar/cancelar estén visibles
+            $('#btnGuardarTransaccion, #btnCancelarTransaccion').show();
+            
+            // Ocultar botones post-guardado
+            $('#btnImprimirComprobante, #btnNuevaTransaccion').hide();
         }
 
         function bloquearFormularioPostGuardado() {
@@ -1395,9 +1267,16 @@
             // Cambiar el estilo visual para indicar que está bloqueado
             $('#divAsociadoSeleccionado').addClass('asociado-bloqueado');
             
-            // Actualizar el badge con el ID formateado
-            const idFormateado = ultimoMovimientoId.toString().padStart(12, '0');
-            $('#divAsociadoSeleccionado').attr('data-transaction-id', idFormateado);
+            // Actualizar el badge con el ID formateado (usar capital si existe, sino intereses)
+            let idParaBadge = '';
+            if (ultimoCapitalMovimientoId) {
+                idParaBadge = ultimoCapitalMovimientoId.toString().padStart(12, '0');
+            } else if (ultimoInteresesMovimientoId) {
+                idParaBadge = ultimoInteresesMovimientoId.toString().padStart(12, '0');
+            }
+            if (idParaBadge) {
+                $('#divAsociadoSeleccionado').attr('data-transaction-id', idParaBadge);
+            }
             
             // Ocultar botones de guardar/cancelar
             $('#btnGuardarTransaccion, #btnCancelarTransaccion').hide();
@@ -1412,54 +1291,41 @@
         }
 
         function imprimirComprobante() {
-            console.log('🖨️ Iniciando impresión de comprobante...');
-            console.log('ultimoMovimientoId actual:', ultimoMovimientoId);
-            console.log('Tipo de ultimoMovimientoId:', typeof ultimoMovimientoId);
-            
-            // Obtener el ID del movimiento guardado (se almacena en una variable global)
-            if (typeof ultimoMovimientoId === 'undefined' || !ultimoMovimientoId) {
-                console.error('No se encontró el ID del movimiento para imprimir');
-                alert('No se encontró el ID del movimiento para imprimir');
+            // Validar que al menos uno de los IDs exista
+            if ((typeof ultimoCapitalMovimientoId === 'undefined' || !ultimoCapitalMovimientoId) &&
+                (typeof ultimoInteresesMovimientoId === 'undefined' || !ultimoInteresesMovimientoId)) {
+                alert('No se encontraron IDs de movimientos para imprimir');
                 return;
             }
 
-            const movimientoIdParaEnviar = ultimoMovimientoId.toString();
-            console.log('📤 Enviando ID de movimiento al servidor:', movimientoIdParaEnviar);
-            console.log('📤 Tipo del ID a enviar:', typeof movimientoIdParaEnviar);
+            const capitalIdParaEnviar = ultimoCapitalMovimientoId ? ultimoCapitalMovimientoId.toString() : '';
+            const interesesIdParaEnviar = ultimoInteresesMovimientoId ? ultimoInteresesMovimientoId.toString() : '';
 
             // Llamar al WebMethod para generar el comprobante
             $.ajax({
                 type: 'POST',
                 url: 'Transacciones.aspx/GenerarComprobante',
-                data: JSON.stringify({ movimientoId: movimientoIdParaEnviar }),
+                data: JSON.stringify({ 
+                    capitalMovimientoId: capitalIdParaEnviar,
+                    interesesMovimientoId: interesesIdParaEnviar
+                }),
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
                 success: function(response) {
-                    console.log('📥 Respuesta del servidor (GenerarComprobante):', response);
-                    console.log('📥 response.d:', response.d);
-                    
                     if (response.d.Resultado === 'SUCCESS') {
-                        console.log('Comprobante generado exitosamente');
                         // Mostrar el comprobante en un modal
-                        mostrarModalComprobante(response.d.Html, ultimoMovimientoId);
+                        mostrarModalComprobante(response.d.Html, capitalIdParaEnviar, interesesIdParaEnviar);
                     } else {
-                        console.error('Error al generar comprobante:', response.d.Mensaje);
                         alert('Error al generar el comprobante: ' + response.d.Mensaje);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error AJAX al generar comprobante:', {
-                        xhr: xhr,
-                        status: status,
-                        error: error,
-                        responseText: xhr.responseText
-                    });
                     alert('Error al generar el comprobante: ' + error);
                 }
             });
         }
 
-        function mostrarModalComprobante(htmlContent, movimientoId) {
+        function mostrarModalComprobante(htmlContent, capitalMovimientoId, interesesMovimientoId) {
             // Crear el modal del comprobante
             const modalHtml = `
                 <div id="modalComprobante" class="comprobante-modal-overlay">
@@ -1479,7 +1345,7 @@
                             <button type="button" class="btn btn-secondary" onclick="cerrarModalComprobante()">
                                 <i class="fas fa-times"></i> Cerrar
                             </button>
-                            <button type="button" class="btn btn-primary" onclick="imprimirDesdeModal(${movimientoId})">
+                            <button type="button" class="btn btn-primary" onclick="imprimirDesdeModal('${capitalMovimientoId || ''}', '${interesesMovimientoId || ''}')">
                                 <i class="fas fa-print"></i> Imprimir
                             </button>
                         </div>
@@ -1616,9 +1482,9 @@
             $('#modalComprobante').remove();
         }
 
-        function imprimirDesdeModal(movimientoId) {
+        function imprimirDesdeModal(capitalMovimientoId, interesesMovimientoId) {
             // Marcar como impreso
-            marcarComprobanteComoImpreso(movimientoId.toString());
+            marcarComprobanteComoImpreso(capitalMovimientoId || '', interesesMovimientoId || '');
             
             // Crear una ventana temporal para imprimir
             const ventanaImpresion = window.open('', '_blank', 'width=800,height=600');
@@ -1725,26 +1591,24 @@
         }
 
         // Función para marcar el comprobante como impreso
-        function marcarComprobanteComoImpreso(movimientoId) {
-            console.log('🖨️ Marcando comprobante como impreso para movimiento:', movimientoId);
-            
+        function marcarComprobanteComoImpreso(capitalMovimientoId, interesesMovimientoId) {
             $.ajax({
                 type: 'POST',
                 url: 'Transacciones.aspx/MarcarComprobanteImpreso',
-                data: JSON.stringify({ movimientoId: movimientoId }),
+                data: JSON.stringify({ 
+                    capitalMovimientoId: capitalMovimientoId || '',
+                    interesesMovimientoId: interesesMovimientoId || ''
+                }),
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
                 success: function(response) {
                     if (response.d.Resultado === 'SUCCESS') {
-                        console.log('Comprobante marcado como impreso correctamente');
                         showToast('success', 'Éxito', 'Comprobante marcado como impreso');
                     } else {
-                        console.error('Error al marcar como impreso:', response.d.Mensaje);
                         showToast('error', 'Error', 'Error al marcar comprobante como impreso: ' + response.d.Mensaje);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error AJAX al marcar como impreso:', error);
                     showToast('error', 'Error', 'Error al marcar comprobante como impreso: ' + error);
                 }
             });

@@ -189,6 +189,10 @@
             background: linear-gradient(135deg, #dc3545, #c82333);
         }
 
+        .historial-tile .tile-icon {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+        }
+
         /* Modal */
         .modal-overlay {
             position: fixed;
@@ -411,6 +415,8 @@
         .tile:nth-child(2) { animation-delay: 0.1s; }
         .tile:nth-child(3) { animation-delay: 0.15s; }
         .tile:nth-child(4) { animation-delay: 0.2s; }
+        .tile:nth-child(5) { animation-delay: 0.25s; }
+        .tile:nth-child(6) { animation-delay: 0.3s; }
     </style>
 </head>
 <body>
@@ -485,6 +491,18 @@
                         Crear y gestionar respaldos de la base de datos
                     </div>
                 </div>
+
+                <!-- Tablas Históricas -->
+                <div class="tile historial-tile" onclick="window.location.href='../Logs/historialTablas.aspx?origen=sistemas'">
+                    <div class="tile-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="tile-title">Tablas Hist&#243;ricas</div>
+                    <div class="tile-description">
+                        Consultar y gestionar las versiones hist&#243;ricas de las tablas del sistema
+                    </div>
+                </div>
+
             </div>
         </div>
 

@@ -18,6 +18,42 @@ Public Class GestionSocios
             Response.Redirect("~/Login.aspx")
             Return
         End If
+
+        ' Manejar descarga de archivos Excel
+        If Request.QueryString("action") = "download" AndAlso Not String.IsNullOrEmpty(Request.QueryString("file")) Then
+            DescargarArchivo(Request.QueryString("file"))
+        End If
+    End Sub
+
+    Private Sub DescargarArchivo(nombreArchivo As String)
+        Try
+            Dim rutaArchivo As String = Server.MapPath("~/Temp/" & nombreArchivo)
+            ModGlobal.EscribirLog($"[DESCARGAR ARCHIVO] Intentando descargar: {nombreArchivo}")
+            ModGlobal.EscribirLog($"[DESCARGAR ARCHIVO] Ruta completa: {rutaArchivo}")
+
+            If System.IO.File.Exists(rutaArchivo) Then
+                ModGlobal.EscribirLog($"[DESCARGAR ARCHIVO] Archivo encontrado, iniciando descarga...")
+                Response.Clear()
+                Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                Response.AddHeader("Content-Disposition", "attachment; filename=" & nombreArchivo)
+                Response.TransmitFile(rutaArchivo)
+                Response.End()
+
+                ' Eliminar archivo temporal después de la descarga
+                Try
+                    System.IO.File.Delete(rutaArchivo)
+                    ModGlobal.EscribirLog($"[DESCARGAR ARCHIVO] Archivo eliminado después de descarga")
+                Catch ex As Exception
+                    ModGlobal.EscribirLog($"[DESCARGAR ARCHIVO] No se pudo eliminar el archivo temporal: {ex.Message}")
+                End Try
+            Else
+                ModGlobal.EscribirLog($"[DESCARGAR ARCHIVO] Archivo no encontrado: {rutaArchivo}")
+                Response.Write("Archivo no encontrado")
+            End If
+        Catch ex As Exception
+            ModGlobal.EscribirLog($"[DESCARGAR ARCHIVO] Error al descargar archivo: {ex.Message} | StackTrace: {ex.StackTrace}")
+            Response.Write("Error al descargar archivo: " & ex.Message)
+        End Try
     End Sub
 
 
@@ -197,16 +233,16 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                ' Convertir DataTable a JSON
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
+            ' Convertir DataTable a JSON
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
 
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
             ' Retornar objeto con información de éxito
             Dim result As New Dictionary(Of String, Object)
@@ -276,27 +312,27 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                ' Convertir DataTable a JSON
-                Dim serializer As New JavaScriptSerializer()
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
+            ' Convertir DataTable a JSON
+            Dim serializer As New JavaScriptSerializer()
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
 
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
-                ' Retornar objeto con información de éxito
-                Dim result As New Dictionary(Of String, Object)
-                result("Success") = True
-                result("Message") = ""
-                result("TotalRegistros") = dt.Rows.Count
-                result("Data") = jsonData
+            ' Retornar objeto con información de éxito
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Message") = ""
+            result("TotalRegistros") = dt.Rows.Count
+            result("Data") = jsonData
 
-                ModGlobal.EscribirLog("Metodo ObtenerSocios completado exitosamente")
-                Return serializer.Serialize(result)
+            ModGlobal.EscribirLog("Metodo ObtenerSocios completado exitosamente")
+            Return serializer.Serialize(result)
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerSocios: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -346,35 +382,35 @@ Public Class GestionSocios
             If dt.Rows.Count > 0 Then
                 ModGlobal.EscribirLog("Validacion: Socio encontrado")
 
-                    ' Convertir DataTable a JSON
-                    Dim jsonData As New List(Of Dictionary(Of String, Object))
+                ' Convertir DataTable a JSON
+                Dim jsonData As New List(Of Dictionary(Of String, Object))
 
-                    For Each row As DataRow In dt.Rows
-                        Dim item As New Dictionary(Of String, Object)
-                        For Each column As DataColumn In dt.Columns
-                            item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                        Next
-                        jsonData.Add(item)
+                For Each row As DataRow In dt.Rows
+                    Dim item As New Dictionary(Of String, Object)
+                    For Each column As DataColumn In dt.Columns
+                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                     Next
+                    jsonData.Add(item)
+                Next
 
-                    ' Devolver estructura estándar
-                    Dim result As New Dictionary(Of String, Object)
-                    result("Success") = True
-                    result("Message") = ""
-                    result("TotalRegistros") = dt.Rows.Count
-                    result("Data") = jsonData(0) ' Solo el primer (y único) socio
-                    ModGlobal.EscribirLog("Metodo ObtenerSocioPorNumero completado exitosamente")
-                    Return serializer.Serialize(result)
-                Else
-                    ModGlobal.EscribirLog("Validacion: Socio no encontrado")
-                    Dim result As New Dictionary(Of String, Object)
-                    result("Success") = False
-                    result("Message") = "Socio no encontrado"
-                    result("TotalRegistros") = 0
-                    result("Data") = Nothing
-                    ModGlobal.EscribirLog("Metodo ObtenerSocioPorNumero completado exitosamente")
-                    Return serializer.Serialize(result)
-                End If
+                ' Devolver estructura estándar
+                Dim result As New Dictionary(Of String, Object)
+                result("Success") = True
+                result("Message") = ""
+                result("TotalRegistros") = dt.Rows.Count
+                result("Data") = jsonData(0) ' Solo el primer (y único) socio
+                ModGlobal.EscribirLog("Metodo ObtenerSocioPorNumero completado exitosamente")
+                Return serializer.Serialize(result)
+            Else
+                ModGlobal.EscribirLog("Validacion: Socio no encontrado")
+                Dim result As New Dictionary(Of String, Object)
+                result("Success") = False
+                result("Message") = "Socio no encontrado"
+                result("TotalRegistros") = 0
+                result("Data") = Nothing
+                ModGlobal.EscribirLog("Metodo ObtenerSocioPorNumero completado exitosamente")
+                Return serializer.Serialize(result)
+            End If
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerSocioPorNumero: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -727,25 +763,25 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                ' Convertir DataTable a JSON
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
+            ' Convertir DataTable a JSON
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
 
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
-                ' Devolver estructura estándar
-                Dim result As New Dictionary(Of String, Object)
-                result("Success") = True
-                result("Message") = ""
-                result("TotalRegistros") = dt.Rows.Count
-                result("Data") = jsonData
-                ModGlobal.EscribirLog("Metodo ObtenerParentezcos completado exitosamente")
-                Return serializer.Serialize(result)
+            ' Devolver estructura estándar
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Message") = ""
+            result("TotalRegistros") = dt.Rows.Count
+            result("Data") = jsonData
+            ModGlobal.EscribirLog("Metodo ObtenerParentezcos completado exitosamente")
+            Return serializer.Serialize(result)
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerParentezcos: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -788,25 +824,25 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                ' Convertir DataTable a JSON
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
+            ' Convertir DataTable a JSON
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
 
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
-                ' Devolver estructura estándar
-                Dim result As New Dictionary(Of String, Object)
-                result("Success") = True
-                result("Message") = ""
-                result("TotalRegistros") = dt.Rows.Count
-                result("Data") = jsonData
-                ModGlobal.EscribirLog("Metodo ObtenerBeneficiarios completado exitosamente")
-                Return serializer.Serialize(result)
+            ' Devolver estructura estándar
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Message") = ""
+            result("TotalRegistros") = dt.Rows.Count
+            result("Data") = jsonData
+            ModGlobal.EscribirLog("Metodo ObtenerBeneficiarios completado exitosamente")
+            Return serializer.Serialize(result)
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerBeneficiarios: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -1251,25 +1287,25 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                ' Convertir DataTable a JSON
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
+            ' Convertir DataTable a JSON
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
 
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
-                ' Retornar objeto con información de éxito
-                Dim result As New Dictionary(Of String, Object)
-                result("Success") = True
-                result("Message") = ""
-                result("TotalRegistros") = dt.Rows.Count
-                result("Data") = jsonData
-                ModGlobal.EscribirLog("Metodo ObtenerNivelesEstudio completado exitosamente")
-                Return serializer.Serialize(result)
+            ' Retornar objeto con información de éxito
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Message") = ""
+            result("TotalRegistros") = dt.Rows.Count
+            result("Data") = jsonData
+            ModGlobal.EscribirLog("Metodo ObtenerNivelesEstudio completado exitosamente")
+            Return serializer.Serialize(result)
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerNivelesEstudio: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -1310,22 +1346,22 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
-                Dim result As New Dictionary(Of String, Object)
-                result("Success") = True
-                result("Message") = ""
-                result("TotalRegistros") = dt.Rows.Count
-                result("Data") = jsonData
-                ModGlobal.EscribirLog("Metodo ObtenerProfesiones completado exitosamente")
-                Return serializer.Serialize(result)
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Message") = ""
+            result("TotalRegistros") = dt.Rows.Count
+            result("Data") = jsonData
+            ModGlobal.EscribirLog("Metodo ObtenerProfesiones completado exitosamente")
+            Return serializer.Serialize(result)
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerProfesiones: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -1364,24 +1400,24 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                ' Convertir DataTable a JSON
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            ' Convertir DataTable a JSON
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
-                ' Retornar objeto con información de éxito
-                Dim result As New Dictionary(Of String, Object)
-                result("Success") = True
-                result("Message") = ""
-                result("TotalRegistros") = dt.Rows.Count
-                result("Data") = jsonData
-                ModGlobal.EscribirLog("Metodo ObtenerEmpresas completado exitosamente")
-                Return serializer.Serialize(result)
+            ' Retornar objeto con información de éxito
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Message") = ""
+            result("TotalRegistros") = dt.Rows.Count
+            result("Data") = jsonData
+            ModGlobal.EscribirLog("Metodo ObtenerEmpresas completado exitosamente")
+            Return serializer.Serialize(result)
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerEmpresas: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -1421,24 +1457,24 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                ' Convertir DataTable a JSON
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            ' Convertir DataTable a JSON
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
-                ' Retornar objeto con información de éxito
-                Dim result As New Dictionary(Of String, Object)
-                result("Success") = True
-                result("Message") = ""
-                result("TotalRegistros") = dt.Rows.Count
-                result("Data") = jsonData
-                ModGlobal.EscribirLog("Metodo ObtenerPaises completado exitosamente")
-                Return serializer.Serialize(result)
+            ' Retornar objeto con información de éxito
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Message") = ""
+            result("TotalRegistros") = dt.Rows.Count
+            result("Data") = jsonData
+            ModGlobal.EscribirLog("Metodo ObtenerPaises completado exitosamente")
+            Return serializer.Serialize(result)
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerPaises: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -1478,24 +1514,24 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                ' Convertir DataTable a JSON
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            ' Convertir DataTable a JSON
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
-                ' Retornar objeto con información de éxito
-                Dim result As New Dictionary(Of String, Object)
-                result("Success") = True
-                result("Message") = ""
-                result("TotalRegistros") = dt.Rows.Count
-                result("Data") = jsonData
-                ModGlobal.EscribirLog("Metodo ObtenerProvincias completado exitosamente")
-                Return serializer.Serialize(result)
+            ' Retornar objeto con información de éxito
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Message") = ""
+            result("TotalRegistros") = dt.Rows.Count
+            result("Data") = jsonData
+            ModGlobal.EscribirLog("Metodo ObtenerProvincias completado exitosamente")
+            Return serializer.Serialize(result)
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerProvincias: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -1535,24 +1571,24 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                ' Convertir DataTable a JSON
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            ' Convertir DataTable a JSON
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
-                ' Retornar objeto con información de éxito
-                Dim result As New Dictionary(Of String, Object)
-                result("Success") = True
-                result("Message") = ""
-                result("TotalRegistros") = dt.Rows.Count
-                result("Data") = jsonData
-                ModGlobal.EscribirLog("Metodo ObtenerDistritos completado exitosamente")
-                Return serializer.Serialize(result)
+            ' Retornar objeto con información de éxito
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Message") = ""
+            result("TotalRegistros") = dt.Rows.Count
+            result("Data") = jsonData
+            ModGlobal.EscribirLog("Metodo ObtenerDistritos completado exitosamente")
+            Return serializer.Serialize(result)
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerDistritos: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -1592,24 +1628,24 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-                ' Convertir DataTable a JSON
-                Dim jsonData As New List(Of Dictionary(Of String, Object))
-                For Each row As DataRow In dt.Rows
-                    Dim item As New Dictionary(Of String, Object)
-                    For Each column As DataColumn In dt.Columns
-                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
-                    Next
-                    jsonData.Add(item)
+            ' Convertir DataTable a JSON
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
                 Next
+                jsonData.Add(item)
+            Next
 
-                ' Retornar objeto con información de éxito
-                Dim result As New Dictionary(Of String, Object)
-                result("Success") = True
-                result("Message") = ""
-                result("TotalRegistros") = dt.Rows.Count
-                result("Data") = jsonData
-                ModGlobal.EscribirLog("Metodo ObtenerCorregimientos completado exitosamente")
-                Return serializer.Serialize(result)
+            ' Retornar objeto con información de éxito
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Message") = ""
+            result("TotalRegistros") = dt.Rows.Count
+            result("Data") = jsonData
+            ModGlobal.EscribirLog("Metodo ObtenerCorregimientos completado exitosamente")
+            Return serializer.Serialize(result)
 
         Catch ex As Exception
             ModGlobal.EscribirLog("Error en ObtenerCorregimientos: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -1638,7 +1674,7 @@ Public Class GestionSocios
             Dim dt As DataTable = uDBA.GetDataTableSql(sSql)
 
             If uDBA.MensajeError = "" Then
-            ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
+                ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
                 ModGlobal.EscribirLog("Ocupaciones obtenidas exitosamente. Registros: " & dt.Rows.Count.ToString())
 
                 ' Convertir DataTable a JSON
@@ -1902,23 +1938,109 @@ Public Class GestionSocios
             ' Formatear fecha y hora
             Dim fechaHora As String = Convert.ToDateTime(row("FechaMovimiento")).ToString("dd/MM/yyyy HH:mm")
 
-            ' Formatear monto con punto decimal
-            Dim montoFormateado As String = Convert.ToDecimal(row("Monto")).ToString("###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
+            ' Formatear montos con formato de moneda (incluyendo símbolo $)
+            Dim montoCapital As Decimal = Convert.ToDecimal(row("Monto"))
+            Dim montoCapitalFormateado As String = montoCapital.ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
+            Dim montoInteresesFormateado As String = ""
+            Dim montoIntereses As Decimal = 0
+
+            ' Verificar si hay movimiento de intereses
+            If dt.Columns.Contains("MontoIntereses") AndAlso Not IsDBNull(row("MontoIntereses")) Then
+                Dim montoInteresesObj As Object = row("MontoIntereses")
+                If montoInteresesObj IsNot Nothing Then
+                    montoIntereses = Convert.ToDecimal(montoInteresesObj)
+                    montoInteresesFormateado = montoIntereses.ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
+                End If
+            End If
+
+            ' Calcular total (capital + intereses)
+            Dim montoTotal As Decimal = montoCapital + montoIntereses
+            Dim montoTotalFormateado As String = montoTotal.ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
 
             ' Leer el template HTML
             Dim templatePath As String = HttpContext.Current.Server.MapPath("~/Forms/Transacciones/ComprobanteTransaccion.html")
             Dim htmlTemplate As String = System.IO.File.ReadAllText(templatePath)
 
-            ' Reemplazar placeholders
+            ' Reemplazar placeholders comunes
             htmlTemplate = htmlTemplate.Replace("@MovimientoID", movimientoIdFormateado)
             htmlTemplate = htmlTemplate.Replace("@FechaHora", fechaHora)
             htmlTemplate = htmlTemplate.Replace("@Usuario", row("UsuarioNombre").ToString())
             htmlTemplate = htmlTemplate.Replace("@NumeroAsociado", row("NumeroAsociado").ToString())
             htmlTemplate = htmlTemplate.Replace("@NombreAsociado", row("NombreAsociado").ToString())
+
+            ' Agregar identificación del asociado
+            Dim tipoIdentificacion As String = ""
+            Dim numeroIdentificacion As String = ""
+            If dt.Columns.Contains("TipoIdentificacion") AndAlso Not IsDBNull(row("TipoIdentificacion")) Then
+                tipoIdentificacion = row("TipoIdentificacion").ToString()
+            End If
+            If dt.Columns.Contains("NumeroIdentificacion") AndAlso Not IsDBNull(row("NumeroIdentificacion")) Then
+                numeroIdentificacion = row("NumeroIdentificacion").ToString()
+            End If
+            htmlTemplate = htmlTemplate.Replace("@TipoIdentificacion", tipoIdentificacion)
+            htmlTemplate = htmlTemplate.Replace("@NumeroIdentificacion", numeroIdentificacion)
+
             htmlTemplate = htmlTemplate.Replace("@DescripcionAuxiliar", row("DescripcionTipoAuxiliar").ToString())
             htmlTemplate = htmlTemplate.Replace("@Cuenta", row("Cuenta").ToString())
+            htmlTemplate = htmlTemplate.Replace("@Total", montoTotalFormateado)
+            
+            ' Construir descripción de transacción + ' TOTAL '
+            Dim descripcionTransaccionTotal As String = row("DescripcionTransaccion").ToString() & " TOTAL "
+            htmlTemplate = htmlTemplate.Replace("@DescripcionTransaccionTotal", descripcionTransaccionTotal)
             htmlTemplate = htmlTemplate.Replace("@DescripcionTransaccion", row("DescripcionTransaccion").ToString())
-            htmlTemplate = htmlTemplate.Replace("@Monto", montoFormateado)
+
+            ' Construir sección de montos dinámicamente
+            Dim nuevaSeccionMontos As String = ""
+
+            If Not String.IsNullOrEmpty(montoCapitalFormateado) AndAlso Not String.IsNullOrEmpty(montoInteresesFormateado) Then
+                ' Ambos movimientos - mostrar lado a lado
+                nuevaSeccionMontos = "            <div class=""monto-container"">" & vbCrLf &
+                    "                <div class=""monto-section capital"">" & vbCrLf &
+                    "                    <div class=""monto-label"">Capital</div>" & vbCrLf &
+                    "                    <div class=""monto-value"">" & montoCapitalFormateado & "</div>" & vbCrLf &
+                    "                </div>" & vbCrLf &
+                    "                <div class=""monto-section intereses"">" & vbCrLf &
+                    "                    <div class=""monto-label"">Intereses</div>" & vbCrLf &
+                    "                    <div class=""monto-value"">" & montoInteresesFormateado & "</div>" & vbCrLf &
+                    "                </div>" & vbCrLf &
+                    "            </div>"
+            ElseIf Not String.IsNullOrEmpty(montoCapitalFormateado) Then
+                ' Solo capital - usar color azul
+                nuevaSeccionMontos = "            <div class=""monto-section capital"">" & vbCrLf &
+                    "                <div class=""monto-label"">Capital</div>" & vbCrLf &
+                    "                <div class=""monto-value"">" & montoCapitalFormateado & "</div>" & vbCrLf &
+                    "            </div>"
+            ElseIf Not String.IsNullOrEmpty(montoInteresesFormateado) Then
+                ' Solo intereses - usar color azul distintivo
+                nuevaSeccionMontos = "            <div class=""monto-section intereses"">" & vbCrLf &
+                    "                <div class=""monto-label"">Intereses</div>" & vbCrLf &
+                    "                <div class=""monto-value"">" & montoInteresesFormateado & "</div>" & vbCrLf &
+                    "            </div>"
+            Else
+                ' Fallback: usar monto genérico si no hay ninguno
+                nuevaSeccionMontos = "            <div class=""monto-section"">" & vbCrLf &
+                    "                <div class=""monto-label"">Monto</div>" & vbCrLf &
+                    "                <div class=""monto-value"">0.00</div>" & vbCrLf &
+                    "            </div>"
+            End If
+
+            ' Reemplazar secciones de monto usando regex
+            Dim patronRegex As String = "<div class=""monto-section"">\s*<div class=""monto-label"">Monto</div>\s*<div class=""monto-value"">@Monto</div>\s*</div>"
+            Dim nuevaSeccionSinIndentacion As String = nuevaSeccionMontos.Replace("            ", "").Trim()
+
+            ' Reemplazar usando regex (más flexible con espacios y saltos de línea)
+            htmlTemplate = System.Text.RegularExpressions.Regex.Replace(htmlTemplate, patronRegex, nuevaSeccionSinIndentacion, System.Text.RegularExpressions.RegexOptions.IgnoreCase Or System.Text.RegularExpressions.RegexOptions.Multiline)
+
+            ' También intentar reemplazo directo por si acaso
+            Dim patronBusqueda As String = "<div class=""monto-section"">" & vbCrLf & "                <div class=""monto-label"">Monto</div>" & vbCrLf & "                <div class=""monto-value"">@Monto</div>" & vbCrLf & "            </div>"
+            While htmlTemplate.Contains(patronBusqueda)
+                htmlTemplate = htmlTemplate.Replace(patronBusqueda, nuevaSeccionSinIndentacion)
+            End While
+
+            ' Reemplazar placeholder antiguo para compatibilidad (solo si no se reemplazó antes)
+            If htmlTemplate.Contains("@Monto") Then
+                htmlTemplate = htmlTemplate.Replace("@Monto", If(Not String.IsNullOrEmpty(montoCapitalFormateado), montoCapitalFormateado, If(Not String.IsNullOrEmpty(montoInteresesFormateado), montoInteresesFormateado, "0.00")))
+            End If
 
             ModGlobal.EscribirLog("Comprobante generado exitosamente para movimiento: " & movimientoId)
 
@@ -1938,6 +2060,434 @@ Public Class GestionSocios
 
     <WebMethod(EnableSession:=True)>
     <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+    Public Shared Function GenerarEstadoCuenta(numeroAsociado As String) As String
+        Dim serializer As New JavaScriptSerializer()
+
+        Try
+            ModGlobal.EscribirLog("GenerarEstadoCuenta iniciado. NumeroAsociado: " & numeroAsociado)
+
+            Dim uDBA As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+            uDBA.Parametros.Clear()
+
+            ' Obtener datos del asociado
+            Dim sSqlAsociado As String = "SELECT NumeroAsociado, Nombre, SegundoNombre, Apellido, SegundoApellido FROM tbAsociados WHERE NumeroAsociado = @NumeroAsociado AND snEliminado = 0"
+            With uDBA.Parametros
+                .Clear()
+                .Add("@NumeroAsociado", Integer.Parse(numeroAsociado))
+            End With
+
+            Dim dtAsociado As DataTable = uDBA.GetDataTableSql(sSqlAsociado)
+
+            If uDBA.MensajeError <> "" Then
+                ModGlobal.EscribirLog("Error en BD al obtener datos del asociado: " & uDBA.MensajeError)
+                Dim resultError As New Dictionary(Of String, Object)
+                resultError("Resultado") = "ERROR"
+                resultError("Mensaje") = "Error en la base de datos: " & uDBA.MensajeError
+                Return serializer.Serialize(resultError)
+            End If
+
+            If dtAsociado.Rows.Count = 0 Then
+                ModGlobal.EscribirLog("No se encontró el asociado con número: " & numeroAsociado)
+                Dim resultNoData As New Dictionary(Of String, Object)
+                resultNoData("Resultado") = "ERROR"
+                resultNoData("Mensaje") = "No se encontró el asociado"
+                Return serializer.Serialize(resultNoData)
+            End If
+
+            Dim rowAsociado As DataRow = dtAsociado.Rows(0)
+            Dim nombreCompleto As String = $"{rowAsociado("Nombre")} {If(Not IsDBNull(rowAsociado("SegundoNombre")), rowAsociado("SegundoNombre"), "")} {rowAsociado("Apellido")} {If(Not IsDBNull(rowAsociado("SegundoApellido")), rowAsociado("SegundoApellido"), "")}".Trim()
+
+            ' Obtener datos del estado de cuenta usando stored procedure
+            uDBA.Parametros.Clear()
+            Dim sSqlEstado As String = "Exec spAsociados_ObtenerEstadoCuenta"
+            With uDBA.Parametros
+                .Add("@NumeroAsociado", Integer.Parse(numeroAsociado))
+            End With
+
+            Dim dtEstado As DataTable = uDBA.GetDataTableSql(sSqlEstado)
+
+            If uDBA.MensajeError <> "" Then
+                ModGlobal.EscribirLog("Error en BD al obtener estado de cuenta: " & uDBA.MensajeError)
+                Dim resultError As New Dictionary(Of String, Object)
+                resultError("Resultado") = "ERROR"
+                resultError("Mensaje") = "Error en la base de datos: " & uDBA.MensajeError
+                Return serializer.Serialize(resultError)
+            End If
+
+            ' Leer el template HTML
+            Dim templatePath As String = HttpContext.Current.Server.MapPath("~/Forms/Socios/EstadoCuenta.html")
+            Dim htmlTemplate As String = System.IO.File.ReadAllText(templatePath)
+
+            ' Obtener datos de identificación del stored procedure (si están disponibles)
+            Dim tipoIdentificacion As String = ""
+            Dim numeroIdentificacion As String = ""
+            If dtEstado.Rows.Count > 0 Then
+                Dim primeraFila As DataRow = dtEstado.Rows(0)
+                If Not IsDBNull(primeraFila("TipoIdentificacion")) Then
+                    tipoIdentificacion = primeraFila("TipoIdentificacion").ToString()
+                End If
+                If Not IsDBNull(primeraFila("NumeroIdentificacion")) Then
+                    numeroIdentificacion = primeraFila("NumeroIdentificacion").ToString()
+                End If
+            End If
+
+            ' Reemplazar datos del asociado
+            htmlTemplate = htmlTemplate.Replace("@NombreAsociado", nombreCompleto)
+            htmlTemplate = htmlTemplate.Replace("@NumeroAsociado", numeroAsociado)
+            htmlTemplate = htmlTemplate.Replace("@TipoIdentificacion", tipoIdentificacion)
+            htmlTemplate = htmlTemplate.Replace("@NumeroIdentificacion", numeroIdentificacion)
+
+            ' Generar filas de la tabla
+            Dim filasTabla As String = ""
+            If dtEstado.Rows.Count > 0 Then
+                For Each row As DataRow In dtEstado.Rows
+                    Dim idAuxiliar As String = If(Not IsDBNull(row("IDAuxiliar")), row("IDAuxiliar").ToString(), "0")
+                    Dim tipoAuxiliar As String = If(Not IsDBNull(row("TipoAuxiliar")), row("TipoAuxiliar").ToString(), "N/A")
+                    Dim numeroCuenta As String = If(Not IsDBNull(row("NumeroCuenta")), row("NumeroCuenta").ToString(), "N/A")
+                    Dim fechaInicio As String = If(Not IsDBNull(row("FechaInicio")), Convert.ToDateTime(row("FechaInicio")).ToString("dd/MM/yyyy"), "N/A")
+                    Dim montoOriginal As String = If(Not IsDBNull(row("MontoOriginal")), Convert.ToDecimal(row("MontoOriginal")).ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture), "$0.00")
+                    Dim fechaUltimoPago As String = If(Not IsDBNull(row("FechaUltimoPago")), Convert.ToDateTime(row("FechaUltimoPago")).ToString("dd/MM/yyyy"), "N/A")
+                    Dim cuota As String = If(Not IsDBNull(row("Cuota")), Convert.ToDecimal(row("Cuota")).ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture), "$0.00")
+                    Dim intereses As String = If(Not IsDBNull(row("Intereses")), Convert.ToDecimal(row("Intereses")).ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture), "$0.00")
+                    Dim saldoActual As String = If(Not IsDBNull(row("SaldoActual")), Convert.ToDecimal(row("SaldoActual")).ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture), "$0.00")
+                    Dim codigoRubro As String = If(Not IsDBNull(row("CodigoRubro")), row("CodigoRubro").ToString().ToUpper(), "")
+
+                    ' Botón para ver detalle de intereses
+                    ' Mostrar siempre el botón (el modal verificará si hay datos)
+                    ' Esto permite ver el historial incluso si los intereses son 0 pero hay registros en tbAuxiliares_Intereses
+                    Dim botonIntereses As String = $"<button type=""button"" class=""btn-detalle-intereses"" onclick=""mostrarDetalleIntereses({idAuxiliar})"" title=""Ver detalle de intereses""><i class=""fa fa-arrow-right""></i></button>"
+
+                    Dim celdaIntereses As String = $"<td class=""celda-intereses"">{botonIntereses}<span class=""monto-intereses"">{intereses}</span></td>"
+
+                    filasTabla &= $"<tr data-auxiliar-id=""{idAuxiliar}"">" & vbCrLf &
+                        $"    <td>{tipoAuxiliar}</td>" & vbCrLf &
+                        $"    <td>{numeroCuenta}</td>" & vbCrLf &
+                        $"    <td>{fechaInicio}</td>" & vbCrLf &
+                        $"    <td>{montoOriginal}</td>" & vbCrLf &
+                        $"    <td>{fechaUltimoPago}</td>" & vbCrLf &
+                        $"    <td>{cuota}</td>" & vbCrLf &
+                        celdaIntereses & vbCrLf &
+                        $"    <td>{saldoActual}</td>" & vbCrLf &
+                        $"</tr>" & vbCrLf
+                Next
+            Else
+                filasTabla = "<tr><td colspan='8' style='text-align: center; padding: 20px;'>No se encontraron registros</td></tr>"
+            End If
+
+            htmlTemplate = htmlTemplate.Replace("@FilasTabla", filasTabla)
+
+            ' Reemplazar fecha y hora de impresión
+            Dim fechaHoraImpresion As String = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
+            htmlTemplate = htmlTemplate.Replace("@FechaHoraImpresion", fechaHoraImpresion)
+
+            ModGlobal.EscribirLog("Estado de cuenta generado exitosamente para asociado: " & numeroAsociado)
+
+            Dim resultado As New Dictionary(Of String, Object)
+            resultado("Resultado") = "SUCCESS"
+            resultado("Html") = htmlTemplate
+            Return serializer.Serialize(resultado)
+
+        Catch ex As Exception
+            ModGlobal.EscribirLog("Error en GenerarEstadoCuenta: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+            Dim result As New Dictionary(Of String, Object)
+            result("Resultado") = "ERROR"
+            result("Mensaje") = "Error al generar estado de cuenta: " & ex.Message
+            Return serializer.Serialize(result)
+        End Try
+    End Function
+
+    <WebMethod(EnableSession:=True)>
+    <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+    Public Shared Function ObtenerHistorialIntereses(idAuxiliar As String) As String
+        Dim serializer As New JavaScriptSerializer()
+
+        Try
+            ModGlobal.EscribirLog("ObtenerHistorialIntereses iniciado. IDAuxiliar: " & idAuxiliar)
+
+            Dim uDBA As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+            uDBA.Parametros.Clear()
+
+            ' Obtener historial de intereses usando stored procedure
+            Dim sSql As String = "Exec spAuxiliares_ObtenerHistorialIntereses"
+
+            With uDBA.Parametros
+                .Add("@IDAuxiliar", Integer.Parse(idAuxiliar))
+            End With
+
+            Dim dt As DataTable = uDBA.GetDataTableSql(sSql)
+
+            If uDBA.MensajeError <> "" Then
+                ModGlobal.EscribirLog("Error en BD al obtener historial de intereses: " & uDBA.MensajeError)
+                Dim resultError As New Dictionary(Of String, Object)
+                resultError("Resultado") = "ERROR"
+                resultError("Mensaje") = "Error en la base de datos: " & uDBA.MensajeError
+                Return serializer.Serialize(resultError)
+            End If
+
+            Dim historial As New List(Of Dictionary(Of String, Object))
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each column As DataColumn In dt.Columns
+                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
+                Next
+                historial.Add(item)
+            Next
+
+            ModGlobal.EscribirLog("Historial de intereses obtenido exitosamente. Registros: " & historial.Count)
+
+            Dim resultado As New Dictionary(Of String, Object)
+            resultado("Resultado") = "SUCCESS"
+            resultado("Datos") = historial
+            Return serializer.Serialize(resultado)
+
+        Catch ex As Exception
+            ModGlobal.EscribirLog("Error en ObtenerHistorialIntereses: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+            Dim result As New Dictionary(Of String, Object)
+            result("Resultado") = "ERROR"
+            result("Mensaje") = "Error al obtener historial de intereses: " & ex.Message
+            Return serializer.Serialize(result)
+        End Try
+    End Function
+
+    <WebMethod(EnableSession:=True)>
+    <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+    Public Shared Function ExportarHistorialInteresesAExcel(datos As Object(), codigoRubro As String) As String
+        Dim serializer As New JavaScriptSerializer()
+        Dim resultado As String = ""
+
+        Try
+            ModGlobal.EscribirLog("[EXPORTAR EXCEL] ExportarHistorialInteresesAExcel iniciado")
+            ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Cantidad de registros recibidos: {datos.Length}")
+            ModGlobal.EscribirLog($"[EXPORTAR EXCEL] CodigoRubro recibido: {codigoRubro}")
+
+            ' Validar datos
+            If datos Is Nothing OrElse datos.Length = 0 Then
+                ModGlobal.EscribirLog("[EXPORTAR EXCEL] No se recibieron datos para exportar")
+                Dim errorResponse As New Dictionary(Of String, Object)
+                errorResponse("Resultado") = "ERROR"
+                errorResponse("Mensaje") = "No se recibieron datos para exportar"
+                errorResponse("NombreArchivo") = ""
+                Return serializer.Serialize(errorResponse)
+            End If
+
+            ' Generar nombre de archivo único
+            Dim nombreArchivo As String = $"HistorialIntereses_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx"
+            nombreArchivo = nombreArchivo.Replace(" ", "_").Replace("/", "_")
+            ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Nombre de archivo generado: {nombreArchivo}")
+
+            ' Crear workbook con ClosedXML
+            ModGlobal.EscribirLog("[EXPORTAR EXCEL] Creando workbook con ClosedXML...")
+            Using workbook As New ClosedXML.Excel.XLWorkbook()
+                Dim worksheet = workbook.Worksheets.Add("Historial Intereses")
+                ModGlobal.EscribirLog("[EXPORTAR EXCEL] Worksheet creado: Historial Intereses")
+
+                ' Agregar título
+                worksheet.Cell(1, 1).Value = "Historial de Intereses"
+                worksheet.Cell(1, 1).Style.Font.Bold = True
+                worksheet.Cell(1, 1).Style.Font.FontSize = 14
+                worksheet.Range(1, 1, 1, 15).Merge()
+
+                ' Agregar fecha de generación
+                worksheet.Cell(2, 1).Value = "Generado el: " & DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
+                worksheet.Cell(2, 1).Style.Font.Italic = True
+                worksheet.Range(2, 1, 2, 15).Merge()
+
+                ' Espacio en blanco
+                Dim filaInicio As Integer = 4
+
+                If datos.Length > 0 Then
+                    ' Determinar el tipo de cuenta
+                    Dim esPrestamo As Boolean = codigoRubro.ToUpper() = "PR"
+                    ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Tipo de cuenta - Es Préstamo: {esPrestamo}")
+
+                    ' Definir columnas según el tipo de cuenta
+                    Dim columnas As New List(Of String)
+                    columnas.Add("Fecha Cálculo")
+                    columnas.Add("Hora")
+                    columnas.Add("Fecha Últ. Cálculo")
+                    columnas.Add("Saldo a Fecha")
+                    columnas.Add("Interés Calc. a Fecha")
+
+                    If esPrestamo Then
+                        columnas.Add("Interés Pagado a Fecha")
+                    End If
+
+                    columnas.Add("Días Intereses")
+                    columnas.Add("Tasa")
+                    columnas.Add("Interés Calculado")
+
+                    If Not esPrestamo Then
+                        columnas.Add("Nuevo Saldo")
+                    End If
+
+                    columnas.Add("Usuario")
+
+                    ' Función auxiliar para convertir string formateado a decimal
+                    Dim convertirMonto As Func(Of String, Decimal) = Function(valor As String) As Decimal
+                                                                         If String.IsNullOrEmpty(valor) Then Return 0
+                                                                         Dim valorLimpio As String = valor.ToString().Replace(",", "").Trim()
+                                                                         Dim montoDecimal As Decimal = 0
+                                                                         Decimal.TryParse(valorLimpio, montoDecimal)
+                                                                         Return montoDecimal
+                                                                     End Function
+
+                    ' Función auxiliar para obtener valor seguro de un diccionario
+                    Dim obtenerValorSeguro As Func(Of Dictionary(Of String, Object), String, String) = Function(dict As Dictionary(Of String, Object), key As String) As String
+                                                                                                           If Not dict.ContainsKey(key) Then Return "N/A"
+                                                                                                           Dim valor = dict(key)
+                                                                                                           If valor Is Nothing OrElse IsDBNull(valor) Then Return "N/A"
+                                                                                                           Return valor.ToString()
+                                                                                                       End Function
+
+                    ' Agregar encabezados
+                    ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Agregando {columnas.Count} columnas de encabezados...")
+                    For i As Integer = 0 To columnas.Count - 1
+                        worksheet.Cell(filaInicio, i + 1).Value = columnas(i)
+                        worksheet.Cell(filaInicio, i + 1).Style.Font.Bold = True
+                        worksheet.Cell(filaInicio, i + 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue
+                    Next
+                    ModGlobal.EscribirLog("[EXPORTAR EXCEL] Encabezados agregados correctamente")
+
+                    ' Agregar datos
+                    ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Agregando {datos.Length} filas de datos...")
+                    For i As Integer = 0 To datos.Length - 1
+                        Dim fila As Integer = filaInicio + 1 + i
+                        Dim item As Dictionary(Of String, Object) = Nothing
+
+                        Try
+                            item = DirectCast(datos(i), Dictionary(Of String, Object))
+                        Catch ex As Exception
+                            ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Error al convertir item {i}: {ex.Message}")
+                            Continue For
+                        End Try
+
+                        Dim columnaActual As Integer = 1
+
+                        If i = 0 Then
+                            ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Procesando primera fila. Keys disponibles: {String.Join(", ", item.Keys)}")
+                        End If
+
+                        ' Fecha Cálculo
+                        worksheet.Cell(fila, columnaActual).Value = obtenerValorSeguro(item, "FechaCalculo")
+                        columnaActual += 1
+
+                        ' Hora
+                        worksheet.Cell(fila, columnaActual).Value = obtenerValorSeguro(item, "HoraCalculo")
+                        columnaActual += 1
+
+                        ' Fecha Últ. Cálculo
+                        worksheet.Cell(fila, columnaActual).Value = obtenerValorSeguro(item, "FechaUltCalculo")
+                        columnaActual += 1
+
+                        ' Saldo a Fecha
+                        Dim saldoAFecha As Decimal = convertirMonto(obtenerValorSeguro(item, "SaldoAFecha"))
+                        worksheet.Cell(fila, columnaActual).Value = saldoAFecha
+                        worksheet.Cell(fila, columnaActual).Style.NumberFormat.Format = "$#,##0.00"
+                        columnaActual += 1
+
+                        ' Interés Calc. a Fecha
+                        Dim interesCalcAFecha As Decimal = convertirMonto(obtenerValorSeguro(item, "InteresCalculadoAFecha"))
+                        worksheet.Cell(fila, columnaActual).Value = interesCalcAFecha
+                        worksheet.Cell(fila, columnaActual).Style.NumberFormat.Format = "$#,##0.00"
+                        columnaActual += 1
+
+                        ' Interés Pagado a Fecha (solo para préstamos)
+                        If esPrestamo Then
+                            Dim interesPagadoAFecha As Decimal = convertirMonto(obtenerValorSeguro(item, "InteresPagadoAFecha"))
+                            worksheet.Cell(fila, columnaActual).Value = interesPagadoAFecha
+                            worksheet.Cell(fila, columnaActual).Style.NumberFormat.Format = "$#,##0.00"
+                            columnaActual += 1
+                        End If
+
+                        ' Días Intereses
+                        worksheet.Cell(fila, columnaActual).Value = obtenerValorSeguro(item, "DiasIntereses")
+                        columnaActual += 1
+
+                        ' Tasa
+                        Dim tasaValor As String = obtenerValorSeguro(item, "Tasa")
+                        worksheet.Cell(fila, columnaActual).Value = If(tasaValor = "N/A", "0.00%", tasaValor & "%")
+                        columnaActual += 1
+
+                        ' Interés Calculado
+                        Dim interesCalculado As Decimal = convertirMonto(obtenerValorSeguro(item, "InteresCalculado"))
+                        worksheet.Cell(fila, columnaActual).Value = interesCalculado
+                        worksheet.Cell(fila, columnaActual).Style.NumberFormat.Format = "$#,##0.00"
+                        worksheet.Cell(fila, columnaActual).Style.Font.Bold = True
+                        columnaActual += 1
+
+                        ' Nuevo Saldo (solo para no-préstamos)
+                        If Not esPrestamo Then
+                            Dim nuevoSaldo As Decimal = convertirMonto(obtenerValorSeguro(item, "SaldoGenerado"))
+                            worksheet.Cell(fila, columnaActual).Value = nuevoSaldo
+                            worksheet.Cell(fila, columnaActual).Style.NumberFormat.Format = "$#,##0.00"
+                            worksheet.Cell(fila, columnaActual).Style.Font.Bold = True
+                            columnaActual += 1
+                        End If
+
+                        ' Usuario
+                        worksheet.Cell(fila, columnaActual).Value = obtenerValorSeguro(item, "NombreUsuario")
+                    Next
+
+                    ' Ajustar ancho de columnas
+                    ModGlobal.EscribirLog("[EXPORTAR EXCEL] Ajustando ancho de columnas...")
+                    worksheet.Columns().AdjustToContents()
+
+                    ' Agregar bordes
+                    ModGlobal.EscribirLog("[EXPORTAR EXCEL] Agregando bordes a la tabla...")
+                    worksheet.Range(filaInicio, 1, filaInicio + datos.Length, columnas.Count).Style.Border.OutsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin
+                    worksheet.Range(filaInicio, 1, filaInicio + datos.Length, columnas.Count).Style.Border.InsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin
+                    ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Datos agregados: {datos.Length} filas procesadas")
+                End If
+
+                ' Guardar archivo temporalmente
+                Dim rutaArchivo As String = HttpContext.Current.Server.MapPath("~/Temp/" & nombreArchivo)
+                Dim directorioTemp As String = HttpContext.Current.Server.MapPath("~/Temp/")
+                ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Ruta del archivo: {rutaArchivo}")
+                ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Directorio temporal: {directorioTemp}")
+
+                ' Crear directorio si no existe
+                If Not System.IO.Directory.Exists(directorioTemp) Then
+                    ModGlobal.EscribirLog("[EXPORTAR EXCEL] Creando directorio Temp...")
+                    System.IO.Directory.CreateDirectory(directorioTemp)
+                    ModGlobal.EscribirLog("[EXPORTAR EXCEL] Directorio Temp creado")
+                Else
+                    ModGlobal.EscribirLog("[EXPORTAR EXCEL] Directorio Temp ya existe")
+                End If
+
+                ModGlobal.EscribirLog("[EXPORTAR EXCEL] Guardando archivo Excel...")
+                workbook.SaveAs(rutaArchivo)
+                ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Archivo Excel guardado exitosamente: {nombreArchivo}")
+                ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Tamaño del archivo: {If(System.IO.File.Exists(rutaArchivo), New System.IO.FileInfo(rutaArchivo).Length.ToString() & " bytes", "No se pudo verificar")}")
+            End Using
+
+            Dim successResponse As New Dictionary(Of String, Object)
+            successResponse("Resultado") = "SUCCESS"
+            successResponse("Mensaje") = "Archivo Excel generado exitosamente"
+            successResponse("NombreArchivo") = nombreArchivo
+            resultado = serializer.Serialize(successResponse)
+            ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Respuesta serializada. Longitud: {resultado.Length} caracteres")
+            ModGlobal.EscribirLog("[EXPORTAR EXCEL] ExportarHistorialInteresesAExcel completado exitosamente")
+
+        Catch ex As Exception
+            ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Error en ExportarHistorialInteresesAExcel: {ex.Message}")
+            ModGlobal.EscribirLog($"[EXPORTAR EXCEL] StackTrace: {ex.StackTrace}")
+            If ex.InnerException IsNot Nothing Then
+                ModGlobal.EscribirLog($"[EXPORTAR EXCEL] InnerException: {ex.InnerException.Message}")
+            End If
+            Dim errorResponse As New Dictionary(Of String, Object)
+            errorResponse("Resultado") = "ERROR"
+            errorResponse("Mensaje") = "Error al generar archivo Excel: " & ex.Message
+            errorResponse("NombreArchivo") = ""
+            resultado = serializer.Serialize(errorResponse)
+            ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Respuesta de error serializada")
+        End Try
+
+        ModGlobal.EscribirLog($"[EXPORTAR EXCEL] Retornando resultado. Longitud: {resultado.Length} caracteres")
+        Return resultado
+    End Function
+
+    <WebMethod(EnableSession:=True)>
+    <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
     Public Shared Function MarcarComprobanteImpreso(movimientoId As String) As String
         Dim serializer As New JavaScriptSerializer()
 
@@ -1946,22 +2496,56 @@ Public Class GestionSocios
             ModGlobal.EscribirLog("Parametro recibido - MovimientoID: " & movimientoId)
 
             Dim uDBA As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+
+            ' Primero obtener el IDMovIntereses si existe
+            uDBA.Parametros.Clear()
+            Dim sSqlObtener As String = "SELECT IDMovIntereses FROM tbMovimientos WHERE IDMovimiento = @MovimientoID AND snEliminado = 0"
+            With uDBA.Parametros
+                .Add("@MovimientoID", Integer.Parse(movimientoId))
+            End With
+
+            Dim dt As DataTable = uDBA.GetDataTableSql(sSqlObtener)
+            Dim idMovIntereses As Integer = 0
+
+            If dt.Rows.Count > 0 AndAlso Not IsDBNull(dt.Rows(0)("IDMovIntereses")) Then
+                idMovIntereses = Convert.ToInt32(dt.Rows(0)("IDMovIntereses"))
+                ModGlobal.EscribirLog($"Movimiento de intereses encontrado: {idMovIntereses}")
+            End If
+
+            ' Marcar el movimiento principal como impreso
             uDBA.Parametros.Clear()
             Dim sSql As String = "UPDATE tbMovimientos SET snImpreso = 1 WHERE IDMovimiento = @MovimientoID"
 
             With uDBA.Parametros
-                .Add("@MovimientoID", movimientoId)
+                .Add("@MovimientoID", Integer.Parse(movimientoId))
             End With
 
             ModGlobal.EscribirLog($"Ejecutando SQL: {sSql} {uDBA.getParamList()}")
             uDBA.ExecuteNonQuerySql(sSql)
 
             If uDBA.MensajeError <> "" Then
-                ModGlobal.EscribirLog("Error en BD al marcar comprobante: " & uDBA.MensajeError)
+                ModGlobal.EscribirLog("Error en BD al marcar comprobante principal: " & uDBA.MensajeError)
                 Dim resultError As New Dictionary(Of String, Object)
                 resultError("Success") = False
                 resultError("Message") = uDBA.MensajeError
                 Return serializer.Serialize(resultError)
+            End If
+
+            ' Si existe movimiento de intereses, marcarlo también como impreso
+            If idMovIntereses > 0 Then
+                uDBA.Parametros.Clear()
+                Dim sSqlIntereses As String = "UPDATE tbMovimientos SET snImpreso = 1 WHERE IDMovimiento = @MovimientoID"
+                With uDBA.Parametros
+                    .Add("@MovimientoID", idMovIntereses)
+                End With
+
+                ModGlobal.EscribirLog($"Marcando movimiento de intereses como impreso: {idMovIntereses}")
+                uDBA.ExecuteNonQuerySql(sSqlIntereses)
+
+                If uDBA.MensajeError <> "" Then
+                    ModGlobal.EscribirLog("Error en BD al marcar comprobante de intereses: " & uDBA.MensajeError)
+                    ' No fallar, solo loguear el error
+                End If
             End If
 
             Dim resultSuccess As New Dictionary(Of String, Object)

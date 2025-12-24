@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Mantenimientos.aspx.vb" Inherits="SemgaWapp.Mantenimientos" %>
+﻿GuardarCorregimiento <%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Mantenimientos.aspx.vb" Inherits="SemgaWapp.Mantenimientos" %>
 
 <!DOCTYPE html>
 
@@ -1875,7 +1875,7 @@
         </div>
 
         <!-- Toast Container -->
-        <div id="toastContainer" class="toast-container"></div>
+        <div id="toastContainer" class="toast-container position-fixed top-50 start-50 translate-middle" style="z-index: 1060;"></div>
         
         <!-- Modal Código Transacción -->
         <div class="modal fade" id="modalCodigoTransaccion" tabindex="-1" aria-labelledby="modalCodigoTransaccionLabel" aria-hidden="true">
@@ -2907,7 +2907,6 @@
 			// Verificar si el tab-pane existe
 			const tabPane = $('#' + tabId);
 			if (tabPane.length === 0) {
-				console.warn('Tab pane no encontrado:', tabId);
 				return;
 			}
 
@@ -3568,9 +3567,7 @@
 
 		// ===== FUNCIONALIDAD CÓDIGOS DE TRANSACCIÓN =====
 		function inicializarCodigosTransaccion() {
-			console.log('Iniciando inicializarCodigosTransaccion...');
 			// Cargar rubros para filtro y modal
-			console.log('Llamando a cargarRubros()...');
 			cargarRubros();
 
 			// Cargar cuentas para dropdowns
@@ -3585,8 +3582,6 @@
 			$('#ddlFiltroRubro, #ddlFiltroEstado').on('change', function () {
 				cargarCodigosTransaccion();
 			});
-
-			console.log('Inicialización de Códigos de Transacción completada');
 		}
 
 		function cargarCuentasParaDropdown() {
@@ -3654,46 +3649,29 @@
 			return cuentaCodigo;
 		}
 		function cargarRubros() {
-			console.log('Iniciando carga de rubros...');
-			console.log('URL:', 'Mantenimientos.aspx/ObtenerRubros');
-
 			$.ajax({
 				type: "POST",
 				url: "Mantenimientos.aspx/ObtenerRubros",
 				contentType: "application/json; charset=utf-8",
 				dataType: "json",
-				beforeSend: function () {
-					console.log('📤 Enviando petición AJAX para obtener rubros...');
-				},
 				success: function (response) {
-					console.log('📥 Respuesta recibida:', response);
-
 					if (response.d && response.d.Resultado === 'SUCCESS') {
 						const rubros = JSON.parse(response.d.Datos);
-						console.log('Rubros cargados:', rubros);
 
 						// Llenar dropdown de filtro
 						$('#ddlFiltroRubro').empty().append('<option value="">Todos los rubros</option>');
 						$.each(rubros, function (index, rubro) {
-							console.log('Agregando rubro a filtro:', rubro.CodigoRubro, rubro.Descripcion);
 							$('#ddlFiltroRubro').append(`<option value="${rubro.CodigoRubro}">${rubro.CodigoRubro} - ${rubro.Descripcion}</option>`);
 						});
 
 						// Llenar dropdown del modal
 						$('#ddlCodigoRubro').empty().append('<option value="">Seleccionar rubro...</option>');
 						$.each(rubros, function (index, rubro) {
-							console.log('Agregando rubro a modal:', rubro.CodigoRubro, rubro.Descripcion);
 							$('#ddlCodigoRubro').append(`<option value="${rubro.CodigoRubro}">${rubro.CodigoRubro} - ${rubro.Descripcion}</option>`);
 						});
-					} else {
-						console.log('Error en respuesta:', response);
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX al cargar rubros:');
-					console.log('Status:', status);
-					console.log('Error:', error);
-					console.log('Response:', xhr.responseText);
 					showToast('error', 'Error', 'Error al cargar rubros: ' + error);
 				}
 			});
@@ -3707,9 +3685,6 @@
 				Descripcion: $('#txtFiltroDescripcion').val(),
 				SnActivo: $('#ddlFiltroEstado').val() === '' ? null : $('#ddlFiltroEstado').val() === '1'
 			};
-
-			console.log('Filtros:', filtros);
-			console.log('🌐 Enviando petición AJAX...');
 
 			$.ajax({
 				type: "POST",
@@ -3749,7 +3724,6 @@
 			}
 
 			$.each(codigos, function (index, codigo) {
-				console.log('Código para debug:', codigo);
 				const estadoBadge = codigo.SnActivo ?
 					'<span class="badge bg-success">Activo</span>' :
 					'<span class="badge bg-secondary">Inactivo</span>';
@@ -3894,40 +3868,30 @@
 		}
 
 		function llenarFormularioCodigoTransaccion(codigo) {
-			console.log('Llenando formulario con código:', codigo);
-
 			// Verificar que los elementos existen antes de llenarlos
 			if ($('#txtCodigoTransaccionID').length > 0) {
 				$('#txtCodigoTransaccionID').val(codigo.ID);
-				console.log('ID establecido:', codigo.ID);
 			}
 			if ($('#ddlCodigoRubro').length > 0) {
 				$('#ddlCodigoRubro').val(codigo.CodigoRubro);
-				console.log('Rubro establecido:', codigo.CodigoRubro, 'Valor actual del dropdown:', $('#ddlCodigoRubro').val());
 			}
 			if ($('#txtCodigoTransaccion').length > 0) {
 				$('#txtCodigoTransaccion').val(codigo.CodigoTransaccion);
-				console.log('Código transacción establecido:', codigo.CodigoTransaccion);
 			}
 			if ($('#txtDescripcion').length > 0) {
 				$('#txtDescripcion').val(codigo.Descripcion);
-				console.log('Descripción establecida:', codigo.Descripcion);
 			}
 			if ($('#ddlDebCred').length > 0) {
 				$('#ddlDebCred').val(codigo.DebCred);
-				console.log('Débito/Crédito establecido:', codigo.DebCred);
 			}
 			if ($('#ddlCuentaContable').length > 0) {
 				$('#ddlCuentaContable').val(codigo.CuentaContable || '').trigger('change');
-				console.log('Cuenta contable establecida:', codigo.CuentaContable);
 			}
 			if ($('#ddlContraCuenta').length > 0) {
 				$('#ddlContraCuenta').val(codigo.ContraCuenta || '').trigger('change');
-				console.log('Contra cuenta establecida:', codigo.ContraCuenta);
 			}
 			if ($('#chkSnActivo').length > 0) {
 				$('#chkSnActivo').prop('checked', codigo.SnActivo);
-				console.log('Estado activo establecido:', codigo.SnActivo);
 			}
 		}
 
@@ -3956,16 +3920,6 @@
 			const cuentaContable = $('#ddlCuentaContable').val() || '';
 			const contraCuenta = $('#ddlContraCuenta').val() || '';
 			const snActivo = $('#chkSnActivo').is(':checked');
-
-			console.log('Datos a enviar:', {
-				CodigoRubro: codigoRubro,
-				CodigoTransaccion: codigoTransaccion,
-				Descripcion: descripcion,
-				DebCred: debCred,
-				CuentaContable: cuentaContable,
-				ContraCuenta: contraCuenta,
-				SnActivo: snActivo
-			});
 
 			const codigoData = {
 				ID: parseInt($('#txtCodigoTransaccionID').val()) || 0,
@@ -4057,19 +4011,121 @@
 		}
 
 		// ===== FUNCIONES DE CONFIRMACIÓN =====
+		
+		// Función local para mostrar toast de confirmación
+		function showConfirmToastLocal(type, title, message, onConfirm, onCancel) {
+			// Obtener el contenedor de toasts (debe existir en el HTML)
+			const toastContainer = $('#toastContainer');
+			if (toastContainer.length === 0) {
+				return;
+			}
+			
+			const toastId = 'confirm-toast-' + Date.now();
+			
+			const iconClass = getToastIcon ? getToastIcon(type) : 'fas fa-exclamation-triangle text-warning';
+			const toastClass = 'toast-' + type;
+			
+			const toastHtml = `
+				<div class="toast ${toastClass}" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
+					<div class="toast-header">
+						<i class="${iconClass} me-2"></i>
+						<strong class="me-auto">${title}</strong>
+					</div>
+					<div class="toast-body">
+						<div class="mb-3">${message}</div>
+						<div class="d-flex gap-2 justify-content-end">
+							<button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelConfirmToastLocal('${toastId}')">
+								<i class="fas fa-times me-1"></i>Cancelar
+							</button>
+							<button type="button" class="btn btn-sm btn-danger" onclick="confirmToastLocal('${toastId}')">
+								<i class="fas fa-check me-1"></i>Eliminar
+							</button>
+						</div>
+					</div>
+				</div>
+			`;
+			
+			toastContainer.append(toastHtml);
+			
+			const toastElement = document.getElementById(toastId);
+			if (!toastElement) {
+				return;
+			}
+			
+			// Almacenar callbacks
+			toastElement.onConfirm = onConfirm;
+			toastElement.onCancel = onCancel || function() {};
+			
+			// Crear y mostrar el toast
+			const toastInstance = new bootstrap.Toast(toastElement, {
+				autohide: false,
+				delay: 0
+			});
+			
+			toastInstance.show();
+			
+			// Remover del DOM cuando se oculte
+			toastElement.addEventListener('hidden.bs.toast', function() {
+				this.remove();
+			});
+		}
+		
+		// Funciones auxiliares para los botones del toast
+		function confirmToastLocal(toastId) {
+			const toastElement = document.getElementById(toastId);
+			if (!toastElement) {
+				return;
+			}
+			
+			if (toastElement.onConfirm && typeof toastElement.onConfirm === 'function') {
+				toastElement.onConfirm();
+			}
+			
+			const toastInstance = bootstrap.Toast.getInstance(toastElement);
+			if (toastInstance) {
+				toastInstance.hide();
+			}
+		}
+		
+		function cancelConfirmToastLocal(toastId) {
+			const toastElement = document.getElementById(toastId);
+			if (!toastElement) {
+				return;
+			}
+			
+			if (toastElement.onCancel && typeof toastElement.onCancel === 'function') {
+				toastElement.onCancel();
+			}
+			
+			const toastInstance = bootstrap.Toast.getInstance(toastElement);
+			if (toastInstance) {
+				toastInstance.hide();
+			}
+		}
+		
 		function mostrarConfirmEliminar(entidad, callback) {
-			showConfirmToast({
-				type: 'warning',
-				title: 'Confirmar eliminación',
-				message: `¿Está seguro de eliminar el ${entidad}? Esta acción no se puede deshacer.`,
-				confirmText: 'Eliminar',
-				cancelText: 'Cancelar',
-				onConfirm: function () {
+			try {
+				showConfirmToastLocal(
+					'warning',
+					'Confirmar eliminación',
+					`¿Está seguro de eliminar el ${entidad}? Esta acción no se puede deshacer.`,
+					function () {
+						if (typeof callback === 'function') {
+							callback();
+						}
+					},
+					function () {
+						// Usuario canceló
+					}
+				);
+			} catch (error) {
+				// Fallback a confirm nativo
+				if (confirm(`¿Está seguro de eliminar el ${entidad}? Esta acción no se puede deshacer.`)) {
 					if (typeof callback === 'function') {
 						callback();
 					}
 				}
-			});
+			}
 		}
 
 		// ===== FUNCIONALIDAD DEPARTAMENTOS =====
@@ -4199,36 +4255,27 @@
 		}
 
 		function llenarFormularioDepartamento(departamento) {
-			console.log('Llenando formulario con departamento:', departamento);
-
 			// Verificar que los elementos existen antes de llenarlos
 			if ($('#txtDepartamentoID').length > 0) {
 				$('#txtDepartamentoID').val(departamento.Id);
-				console.log('ID establecido:', departamento.Id);
 			}
 			if ($('#txtNombreDepartamento').length > 0) {
 				$('#txtNombreDepartamento').val(departamento.Nombre);
-				console.log('Nombre establecido:', departamento.Nombre);
 			}
 			if ($('#txtDescripcionDepartamento').length > 0) {
 				$('#txtDescripcionDepartamento').val(departamento.Descripcion);
-				console.log('Descripción establecida:', departamento.Descripcion);
 			}
 			if ($('#txtResponsableDepartamento').length > 0) {
 				$('#txtResponsableDepartamento').val(departamento.Responsable);
-				console.log('Responsable establecido:', departamento.Responsable);
 			}
 			if ($('#txtTelefonoDepartamento').length > 0) {
 				$('#txtTelefonoDepartamento').val(departamento.Telefono);
-				console.log('Teléfono establecido:', departamento.Telefono);
 			}
 			if ($('#txtEmailDepartamento').length > 0) {
 				$('#txtEmailDepartamento').val(departamento.Email);
-				console.log('Email establecido:', departamento.Email);
 			}
 			if ($('#chkActivoDepartamento').length > 0) {
 				$('#chkActivoDepartamento').prop('checked', departamento.Activo);
-				console.log('Estado activo establecido:', departamento.Activo);
 			}
 		}
 		function limpiarFormularioDepartamento() {
@@ -4251,15 +4298,6 @@
 			const telefono = $('#txtTelefonoDepartamento').val();
 			const email = $('#txtEmailDepartamento').val();
 			const activo = $('#chkActivoDepartamento').is(':checked');
-
-			console.log('Datos a enviar:', {
-				Nombre: nombre,
-				Descripcion: descripcion,
-				Responsable: responsable,
-				Telefono: telefono,
-				Email: email,
-				Activo: activo
-			});
 
 			const departamentoData = {
 				Id: parseInt($('#txtDepartamentoID').val()) || 0,
@@ -4449,16 +4487,12 @@
 			});
 		}
 		function llenarFormularioParentezco(parentezco) {
-			console.log('Llenando formulario con parentezco:', parentezco);
-
 			// Verificar que los elementos existen antes de llenarlos
 			if ($('#txtParentezcoID').length > 0) {
 				$('#txtParentezcoID').val(parentezco.IDParentezco);
-				console.log('ID establecido:', parentezco.IDParentezco);
 			}
 			if ($('#txtParentezco').length > 0) {
 				$('#txtParentezco').val(parentezco.Parentezco);
-				console.log('Parentezco establecido:', parentezco.Parentezco);
 			}
 		}
 
@@ -4477,10 +4511,6 @@
 
 			// Obtener valores del formulario
 			const parentezco = $('#txtParentezco').val();
-
-			console.log('Datos a enviar:', {
-				Parentezco: parentezco
-			});
 
 			const parentezcoData = {
 				IDParentezco: parseInt($('#txtParentezcoID').val()) || 0,
@@ -4689,28 +4719,21 @@
 		}
 
 		function llenarFormularioRol(rol) {
-			console.log('Llenando formulario con rol:', rol);
-
 			// Verificar que los elementos existen antes de llenarlos
 			if ($('#txtRolID').length > 0) {
 				$('#txtRolID').val(rol.Id);
-				console.log('ID establecido:', rol.Id);
 			}
 			if ($('#txtNombreRol').length > 0) {
 				$('#txtNombreRol').val(rol.Nombre);
-				console.log('Nombre establecido:', rol.Nombre);
 			}
 			if ($('#txtDescripcionRol').length > 0) {
 				$('#txtDescripcionRol').val(rol.Descripcion);
-				console.log('Descripción establecida:', rol.Descripcion);
 			}
 			if ($('#ddlNivelAcceso').length > 0) {
 				$('#ddlNivelAcceso').val(rol.NivelAcceso);
-				console.log('Nivel de acceso establecido:', rol.NivelAcceso);
 			}
 			if ($('#chkActivoRol').length > 0) {
 				$('#chkActivoRol').prop('checked', rol.Activo);
-				console.log('Estado activo establecido:', rol.Activo);
 			}
 		}
 
@@ -4734,13 +4757,6 @@
 			const descripcion = $('#txtDescripcionRol').val();
 			const nivelAcceso = parseInt($('#ddlNivelAcceso').val());
 			const activo = $('#chkActivoRol').is(':checked');
-
-			console.log('Datos a enviar:', {
-				Nombre: nombre,
-				Descripcion: descripcion,
-				NivelAcceso: nivelAcceso,
-				Activo: activo
-			});
 
 			const rolData = {
 				Id: parseInt($('#txtRolID').val()) || 0,
@@ -4930,20 +4946,15 @@
 		}
 
 		function llenarFormularioRubro(rubro) {
-			console.log('Llenando formulario con rubro:', rubro);
-
 			// Verificar que los elementos existen antes de llenarlos
 			if ($('#txtRubroID').length > 0) {
 				$('#txtRubroID').val(rubro.IDRubro);
-				console.log('ID establecido:', rubro.IDRubro);
 			}
 			if ($('#txtCodigoRubro').length > 0) {
 				$('#txtCodigoRubro').val(rubro.CodigoRubro);
-				console.log('Código establecido:', rubro.CodigoRubro);
 			}
 			if ($('#txtDescripcionRubro').length > 0) {
 				$('#txtDescripcionRubro').val(rubro.Descripcion);
-				console.log('Descripción establecida:', rubro.Descripcion);
 			}
 		}
 
@@ -4963,11 +4974,6 @@
 			// Obtener valores del formulario
 			const codigoRubro = $('#txtCodigoRubro').val();
 			const descripcion = $('#txtDescripcionRubro').val();
-
-			console.log('Datos a enviar:', {
-				CodigoRubro: codigoRubro,
-				Descripcion: descripcion
-			});
 
 			const rubroData = {
 				IDRubro: parseInt($('#txtRubroID').val()) || 0,
@@ -5173,20 +5179,15 @@
 		}
 
 		function llenarFormularioStatus(status) {
-			console.log('Llenando formulario con estatus:', status);
-
 			// Verificar que los elementos existen antes de llenarlos
 			if ($('#txtStatusID').length > 0) {
 				$('#txtStatusID').val(status.IDStatus);
-				console.log('ID establecido:', status.IDStatus);
 			}
 			if ($('#txtCodigoStatus').length > 0) {
 				$('#txtCodigoStatus').val(status.CodStatusAsociado);
-				console.log('Código establecido:', status.CodStatusAsociado);
 			}
 			if ($('#txtDescripcionStatus').length > 0) {
 				$('#txtDescripcionStatus').val(status.StatusAsociado);
-				console.log('Descripción establecida:', status.StatusAsociado);
 			}
 		}
 
@@ -5206,11 +5207,6 @@
 			// Obtener valores del formulario
 			const codigoStatus = $('#txtCodigoStatus').val();
 			const descripcionStatus = $('#txtDescripcionStatus').val();
-
-			console.log('Datos a enviar:', {
-				CodStatusAsociado: codigoStatus,
-				StatusAsociado: descripcionStatus
-			});
 
 			const statusData = {
 				IDStatus: parseInt($('#txtStatusID').val()) || 0,
@@ -5403,20 +5399,15 @@
 		}
 
 		function llenarFormularioTipoAsociado(tipoAsociado) {
-			console.log('Llenando formulario con tipo de asociado:', tipoAsociado);
-
 			// Verificar que los elementos existen antes de llenarlos
 			if ($('#txtTipoAsociadoID').length > 0) {
 				$('#txtTipoAsociadoID').val(tipoAsociado.IdTipoAsociado);
-				console.log('ID establecido:', tipoAsociado.IdTipoAsociado);
 			}
 			if ($('#txtCodigoTipoAsociado').length > 0) {
 				$('#txtCodigoTipoAsociado').val(tipoAsociado.CodTipoAsociado);
-				console.log('Código establecido:', tipoAsociado.CodTipoAsociado);
 			}
 			if ($('#txtTipoAsociado').length > 0) {
 				$('#txtTipoAsociado').val(tipoAsociado.TipoAsociado);
-				console.log('Tipo establecido:', tipoAsociado.TipoAsociado);
 			}
 		}
 
@@ -5436,11 +5427,6 @@
 			// Obtener valores del formulario
 			const codigoTipoAsociado = $('#txtCodigoTipoAsociado').val();
 			const tipoAsociado = $('#txtTipoAsociado').val();
-
-			console.log('Datos a enviar:', {
-				CodTipoAsociado: codigoTipoAsociado,
-				TipoAsociado: tipoAsociado
-			});
 
 			const tipoAsociadoData = {
 				IdTipoAsociado: parseInt($('#txtTipoAsociadoID').val()) || 0,
@@ -5651,8 +5637,6 @@
 
 		// ===== FUNCIONALIDAD TIPOS AUXILIARES =====
 		function inicializarTiposAuxiliares() {
-			console.log('🚀 Inicializando Tipos Auxiliares...');
-
 			// Verificar que todos los elementos necesarios existan
 			const elementos = [
 				'#ddlFiltroRubroAuxiliar',
@@ -5664,25 +5648,18 @@
 				'#btnLimpiarFiltrosTiposAuxiliares'
 			];
 
-			console.log('Verificando elementos del DOM...');
 			elementos.forEach(selector => {
 				const elemento = $(selector);
-				console.log(`${selector}:`, elemento.length);
 			});
 
 			// Cargar rubros para filtro y modal
-			console.log('Cargando rubros...');
 			cargarRubrosAuxiliares();
 
 			// Cargar datos iniciales
-			console.log('Cargando tipos auxiliares...');
 			cargarTiposAuxiliares();
 
 			// Configurar eventos
-			console.log('⚙️ Configurando eventos...');
 			configurarEventosTiposAuxiliares();
-
-			console.log('Inicialización de Tipos Auxiliares completada');
 		}
 
 		function cargarRubrosAuxiliares() {
@@ -5715,26 +5692,16 @@
 		}
 
 		function cargarTiposAuxiliares() {
-			console.log('🔄 cargarTiposAuxiliares iniciado');
-
 			// Verificar que los elementos del DOM existan
 			const ddlRubro = $('#ddlFiltroRubroAuxiliar');
 			const txtTipo = $('#txtFiltroTipoAuxiliar');
 			const txtDescripcion = $('#txtFiltroDescripcionAuxiliar');
-
-			console.log('Elementos del DOM:');
-			console.log('- ddlFiltroRubroAuxiliar:', ddlRubro.length);
-			console.log('- txtFiltroTipoAuxiliar:', txtTipo.length);
-			console.log('- txtFiltroDescripcionAuxiliar:', txtDescripcion.length);
 
 			const filtros = {
 				CodigoRubro: ddlRubro.val() || '',
 				TipoAuxiliar: txtTipo.val() || '',
 				Descripcion: txtDescripcion.val() || ''
 			};
-
-			console.log('Filtros:', filtros);
-			console.log('🌐 Enviando petición AJAX a: Mantenimientos.aspx/ListarTiposAuxiliares');
 
 			$.ajax({
 				type: "POST",
@@ -5743,16 +5710,12 @@
 				data: JSON.stringify({ filtros: filtros }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta AJAX recibida:', response);
-
 					// Verificar si response.d es un string que necesita ser parseado
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
-							console.log('response.d parseado:', responseData);
 						} catch (parseError) {
-							console.log('Error al parsear response.d:', parseError);
 							mostrarTiposAuxiliares([]);
 							showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 							return;
@@ -5760,49 +5723,34 @@
 					}
 
 					if (responseData && responseData.Resultado === 'SUCCESS') {
-						console.log('Datos recibidos:', responseData.Datos);
 						try {
 							const tiposAuxiliares = JSON.parse(responseData.Datos);
-							console.log('Tipos auxiliares parseados:', tiposAuxiliares);
 							mostrarTiposAuxiliares(tiposAuxiliares);
 						} catch (parseError) {
-							console.log('Error al parsear JSON de datos:', parseError);
 							mostrarTiposAuxiliares([]);
 							showToast('error', 'Error', 'Error al procesar los datos');
 						}
 					} else {
-						console.log('Error en respuesta:', responseData ? responseData.Mensaje : 'Respuesta inválida');
 						mostrarTiposAuxiliares([]);
 						showToast('warning', 'Advertencia', responseData ? responseData.Mensaje : 'No se encontraron datos');
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX:', xhr, status, error);
 					mostrarTiposAuxiliares([]);
 					showToast('error', 'Error', 'Error al cargar tipos auxiliares');
 				}
 			});
 		}
 		function mostrarTiposAuxiliares(tiposAuxiliares) {
-			console.log('mostrarTiposAuxiliares iniciado con:', tiposAuxiliares);
-			console.log('Tipo de datos:', typeof tiposAuxiliares);
-			console.log('Es array:', Array.isArray(tiposAuxiliares));
-			console.log('Longitud:', tiposAuxiliares ? tiposAuxiliares.length : 'undefined');
-
 			const tbody = $('#tblTiposAuxiliares tbody');
-			console.log('Buscando tabla tblTiposAuxiliares:', $('#tblTiposAuxiliares').length);
-			console.log('Buscando tbody:', tbody.length);
 
 			if (tbody.length === 0) {
-				console.log('No se encontró el tbody de la tabla');
-				console.log('Tabla completa:', $('#tblTiposAuxiliares').html());
 				return;
 			}
 
 			tbody.empty();
 
 			if (!tiposAuxiliares || !Array.isArray(tiposAuxiliares) || tiposAuxiliares.length === 0) {
-				console.log('⚠️ No hay datos para mostrar');
 				tbody.append(`
                     <tr>
                         <td colspan="12" class="text-center text-muted">
@@ -5813,15 +5761,10 @@
 				return;
 			}
 
-			console.log('Procesando', tiposAuxiliares.length, 'tipos auxiliares');
-
 			try {
 				$.each(tiposAuxiliares, function (index, tipo) {
-					console.log(`Procesando tipo ${index}:`, tipo);
-
 					// Validar que el objeto tipo tenga las propiedades necesarias
 					if (!tipo) {
-						console.log('⚠️ Tipo es null o undefined');
 						return;
 					}
 
@@ -5850,9 +5793,7 @@
                     `;
 					tbody.append(row);
 				});
-				console.log('Tabla actualizada con', tiposAuxiliares.length, 'filas');
 			} catch (error) {
-				console.log('Error al procesar tipos auxiliares:', error);
 				tbody.append(`
                     <tr>
                         <td colspan="12" class="text-center text-danger">
@@ -5921,26 +5862,20 @@
 				data: JSON.stringify({ id: id }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta AJAX editarTipoAuxiliar:', response);
-
 					// Verificar si response.d es un string que necesita ser parseado
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
-							console.log('response.d parseado:', responseData);
 						} catch (parseError) {
-							console.log('Error al parsear response.d:', parseError);
 							showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 							return;
 						}
 					}
 
 					if (responseData && responseData.Resultado === 'SUCCESS') {
-						console.log('Datos recibidos:', responseData.Datos);
 						try {
 							const tipoAuxiliar = JSON.parse(responseData.Datos);
-							console.log('Tipo auxiliar parseado:', tipoAuxiliar);
 							llenarFormularioTipoAuxiliar(tipoAuxiliar);
 							$('#modalTipoAuxiliarLabel').html('<i class="fas fa-tools me-2"></i>Editar Tipo Auxiliar');
 
@@ -5948,11 +5883,9 @@
 							const modal = new bootstrap.Modal(document.getElementById('modalTipoAuxiliar'));
 							modal.show();
 						} catch (parseError) {
-							console.log('Error al parsear JSON de datos:', parseError);
 							showToast('error', 'Error', 'Error al procesar los datos del tipo auxiliar');
 						}
 					} else {
-						console.log('Error en respuesta:', responseData ? responseData.Mensaje : 'Respuesta inválida');
 						showToast('error', 'Error', responseData ? responseData.Mensaje : 'No se pudo obtener el tipo auxiliar');
 					}
 				},
@@ -5963,50 +5896,35 @@
 		}
 
 		function llenarFormularioTipoAuxiliar(tipoAuxiliar) {
-			console.log('🔧 Llenando formulario con datos:', tipoAuxiliar);
-
 			$('#hdnIDTipoAuxiliar').val(tipoAuxiliar.ID);
-			console.log('ID asignado:', tipoAuxiliar.ID);
 
 			$('#ddlCodigoRubroAuxiliar').val(tipoAuxiliar.CodigoRubro);
-			console.log('CodigoRubro asignado:', tipoAuxiliar.CodigoRubro);
 
 			$('#txtTipoAuxiliar').val(tipoAuxiliar.TipoAuxiliar);
-			console.log('TipoAuxiliar asignado:', tipoAuxiliar.TipoAuxiliar);
 
 			$('#txtDescripcionAuxiliar').val(tipoAuxiliar.Descripcion);
-			console.log('Descripcion asignada:', tipoAuxiliar.Descripcion);
 
 			// Limpiar y asignar valores numéricos
 			const tasa = tipoAuxiliar.Tasa ? tipoAuxiliar.Tasa.toString().replace(',', '.') : '';
 			$('#txtTasaAuxiliar').val(tasa);
-			console.log('Tasa asignada:', tasa, '(original:', tipoAuxiliar.Tasa, ')');
 
 			const plazo = tipoAuxiliar.Plazo ? tipoAuxiliar.Plazo.toString() : '';
 			$('#txtPlazoAuxiliar').val(plazo);
-			console.log('Plazo asignado:', plazo, '(original:', tipoAuxiliar.Plazo, ')');
 
 			const montoMinimo = tipoAuxiliar.MontoMinimo ? tipoAuxiliar.MontoMinimo.toString().replace(',', '.') : '';
 			$('#txtMontoMinimoAuxiliar').val(montoMinimo);
-			console.log('MontoMinimo asignado:', montoMinimo, '(original:', tipoAuxiliar.MontoMinimo, ')');
 
 			const montoMaximo = tipoAuxiliar.MontoMaximo ? tipoAuxiliar.MontoMaximo.toString().replace(',', '.') : '';
 			$('#txtMontoMaximoAuxiliar').val(montoMaximo);
-			console.log('MontoMaximo asignado:', montoMaximo, '(original:', tipoAuxiliar.MontoMaximo, ')');
 
 			const porManejo = tipoAuxiliar.PorManejo ? tipoAuxiliar.PorManejo.toString().replace(',', '.') : '';
 			$('#txtPorManejoAuxiliar').val(porManejo);
-			console.log('PorManejo asignado:', porManejo, '(original:', tipoAuxiliar.PorManejo, ')');
 
 			const porCapitalizacion = tipoAuxiliar.PorCapitalizacion ? tipoAuxiliar.PorCapitalizacion.toString().replace(',', '.') : '';
 			$('#txtPorCapitalizacionAuxiliar').val(porCapitalizacion);
-			console.log('PorCapitalizacion asignado:', porCapitalizacion, '(original:', tipoAuxiliar.PorCapitalizacion, ')');
 
 			const porProteccion = tipoAuxiliar.PorProteccion ? tipoAuxiliar.PorProteccion.toString().replace(',', '.') : '';
 			$('#txtPorProteccionAuxiliar').val(porProteccion);
-			console.log('PorProteccion asignado:', porProteccion, '(original:', tipoAuxiliar.PorProteccion, ')');
-
-			console.log('🎯 Formulario llenado completamente');
 		}
 
 		function limpiarFormularioTipoAuxiliar() {
@@ -6044,8 +5962,6 @@
 				PorProteccion: limpiarValorNumerico($('#txtPorProteccionAuxiliar').val())
 			};
 
-			console.log('Datos a enviar:', tipoAuxiliarData);
-
 			$.ajax({
 				type: "POST",
 				url: "Mantenimientos.aspx/GuardarTipoAuxiliar",
@@ -6053,34 +5969,26 @@
 				data: JSON.stringify({ tipoAuxiliarData: tipoAuxiliarData }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta AJAX guardarTipoAuxiliar:', response);
-
 					// Verificar si response.d es un string que necesita ser parseado
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
-							console.log('response.d parseado:', responseData);
 						} catch (parseError) {
-							console.log('Error al parsear response.d:', parseError);
 							showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 							return;
 						}
 					}
 
 					if (responseData && responseData.Resultado === 'SUCCESS') {
-						console.log('Guardado exitoso:', responseData.Mensaje);
 						showToast('success', 'Éxito', responseData.Mensaje);
 						$('#modalTipoAuxiliar').modal('hide');
 						cargarTiposAuxiliares();
 					} else {
-						console.log('Error en respuesta:', responseData ? responseData.Mensaje : 'Respuesta inválida');
 						showToast('error', 'Error', responseData ? responseData.Mensaje : 'No se pudo guardar el tipo auxiliar');
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error en AJAX:', xhr, status, error);
-					console.log('Response text:', xhr.responseText);
 					showToast('error', 'Error', 'Error al guardar tipo auxiliar: ' + error);
 				}
 			});
@@ -6203,20 +6111,15 @@
 		}
 
 		function llenarFormularioTipoDoc(tipoDocumento) {
-			console.log('Llenando formulario con tipo de documento:', tipoDocumento);
-
 			// Verificar que los elementos existen antes de llenarlos
 			if ($('#txtTipoDocID').length > 0) {
 				$('#txtTipoDocID').val(tipoDocumento.IDTipoDoc);
-				console.log('ID establecido:', tipoDocumento.IDTipoDoc);
 			}
 			if ($('#txtCodigoTipoDoc').length > 0) {
 				$('#txtCodigoTipoDoc').val(tipoDocumento.CodTipoDoc);
-				console.log('Código establecido:', tipoDocumento.CodTipoDoc);
 			}
 			if ($('#txtTipoDocumento').length > 0) {
 				$('#txtTipoDocumento').val(tipoDocumento.TipoDocumento);
-				console.log('Tipo establecido:', tipoDocumento.TipoDocumento);
 			}
 		}
 
@@ -6236,11 +6139,6 @@
 			// Obtener valores del formulario
 			const codigoTipoDoc = $('#txtCodigoTipoDoc').val();
 			const tipoDocumento = $('#txtTipoDocumento').val();
-
-			console.log('Datos a enviar:', {
-				CodTipoDoc: codigoTipoDoc,
-				TipoDocumento: tipoDocumento
-			});
 
 			const tipoDocumentoData = {
 				IDTipoDoc: parseInt($('#txtTipoDocID').val()) || 0,
@@ -6318,23 +6216,14 @@
 
 		// ===== USUARIOS =====
 		function inicializarUsuarios() {
-			console.log('USUARIOS: inicializarUsuarios iniciado');
-			console.log('USUARIOS: Tab usuarios visible al inicio:', $('#usuarios').is(':visible'));
-			console.log('USUARIOS: Tab usuarios activo al inicio:', $('#usuarios').hasClass('active'));
-
 			// Cargar roles para filtro y modal
-			console.log('USUARIOS: Llamando cargarRolesUsuarios...');
 			cargarRolesUsuarios();
 
 			// Cargar datos iniciales
-			console.log('USUARIOS: Llamando cargarUsuarios...');
 			cargarUsuarios();
 
 			// Configurar eventos
-			console.log('USUARIOS: Llamando configurarEventosUsuarios...');
 			configurarEventosUsuarios();
-
-			console.log('USUARIOS: inicializarUsuarios completado');
 		}
 
 		function cargarRolesUsuarios() {
@@ -6413,23 +6302,12 @@
 		}
 
 		function cargarUsuarios() {
-			console.log('USUARIOS: cargarUsuarios iniciado');
-			console.log('USUARIOS: Tab usuarios visible:', $('#usuarios').is(':visible'));
-			console.log('USUARIOS: Tab usuarios activo:', $('#usuarios').hasClass('active'));
-			console.log('USUARIOS: Elementos encontrados:');
-			console.log('USUARIOS: - ddlFiltroRolUsuario:', $('#ddlFiltroRolUsuario').length);
-			console.log('USUARIOS: - ddlFiltroDepartamentoUsuario:', $('#ddlFiltroDepartamentoUsuario').length);
-			console.log('USUARIOS: - ddlFiltroEstadoUsuario:', $('#ddlFiltroEstadoUsuario').length);
-			console.log('USUARIOS: - txtFiltroBuscarUsuario:', $('#txtFiltroBuscarUsuario').length);
-
 			const filtros = {
 				Rol: $('#ddlFiltroRolUsuario').val(),
 				Departamento: $('#ddlFiltroDepartamentoUsuario').val(),
 				Estado: $('#ddlFiltroEstadoUsuario').val(),
 				Buscar: $('#txtFiltroBuscarUsuario').val()
 			};
-
-			console.log('USUARIOS: Filtros:', filtros);
 
 			$.ajax({
 				type: "POST",
@@ -6438,60 +6316,39 @@
 				data: JSON.stringify({ filtros: filtros }),
 				dataType: "json",
 				success: function (response) {
-					console.log('USUARIOS: Respuesta AJAX completa:', response);
-					console.log('USUARIOS: response.d:', response.d);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
-							console.log('USUARIOS: response.d parseado:', responseData);
 						} catch (parseError) {
-							console.log('USUARIOS: Error al parsear response.d:', parseError);
 							showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 							return;
 						}
 					}
 
 					if (responseData && responseData.Resultado === 'SUCCESS') {
-						console.log('USUARIOS: Resultado SUCCESS, Datos:', responseData.Datos);
 						const usuarios = JSON.parse(responseData.Datos);
-						console.log('USUARIOS: Usuarios parseados:', usuarios);
-						console.log('USUARIOS: Cantidad de usuarios:', usuarios.length);
 						mostrarUsuarios(usuarios);
 					} else {
-						console.log('USUARIOS: Error en respuesta:', responseData ? responseData.Mensaje : 'No hay responseData');
 						mostrarUsuarios([]);
 						showToast('warning', 'Advertencia', responseData ? responseData.Mensaje : 'No se encontraron datos');
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('USUARIOS: Error AJAX:', xhr, status, error);
-					console.log('USUARIOS: Response text:', xhr.responseText);
 					mostrarUsuarios([]);
 					showToast('error', 'Error', 'Error al cargar usuarios');
 				}
 			});
 		}
 		function mostrarUsuarios(usuarios) {
-			console.log('USUARIOS: mostrarUsuarios iniciado con:', usuarios);
-			console.log('USUARIOS: Tipo de datos:', typeof usuarios);
-			console.log('USUARIOS: Es array:', Array.isArray(usuarios));
-			console.log('USUARIOS: Longitud:', usuarios ? usuarios.length : 'undefined');
-
 			// Verificar que el tab esté activo
 			const tabPane = $('#usuarios');
 			const tabLink = $('#usuarios-tab');
-			console.log('USUARIOS: Tab pane activo:', tabPane.hasClass('active'));
-			console.log('USUARIOS: Tab link activo:', tabLink.hasClass('active'));
-			console.log('USUARIOS: Tab pane visible:', tabPane.is(':visible'));
 
 			const tbody = $('#tblUsuarios tbody');
-			console.log('USUARIOS: tbody encontrado:', tbody.length);
 			tbody.empty();
 
 			if (!usuarios || usuarios.length === 0) {
-				console.log('USUARIOS: No hay usuarios, mostrando mensaje de no datos');
 				tbody.append(`
                     <tr>
                         <td colspan="10" class="text-center text-muted">
@@ -6502,9 +6359,7 @@
 				return;
 			}
 
-			console.log('USUARIOS: Procesando', usuarios.length, 'usuarios');
 			$.each(usuarios, function (index, usuario) {
-				console.log('USUARIOS: Procesando usuario', index + 1, ':', usuario);
 
 				const estadoBadge = usuario.Estado === 'A' ?
 					'<span class="badge bg-success">Activo</span>' :
@@ -6536,41 +6391,17 @@
                     </tr>
                 `;
 				tbody.append(row);
-				console.log('USUARIOS: Fila agregada para usuario', usuario.Usuario);
 			});
-
-			console.log('USUARIOS: Filas en tbody después de procesar:', tbody.find('tr').length);
 
 			// Verificar visibilidad de elementos
 			const tabla = $('#tblUsuarios');
 			const contenedor = $('.table-responsive');
 
-			console.log('USUARIOS: Tab visible:', tabPane.is(':visible'));
-			console.log('USUARIOS: Tabla encontrada:', tabla.length);
-			console.log('USUARIOS: Tabla visible:', tabla.is(':visible'));
-			console.log('USUARIOS: Tabla height:', tabla.height());
-			console.log('USUARIOS: Tabla display:', tabla.css('display'));
-			console.log('USUARIOS: Tabla visibility:', tabla.css('visibility'));
-			console.log('USUARIOS: Contenedor visible:', contenedor.is(':visible'));
-			console.log('USUARIOS: Contenedor encontrado:', contenedor.length);
-
-			// Verificar si la tabla tiene contenido
-			console.log('USUARIOS: Filas en tabla:', tabla.find('tr').length);
-			console.log('USUARIOS: Filas en tbody:', tbody.find('tr').length);
-
 			// Forzar visibilidad si es necesario
 			setTimeout(function () {
-				console.log('USUARIOS: Verificando visibilidad después del delay...');
-				console.log('USUARIOS: Tab visible después:', tabPane.is(':visible'));
-				console.log('USUARIOS: Tabla visible después:', tabla.is(':visible'));
-				console.log('USUARIOS: Tabla height después:', tabla.height());
-
 				if (!tabla.is(':visible') || tabla.height() === 0) {
-					console.log('USUARIOS: Forzando visibilidad de la tabla...');
-
 					// Asegurar que el tab esté activo
 					if (!tabPane.hasClass('active')) {
-						console.log('USUARIOS: Activando tab de usuarios...');
 						tabPane.addClass('active show');
 						tabLink.addClass('active');
 					}
@@ -6595,8 +6426,6 @@
 					// Forzar re-render
 					tabla.hide().show();
 					contenedor.hide().show();
-
-					console.log('USUARIOS: Visibilidad forzada aplicada');
 				}
 			}, 100);
 		}
@@ -6692,8 +6521,6 @@
 				Estado: $('#ddlEstadoUsuario').val()
 			};
 
-			console.log('Datos a enviar:', usuarioData);
-
 			$.ajax({
 				type: "POST",
 				url: "Mantenimientos.aspx/GuardarUsuario",
@@ -6701,32 +6528,25 @@
 				data: JSON.stringify({ usuarioData: usuarioData }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta AJAX guardarUsuario:', response);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
 						} catch (parseError) {
-							console.log('Error al parsear response.d:', parseError);
 							showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 							return;
 						}
 					}
 
 					if (responseData && responseData.Resultado === 'SUCCESS') {
-						console.log('Usuario guardado exitosamente:', responseData.Mensaje);
 						showToast('success', 'Éxito', responseData.Mensaje);
 						$('#modalUsuario').modal('hide');
 						cargarUsuarios();
 					} else {
-						console.log('Error en respuesta:', responseData ? responseData.Mensaje : 'Respuesta inválida');
 						showToast('error', 'Error', responseData ? responseData.Mensaje : 'No se pudo guardar el usuario');
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error en AJAX:', xhr, status, error);
-					console.log('Response text:', xhr.responseText);
 					showToast('error', 'Error', 'Error al guardar usuario: ' + error);
 				}
 			});
@@ -6785,8 +6605,6 @@
 
 		// ===== FUNCIONES PARA NIVELES DE ESTUDIO =====
 		function inicializarNivelesEstudio() {
-			console.log('🚀 Inicializando Niveles de Estudio...');
-
 			// Verificar que todos los elementos necesarios existan
 			const elementos = [
 				'#txtFiltroCodigoNivel',
@@ -6797,32 +6615,21 @@
 				'#btnLimpiarFiltrosNivel'
 			];
 
-			console.log('Verificando elementos del DOM...');
 			elementos.forEach(selector => {
 				const elemento = $(selector);
-				console.log(`${selector}:`, elemento.length);
 			});
 
 			// Cargar datos iniciales
-			console.log('Cargando niveles de estudio...');
 			cargarNivelesEstudio();
 
 			// Configurar eventos
-			console.log('⚙️ Configurando eventos...');
 			configurarEventosNivelesEstudio();
-
-			console.log('Inicialización de Niveles de Estudio completada');
 		}
 		function cargarNivelesEstudio() {
-			console.log('🔄 cargarNivelesEstudio iniciado');
-
 			const filtros = {
 				Codigo: $('#txtFiltroCodigoNivel').val() || '',
 				Descripcion: $('#txtFiltroDescripcionNivel').val() || ''
 			};
-
-			console.log('Filtros:', filtros);
-			console.log('🌐 Enviando petición AJAX a: Mantenimientos.aspx/ListarNivelesEstudio');
 
 			$.ajax({
 				type: "POST",
@@ -6831,15 +6638,11 @@
 				data: JSON.stringify({ filtros: filtros }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta AJAX recibida:', response);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
-							console.log('response.d parseado:', responseData);
 						} catch (parseError) {
-							console.log('Error al parsear response.d:', parseError);
 							mostrarNivelesEstudio([]);
 							showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 							return;
@@ -6847,24 +6650,19 @@
 					}
 
 					if (responseData && responseData.Resultado === 'SUCCESS') {
-						console.log('Datos recibidos:', responseData.Datos);
 						try {
 							const niveles = JSON.parse(responseData.Datos);
-							console.log('Niveles parseados:', niveles);
 							mostrarNivelesEstudio(niveles);
 						} catch (parseError) {
-							console.log('Error al parsear JSON de datos:', parseError);
 							mostrarNivelesEstudio([]);
 							showToast('error', 'Error', 'Error al procesar los datos');
 						}
 					} else {
-						console.log('Error en respuesta:', responseData ? responseData.Mensaje : 'Respuesta inválida');
 						mostrarNivelesEstudio([]);
 						showToast('warning', 'Advertencia', responseData ? responseData.Mensaje : 'No se encontraron datos');
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX:', xhr, status, error);
 					mostrarNivelesEstudio([]);
 					showToast('error', 'Error', 'Error al cargar niveles de estudio');
 				}
@@ -6872,19 +6670,15 @@
 		}
 
 		function mostrarNivelesEstudio(niveles) {
-			console.log('mostrarNivelesEstudio iniciado con:', niveles);
-
 			const tbody = $('#tblNivelesEstudio tbody');
 
 			if (tbody.length === 0) {
-				console.log('No se encontró el tbody de la tabla');
 				return;
 			}
 
 			tbody.empty();
 
 			if (!niveles || !Array.isArray(niveles) || niveles.length === 0) {
-				console.log('⚠️ No hay datos para mostrar');
 				tbody.append(`
                     <tr>
                         <td colspan="4" class="text-center text-muted">
@@ -6895,14 +6689,9 @@
 				return;
 			}
 
-			console.log('Procesando', niveles.length, 'niveles de estudio');
-
 			try {
 				$.each(niveles, function (index, nivel) {
-					console.log(`Procesando nivel ${index}:`, nivel);
-
 					if (!nivel) {
-						console.log('⚠️ Nivel es null o undefined');
 						return;
 					}
 
@@ -6926,10 +6715,7 @@
 
 					tbody.append(row);
 				});
-
-				console.log('Niveles de estudio mostrados correctamente');
 			} catch (error) {
-				console.log('Error al mostrar niveles:', error);
 				tbody.append(`
                     <tr>
                         <td colspan="4" class="text-center text-danger">
@@ -6940,11 +6726,8 @@
 			}
 		}
 		function configurarEventosNivelesEstudio() {
-			console.log('⚙️ Configurando eventos de Niveles de Estudio...');
-
 			// Botón Nuevo
 			$('#btnNuevoNivel').off('click').on('click', function () {
-				console.log('🆕 Abriendo modal para nuevo nivel');
 				limpiarFormularioNivel();
 				$('#modalNivelEstudioLabel').html('<i class="fas fa-graduation-cap me-2"></i>Nuevo Nivel de Estudio');
 				$('#modalNivelEstudio').modal('show');
@@ -6957,13 +6740,11 @@
 
 			// Botón Buscar
 			$('#btnBuscarNiveles').off('click').on('click', function () {
-				console.log('Buscando niveles de estudio');
 				cargarNivelesEstudio();
 			});
 
 			// Botón Limpiar
 			$('#btnLimpiarFiltrosNivel').off('click').on('click', function () {
-				console.log('🧹 Limpiando filtros');
 				$('#txtFiltroCodigoNivel').val('');
 				$('#txtFiltroDescripcionNivel').val('');
 				cargarNivelesEstudio();
@@ -6971,7 +6752,6 @@
 
 			// Botón Guardar
 			$('#btnGuardarNivel').off('click').on('click', function () {
-				console.log('Guardando nivel de estudio');
 				guardarNivel();
 			});
 
@@ -6998,8 +6778,6 @@
 		}
 
 		function editarNivel(id) {
-			console.log('✏️ Editando nivel ID:', id);
-
 			// Buscar el nivel en la tabla actual
 			const tbody = $('#tblNivelesEstudio tbody');
 			const row = tbody.find(`button[onclick="editarNivel(${id})"]`).closest('tr');
@@ -7014,8 +6792,6 @@
 			const codigo = cells.eq(1).find('.badge').text();
 			const descripcion = cells.eq(2).text();
 
-			console.log('Datos del nivel:', { id, codigo, descripcion });
-
 			// Llenar el formulario del modal
 			$('#hdnIDNivelEstudio').val(id);
 			$('#txtCodigoNivel').val(codigo);
@@ -7029,8 +6805,6 @@
 		}
 
 		function eliminarNivel(id) {
-			console.log('Eliminando nivel ID:', id);
-
 			// Obtener descripción del nivel para mostrar en la confirmación
 			const tbody = $('#tblNivelesEstudio tbody');
 			const row = tbody.find(`button[onclick="eliminarNivel(${id})"]`).closest('tr');
@@ -7038,8 +6812,6 @@
 
 			// Mostrar confirmación personalizada
 			mostrarConfirmEliminar(`Nivel "${descripcion}"`, function () {
-				console.log('Confirmación recibida, procediendo con eliminación');
-
 				// Mostrar loading
 				const btnEliminar = row.find('button[onclick="eliminarNivel(' + id + ')"]');
 				btnEliminar.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
@@ -7051,14 +6823,11 @@
 					data: JSON.stringify({ id: id }),
 					dataType: "json",
 					success: function (response) {
-						console.log('Respuesta de eliminación:', response);
-
 						let responseData = response.d;
 						if (typeof responseData === 'string') {
 							try {
 								responseData = JSON.parse(responseData);
 							} catch (parseError) {
-								console.log('Error al parsear respuesta:', parseError);
 								showToast('error', 'Error', 'Error al procesar la respuesta');
 								return;
 							}
@@ -7072,7 +6841,6 @@
 						}
 					},
 					error: function (xhr, status, error) {
-						console.log('Error AJAX:', xhr, status, error);
 						showToast('error', 'Error', 'Error al eliminar el nivel');
 					},
 					complete: function () {
@@ -7084,7 +6852,6 @@
 		}
 
 		function guardarNivel() {
-			console.log('Guardando nivel de estudio');
 
 			// Validar campos requeridos
 			const codigo = $('#txtCodigoNivel').val().trim();
@@ -7131,8 +6898,6 @@
 				Descripcion: descripcion
 			};
 
-			console.log('Datos a guardar:', nivelData);
-
 			// Mostrar loading
 			$('#btnGuardarNivel').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando...');
 
@@ -7143,14 +6908,11 @@
 				data: JSON.stringify({ nivelData: nivelData }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta de guardado:', response);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
 						} catch (parseError) {
-							console.log('Error al parsear respuesta:', parseError);
 							showToast('error', 'Error', 'Error al procesar la respuesta');
 							return;
 						}
@@ -7172,7 +6934,6 @@
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX:', xhr, status, error);
 					showToast('error', 'Error', 'Error al guardar el nivel');
 				},
 				complete: function () {
@@ -7184,8 +6945,6 @@
 
 		// ===== FUNCIONES PARA PROFESIONES =====
 		function inicializarProfesiones() {
-			console.log('🚀 Inicializando Profesiones...');
-
 			// Verificar que todos los elementos necesarios existan
 			const elementos = [
 				'#txtFiltroCodigoProfesion',
@@ -7196,33 +6955,22 @@
 				'#btnLimpiarFiltrosProfesion'
 			];
 
-			console.log('Verificando elementos del DOM...');
 			elementos.forEach(selector => {
 				const elemento = $(selector);
-				console.log(`${selector}:`, elemento.length);
 			});
 
 			// Cargar datos iniciales
-			console.log('Cargando profesiones...');
 			cargarProfesiones();
 
 			// Configurar eventos
-			console.log('⚙️ Configurando eventos...');
 			configurarEventosProfesiones();
-
-			console.log('Inicialización de Profesiones completada');
 		}
 
 		function cargarProfesiones() {
-			console.log('🔄 cargarProfesiones iniciado');
-
 			const filtros = {
 				Codigo: $('#txtFiltroCodigoProfesion').val() || '',
 				Descripcion: $('#txtFiltroDescripcionProfesion').val() || ''
 			};
-
-			console.log('Filtros:', filtros);
-			console.log('🌐 Enviando petición AJAX a: Mantenimientos.aspx/ListarProfesiones');
 
 			$.ajax({
 				type: "POST",
@@ -7231,15 +6979,11 @@
 				data: JSON.stringify({ filtros: filtros }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta AJAX recibida:', response);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
-							console.log('response.d parseado:', responseData);
 						} catch (parseError) {
-							console.log('Error al parsear response.d:', parseError);
 							mostrarProfesiones([]);
 							showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 							return;
@@ -7247,43 +6991,34 @@
 					}
 
 					if (responseData && responseData.Resultado === 'SUCCESS') {
-						console.log('Datos recibidos:', responseData.Datos);
 						try {
 							const profesiones = JSON.parse(responseData.Datos);
-							console.log('Profesiones parseadas:', profesiones);
 							mostrarProfesiones(profesiones);
 						} catch (parseError) {
-							console.log('Error al parsear JSON de datos:', parseError);
 							mostrarProfesiones([]);
 							showToast('error', 'Error', 'Error al procesar los datos');
 						}
 					} else {
-						console.log('Error en respuesta:', responseData ? responseData.Mensaje : 'Respuesta inválida');
 						mostrarProfesiones([]);
 						showToast('warning', 'Advertencia', responseData ? responseData.Mensaje : 'No se encontraron datos');
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX:', xhr, status, error);
 					mostrarProfesiones([]);
 					showToast('error', 'Error', 'Error al cargar profesiones');
 				}
 			});
 		}
 		function mostrarProfesiones(profesiones) {
-			console.log('mostrarProfesiones iniciado con:', profesiones);
-
 			const tbody = $('#tblProfesiones tbody');
 
 			if (tbody.length === 0) {
-				console.log('No se encontró el tbody de la tabla');
 				return;
 			}
 
 			tbody.empty();
 
 			if (!profesiones || !Array.isArray(profesiones) || profesiones.length === 0) {
-				console.log('⚠️ No hay datos para mostrar');
 				tbody.append(`
                     <tr>
                         <td colspan="4" class="text-center text-muted">
@@ -7294,14 +7029,9 @@
 				return;
 			}
 
-			console.log('Procesando', profesiones.length, 'profesiones');
-
 			try {
 				$.each(profesiones, function (index, profesion) {
-					console.log(`Procesando profesión ${index}:`, profesion);
-
 					if (!profesion) {
-						console.log('⚠️ Profesión es null o undefined');
 						return;
 					}
 
@@ -7325,10 +7055,7 @@
 
 					tbody.append(row);
 				});
-
-				console.log('Profesiones mostradas correctamente');
 			} catch (error) {
-				console.log('Error al mostrar profesiones:', error);
 				tbody.append(`
                     <tr>
                         <td colspan="4" class="text-center text-danger">
@@ -7340,11 +7067,8 @@
 		}
 
 		function configurarEventosProfesiones() {
-			console.log('⚙️ Configurando eventos de Profesiones...');
-
 			// Botón Nuevo
 			$('#btnNuevoProfesion').off('click').on('click', function () {
-				console.log('🆕 Abriendo modal para nueva profesión');
 				limpiarFormularioProfesion();
 				$('#modalProfesionLabel').html('<i class="fas fa-briefcase me-2"></i>Nueva Profesión');
 				$('#modalProfesion').modal('show');
@@ -7357,13 +7081,11 @@
 
 			// Botón Buscar
 			$('#btnBuscarProfesiones').off('click').on('click', function () {
-				console.log('Buscando profesiones');
 				cargarProfesiones();
 			});
 
 			// Botón Limpiar
 			$('#btnLimpiarFiltrosProfesion').off('click').on('click', function () {
-				console.log('🧹 Limpiando filtros');
 				$('#txtFiltroCodigoProfesion').val('');
 				$('#txtFiltroDescripcionProfesion').val('');
 				cargarProfesiones();
@@ -7371,7 +7093,6 @@
 
 			// Botón Guardar
 			$('#btnGuardarProfesion').off('click').on('click', function () {
-				console.log('Guardando profesión');
 				guardarProfesion();
 			});
 
@@ -7398,8 +7119,6 @@
 		}
 
 		function editarProfesion(id) {
-			console.log('✏️ Editando profesión ID:', id);
-
 			// Buscar la profesión en la tabla actual
 			const tbody = $('#tblProfesiones tbody');
 			const row = tbody.find(`button[onclick="editarProfesion(${id})"]`).closest('tr');
@@ -7414,8 +7133,6 @@
 			const codigo = cells.eq(1).find('.badge').text();
 			const descripcion = cells.eq(2).text();
 
-			console.log('Datos de la profesión:', { id, codigo, descripcion });
-
 			// Llenar el formulario del modal
 			$('#hdnIDProfesion').val(id);
 			$('#txtCodigoProfesion').val(codigo);
@@ -7428,8 +7145,6 @@
 			$('#modalProfesion').modal('show');
 		}
 		function eliminarProfesion(id) {
-			console.log('Eliminando profesión ID:', id);
-
 			// Obtener descripción de la profesión para mostrar en la confirmación
 			const tbody = $('#tblProfesiones tbody');
 			const row = tbody.find(`button[onclick="eliminarProfesion(${id})"]`).closest('tr');
@@ -7437,8 +7152,6 @@
 
 			// Mostrar confirmación personalizada
 			mostrarConfirmEliminar(`Profesión "${descripcion}"`, function () {
-				console.log('Confirmación recibida, procediendo con eliminación');
-
 				// Mostrar loading
 				const btnEliminar = row.find('button[onclick="eliminarProfesion(' + id + ')"]');
 				btnEliminar.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
@@ -7450,14 +7163,11 @@
 					data: JSON.stringify({ id: id }),
 					dataType: "json",
 					success: function (response) {
-						console.log('Respuesta de eliminación:', response);
-
 						let responseData = response.d;
 						if (typeof responseData === 'string') {
 							try {
 								responseData = JSON.parse(responseData);
 							} catch (parseError) {
-								console.log('Error al parsear respuesta:', parseError);
 								showToast('error', 'Error', 'Error al procesar la respuesta');
 								return;
 							}
@@ -7471,7 +7181,6 @@
 						}
 					},
 					error: function (xhr, status, error) {
-						console.log('Error AJAX:', xhr, status, error);
 						showToast('error', 'Error', 'Error al eliminar la profesión');
 					},
 					complete: function () {
@@ -7483,7 +7192,6 @@
 		}
 
 		function guardarProfesion() {
-			console.log('Guardando profesión');
 
 			// Validar campos requeridos
 			const codigo = $('#txtCodigoProfesion').val().trim();
@@ -7530,7 +7238,6 @@
 				Descripcion: descripcion
 			};
 
-			console.log('Datos a guardar:', profesionData);
 
 			// Mostrar loading
 			$('#btnGuardarProfesion').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando...');
@@ -7542,14 +7249,11 @@
 				data: JSON.stringify({ profesionData: profesionData }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta de guardado:', response);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
 						} catch (parseError) {
-							console.log('Error al parsear respuesta:', parseError);
 							showToast('error', 'Error', 'Error al procesar la respuesta');
 							return;
 						}
@@ -7571,7 +7275,6 @@
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX:', xhr, status, error);
 					showToast('error', 'Error', 'Error al guardar la profesión');
 				},
 				complete: function () {
@@ -7583,28 +7286,17 @@
 
 		// ===== FUNCIONES PARA EMPRESAS =====
 		function inicializarEmpresas() {
-			console.log('🏢 Inicializando Empresas...');
-
 			// Cargar datos iniciales
-			console.log('Cargando empresas...');
 			cargarEmpresas();
 
 			// Configurar eventos
-			console.log('⚙️ Configurando eventos...');
 			configurarEventosEmpresas();
-
-			console.log('Inicialización de Empresas completada');
 		}
 		function cargarEmpresas() {
-			console.log('🔄 cargarEmpresas iniciado');
-
 			const filtros = {
 				Codigo: $('#txtFiltroCodigoEmpresa').val() || '',
 				Descripcion: $('#txtFiltroDescripcionEmpresa').val() || ''
 			};
-
-			console.log('Filtros:', filtros);
-			console.log('🌐 Enviando petición AJAX a: Mantenimientos.aspx/ListarEmpresas');
 
 			$.ajax({
 				type: "POST",
@@ -7613,15 +7305,11 @@
 				data: JSON.stringify({ filtros: filtros }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta AJAX recibida:', response);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
-							console.log('response.d parseado:', responseData);
 						} catch (parseError) {
-							console.log('Error al parsear response.d:', parseError);
 							mostrarEmpresas([]);
 							showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 							return;
@@ -7629,24 +7317,19 @@
 					}
 
 					if (responseData && responseData.Resultado === 'SUCCESS') {
-						console.log('Datos recibidos:', responseData.Datos);
 						try {
 							const empresas = JSON.parse(responseData.Datos);
-							console.log('Empresas parseadas:', empresas);
 							mostrarEmpresas(empresas);
 						} catch (parseError) {
-							console.log('Error al parsear JSON de datos:', parseError);
 							mostrarEmpresas([]);
 							showToast('error', 'Error', 'Error al procesar los datos');
 						}
 					} else {
-						console.log('Error en respuesta:', responseData ? responseData.Mensaje : 'Respuesta inválida');
 						mostrarEmpresas([]);
 						showToast('warning', 'Advertencia', responseData ? responseData.Mensaje : 'No se encontraron datos');
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX:', xhr, status, error);
 					mostrarEmpresas([]);
 					showToast('error', 'Error', 'Error al cargar empresas');
 				}
@@ -7654,19 +7337,15 @@
 		}
 
 		function mostrarEmpresas(empresas) {
-			console.log('mostrarEmpresas iniciado con:', empresas);
-
 			const tbody = $('#tblEmpresas tbody');
 
 			if (tbody.length === 0) {
-				console.log('No se encontró el tbody de la tabla');
 				return;
 			}
 
 			tbody.empty();
 
 			if (!empresas || !Array.isArray(empresas) || empresas.length === 0) {
-				console.log('⚠️ No hay datos para mostrar');
 				tbody.append(`
                     <tr>
                         <td colspan="4" class="text-center text-muted">
@@ -7677,14 +7356,9 @@
 				return;
 			}
 
-			console.log('Procesando', empresas.length, 'empresas');
-
 			try {
 				$.each(empresas, function (index, empresa) {
-					console.log(`Procesando empresa ${index}:`, empresa);
-
 					if (!empresa) {
-						console.log('⚠️ Empresa es null o undefined');
 						return;
 					}
 
@@ -7697,18 +7371,23 @@
                                 <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editarEmpresa(${empresa.ID})" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarEmpresa(${empresa.ID})" title="Eliminar">
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-empresa" data-empresa-id="${empresa.ID}" title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </td>
                         </tr>
                     `;
 					tbody.append(row);
+					
+					// Agregar event listener después de agregar la fila
+					const btnEliminar = tbody.find('tr:last-child .btn-eliminar-empresa[data-empresa-id="' + empresa.ID + '"]');
+					btnEliminar.off('click').on('click', function(e) {
+						e.preventDefault();
+						e.stopPropagation();
+						eliminarEmpresa(empresa.ID);
+					});
 				});
-
-				console.log('Empresas mostradas exitosamente');
 			} catch (error) {
-				console.log('Error al mostrar empresas:', error);
 				tbody.append(`
                     <tr>
                         <td colspan="4" class="text-center text-danger">
@@ -7720,11 +7399,8 @@
 		}
 
 		function configurarEventosEmpresas() {
-			console.log('⚙️ Configurando eventos de Empresas...');
-
 			// Botón Nuevo
 			$('#btnNuevoEmpresa').off('click').on('click', function () {
-				console.log('🆕 Abriendo modal para nueva empresa');
 				limpiarFormularioEmpresa();
 				$('#modalEmpresaLabel').html('<i class="fas fa-building me-2"></i>Nueva Empresa');
 				$('#modalEmpresa').modal('show');
@@ -7737,13 +7413,11 @@
 
 			// Botón Buscar
 			$('#btnBuscarEmpresas').off('click').on('click', function () {
-				console.log('Buscando empresas');
 				cargarEmpresas();
 			});
 
 			// Botón Limpiar
 			$('#btnLimpiarFiltrosEmpresa').off('click').on('click', function () {
-				console.log('🧹 Limpiando filtros');
 				$('#txtFiltroCodigoEmpresa').val('');
 				$('#txtFiltroDescripcionEmpresa').val('');
 				cargarEmpresas();
@@ -7751,7 +7425,6 @@
 
 			// Botón Guardar
 			$('#btnGuardarEmpresa').off('click').on('click', function () {
-				console.log('Guardando empresa');
 				guardarEmpresa();
 			});
 
@@ -7778,7 +7451,6 @@
 		}
 
 		function editarEmpresa(id) {
-			console.log('✏️ Editando empresa ID:', id);
 
 			// Buscar la empresa en la tabla actual
 			const tbody = $('#tblEmpresas tbody');
@@ -7794,8 +7466,6 @@
 			const codigo = cells.eq(1).find('.badge').text();
 			const descripcion = cells.eq(2).text();
 
-			console.log('Datos de la empresa:', { id, codigo, descripcion });
-
 			// Llenar el formulario del modal
 			$('#hdnIDEmpresa').val(id);
 			$('#txtCodigoEmpresa').val(codigo);
@@ -7809,16 +7479,37 @@
 		}
 
 		function eliminarEmpresa(id) {
-			console.log('Eliminando empresa ID:', id);
+			if (!id) {
+				showToast('error', 'Error', 'ID de empresa no válido');
+				return;
+			}
 
 			// Obtener descripción de la empresa para mostrar en la confirmación
 			const tbody = $('#tblEmpresas tbody');
-			const row = tbody.find(`button[onclick="eliminarEmpresa(${id})"]`).closest('tr');
+			
+			// Buscar la fila usando el atributo data-empresa-id o onclick
+			let row = tbody.find(`button.btn-eliminar-empresa[data-empresa-id="${id}"]`).closest('tr');
+			if (row.length === 0) {
+				// Fallback: buscar por onclick
+				row = tbody.find(`button[onclick="eliminarEmpresa(${id})"]`).closest('tr');
+			}
+			
+			if (row.length === 0) {
+				showToast('error', 'Error', 'No se encontró la empresa a eliminar');
+				return;
+			}
+			
 			const descripcion = row.find('td').eq(2).text();
 
 			// Mostrar confirmación personalizada
 			mostrarConfirmEliminar(`Empresa "${descripcion}"`, function () {
-				console.log('Confirmación recibida, eliminando empresa...');
+
+				// Mostrar loading en el botón
+				let btnEliminar = row.find(`button.btn-eliminar-empresa[data-empresa-id="${id}"]`);
+				if (btnEliminar.length === 0) {
+					btnEliminar = row.find(`button[onclick="eliminarEmpresa(${id})"]`);
+				}
+				btnEliminar.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
 				$.ajax({
 					type: "POST",
@@ -7827,14 +7518,11 @@
 					data: JSON.stringify({ id: id }),
 					dataType: "json",
 					success: function (response) {
-						console.log('Respuesta de eliminación:', response);
-
 						let responseData = response.d;
 						if (typeof responseData === 'string') {
 							try {
 								responseData = JSON.parse(responseData);
 							} catch (parseError) {
-								console.log('Error al parsear response.d:', parseError);
 								showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 								return;
 							}
@@ -7849,15 +7537,18 @@
 						}
 					},
 					error: function (xhr, status, error) {
-						console.log('Error AJAX:', xhr, status, error);
-						showToast('error', 'Error', 'Error al eliminar la empresa');
+						showToast('error', 'Error', 'Error al eliminar la empresa: ' + error);
+					},
+					complete: function () {
+						if (btnEliminar && btnEliminar.length > 0) {
+							btnEliminar.prop('disabled', false).html('<i class="fas fa-trash"></i>');
+						}
 					}
 				});
 			});
 		}
 
 		function guardarEmpresa() {
-			console.log('guardarEmpresa iniciado');
 
 			// Validar campos requeridos
 			const codigo = $('#txtCodigoEmpresa').val().trim();
@@ -7878,8 +7569,6 @@
 				Descripcion: descripcion
 			};
 
-			console.log('Datos a enviar:', empresaData);
-
 			$.ajax({
 				type: "POST",
 				url: "Mantenimientos.aspx/GuardarEmpresa",
@@ -7887,15 +7576,11 @@
 				data: JSON.stringify({ empresaData: empresaData }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta AJAX recibida:', response);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
-							console.log('response.d parseado:', responseData);
 						} catch (parseError) {
-							console.log('Error al parsear response.d:', parseError);
 							showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 							return;
 						}
@@ -7917,7 +7602,6 @@
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX:', xhr, status, error);
 					showToast('error', 'Error', 'Error al guardar la empresa');
 				},
 				complete: function () {
@@ -7928,15 +7612,11 @@
 		}
 		// ===== FUNCIONES PARA OCUPACIONES =====
 		function inicializarOcupaciones() {
-			console.log('👔 Inicializando Ocupaciones...');
 			cargarOcupaciones();
 			configurarEventosOcupaciones();
-			console.log('Inicialización de Ocupaciones completada');
 		}
 
 		function cargarOcupaciones() {
-			console.log('Cargando ocupaciones...');
-
 			const filtros = {
 				Codigo: $('#txtFiltroCodigoOcupacion').val(),
 				Descripcion: $('#txtFiltroDescripcionOcupacion').val()
@@ -7949,14 +7629,11 @@
 				data: JSON.stringify({ filtros: filtros }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta de ocupaciones:', response);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
 						} catch (parseError) {
-							console.log('Error al parsear response.d:', parseError);
 							showToast('error', 'Error', 'Error al procesar la respuesta');
 							return;
 						}
@@ -7970,7 +7647,6 @@
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX:', xhr, status, error);
 					showToast('error', 'Error', 'Error al cargar ocupaciones');
 				}
 			});
@@ -8001,11 +7677,8 @@
 		}
 
 		function configurarEventosOcupaciones() {
-			console.log('⚙️ Configurando eventos de Ocupaciones...');
-
 			// Botón Nuevo
 			$('#btnNuevoOcupacion').off('click').on('click', function () {
-				console.log('🆕 Abriendo modal para nueva ocupación');
 				limpiarFormularioOcupacion();
 				$('#modalOcupacionLabel').html('<i class="fas fa-user-tie me-2"></i>Nueva Ocupación');
 				$('#modalOcupacion').modal('show');
@@ -8018,19 +7691,16 @@
 
 			// Botón Buscar
 			$('#btnBuscarOcupaciones').off('click').on('click', function () {
-				console.log('Buscando ocupaciones');
 				cargarOcupaciones();
 			});
 
 			// Botón Limpiar
 			$('#btnLimpiarFiltrosOcupacion').off('click').on('click', function () {
-				console.log('🧹 Limpiando filtros de ocupaciones');
 				limpiarFiltrosOcupacion();
 			});
 
 			// Botón Guardar
 			$('#btnGuardarOcupacion').off('click').on('click', function () {
-				console.log('Guardando ocupación');
 				guardarOcupacion();
 			});
 		}
@@ -8047,7 +7717,6 @@
 			$('#txtDescripcionOcupacion').val('');
 		}
 		function editarOcupacion(id) {
-			console.log('✏️ Editando ocupación ID:', id);
 
 			// Buscar la ocupación en la tabla
 			const tbody = $('#tblOcupaciones tbody');
@@ -8075,7 +7744,6 @@
 		}
 
 		function eliminarOcupacion(id) {
-			console.log('Eliminando ocupación ID:', id);
 
 			// Obtener descripción de la ocupación para mostrar en la confirmación
 			const tbody = $('#tblOcupaciones tbody');
@@ -8084,7 +7752,6 @@
 
 			// Mostrar confirmación personalizada
 			mostrarConfirmEliminar(`Ocupación "${descripcion}"`, function () {
-				console.log('Confirmación recibida, eliminando ocupación...');
 
 				$.ajax({
 					type: "POST",
@@ -8093,14 +7760,12 @@
 					data: JSON.stringify({ id: id }),
 					dataType: "json",
 					success: function (response) {
-						console.log('Respuesta de eliminación:', response);
 
 						let responseData = response.d;
 						if (typeof responseData === 'string') {
 							try {
 								responseData = JSON.parse(responseData);
 							} catch (parseError) {
-								console.log('Error al parsear response.d:', parseError);
 								showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
 								return;
 							}
@@ -8115,7 +7780,6 @@
 						}
 					},
 					error: function (xhr, status, error) {
-						console.log('Error AJAX:', xhr, status, error);
 						showToast('error', 'Error', 'Error al eliminar la ocupación');
 					}
 				});
@@ -8123,7 +7787,6 @@
 		}
 
 		function guardarOcupacion() {
-			console.log('guardarOcupacion iniciado');
 
 			// Validar campos requeridos
 			const codigo = $('#txtCodigoOcupacion').val().trim();
@@ -8148,8 +7811,6 @@
 				Descripcion: descripcion
 			};
 
-			console.log('Datos a guardar:', ocupacionData);
-
 			// Mostrar loading
 			$('#btnGuardarOcupacion').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando...');
 
@@ -8160,14 +7821,11 @@
 				data: JSON.stringify({ ocupacionData: ocupacionData }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta de guardado:', response);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
 						} catch (parseError) {
-							console.log('Error al parsear respuesta:', parseError);
 							showToast('error', 'Error', 'Error al procesar la respuesta');
 							return;
 						}
@@ -8189,7 +7847,6 @@
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX:', xhr, status, error);
 					showToast('error', 'Error', 'Error al guardar la ocupación');
 				},
 				complete: function () {
@@ -8203,14 +7860,11 @@
 
 		// ===== PAÍSES =====
 		function inicializarPaises() {
-			console.log('🌍 Inicializando Países...');
 			cargarPaises();
 			configurarEventosPaises();
 		}
 
 		function cargarPaises() {
-			console.log('Cargando países...');
-
 			const filtros = {
 				CodigoISO: $('#txtFiltroCodigoPais').val() || '',
 				Descripcion: $('#txtFiltroDescripcionPais').val() || ''
@@ -8223,14 +7877,11 @@
 				data: JSON.stringify({ filtros: filtros }),
 				dataType: "json",
 				success: function (response) {
-					console.log('Respuesta de países:', response);
-
 					let responseData = response.d;
 					if (typeof responseData === 'string') {
 						try {
 							responseData = JSON.parse(responseData);
 						} catch (parseError) {
-							console.log('Error al parsear response.d:', parseError);
 							showToast('error', 'Error', 'Error al procesar la respuesta');
 							return;
 						}
@@ -8244,7 +7895,6 @@
 					}
 				},
 				error: function (xhr, status, error) {
-					console.log('Error AJAX:', xhr, status, error);
 					showToast('error', 'Error', 'Error al cargar países');
 				}
 			});
@@ -8317,8 +7967,6 @@
 		}
 
 		function editarPais(id) {
-			console.log('✏️ Editando país ID:', id);
-
 			const tbody = $('#tblPaises tbody');
 			const row = tbody.find(`button[onclick="editarPais(${id})"]`).closest('tr');
 
@@ -8418,7 +8066,6 @@
 
 		// ===== PROVINCIAS =====
 		function inicializarProvincias() {
-			console.log('🗺️ Inicializando Provincias...');
 			cargarPaisesParaProvincias();
 			cargarPaisesParaFiltroProvincias();
 			cargarProvincias();
@@ -8450,47 +8097,48 @@
 		}
 
 		function cargarPaisesParaProvincias() {
-			$.ajax({
+			return $.ajax({
 				type: "POST",
 				url: "Mantenimientos.aspx/ListarPaises",
 				contentType: "application/json; charset=utf-8",
 				data: JSON.stringify({ filtros: {} }),
-				dataType: "json",
-				success: function (response) {
-					let responseData = response.d;
-					if (typeof responseData === 'string') {
-						responseData = JSON.parse(responseData);
-					}
-
-					if (responseData && responseData.Resultado === 'SUCCESS') {
-						const paises = JSON.parse(responseData.Datos);
-						const select = $('#ddlPaisProvincia');
-						select.empty().append('<option value="">Seleccionar país...</option>');
-						paises.forEach(function (pais) {
-							select.append(`<option value="${pais.Code}">${pais.Descripcion}</option>`);
-						});
-
-						// Inicializar Select2
-						if ($.fn.select2) {
-							select.select2({
-								theme: 'bootstrap-5',
-								placeholder: 'Seleccionar país...',
-								allowClear: true,
-								width: '100%',
-								minimumResultsForSearch: 0,
-								dropdownParent: $('#modalProvincia')
-							});
-						}
-					}
-				},
-				error: function () {
-					console.log('Error al cargar países para provincias');
+				dataType: "json"
+			}).then(function (response) {
+				let responseData = response.d;
+				if (typeof responseData === 'string') {
+					responseData = JSON.parse(responseData);
 				}
+
+				if (responseData && responseData.Resultado === 'SUCCESS') {
+					const paises = JSON.parse(responseData.Datos);
+					const select = $('#ddlPaisProvincia');
+					select.empty().append('<option value="">Seleccionar país...</option>');
+					paises.forEach(function (pais) {
+						select.append(`<option value="${pais.Code}">${pais.Descripcion}</option>`);
+					});
+
+					// Si Select2 ya está inicializado, destruirlo y reinicializarlo
+					if ($.fn.select2 && select.hasClass('select2-hidden-accessible')) {
+						select.select2('destroy');
+					}
+					
+					// Inicializar Select2
+					if ($.fn.select2) {
+						select.select2({
+							theme: 'bootstrap-5',
+							placeholder: 'Seleccionar país...',
+							allowClear: true,
+							width: '100%',
+							minimumResultsForSearch: 0,
+							dropdownParent: $('#modalProvincia')
+						});
+					}
+				}
+			}).fail(function (xhr, status, error) {
 			});
 		}
 
 		function cargarProvincias() {
-			console.log('Cargando provincias...');
 
 			const filtros = {
 				Code: $('#txtFiltroCodigoProvincia').val() || '',
@@ -8586,11 +8234,17 @@
 				}
 			});
 
-			// Reinicializar Select2 cuando se abre el modal
+			// Reinicializar Select2 cuando se abre el modal y cargar países si están vacíos
 			$('#modalProvincia').on('shown.bs.modal', function () {
-				if ($.fn.select2) {
-					const select = $('#ddlPaisProvincia');
-					if (!select.hasClass('select2-hidden-accessible')) {
+				const select = $('#ddlPaisProvincia');
+				const numOpciones = select.find('option').length;
+				
+				// Si el dropdown está vacío o solo tiene la opción por defecto, cargar países
+				if (numOpciones <= 1) {
+					cargarPaisesParaProvincias();
+				} else {
+					// Si ya tiene opciones, solo inicializar Select2 si no está inicializado
+					if ($.fn.select2 && !select.hasClass('select2-hidden-accessible')) {
 						select.select2({
 							theme: 'bootstrap-5',
 							placeholder: 'Seleccionar país...',
@@ -8648,7 +8302,9 @@
 			const tbody = $('#tblProvincias tbody');
 			const row = tbody.find(`button[onclick="editarProvincia(${id})"]`).closest('tr');
 
-			if (row.length === 0) return;
+			if (row.length === 0) {
+				return;
+			}
 
 			const codigo = row.find('span.badge').text();
 			const descripcion = row.find('td').eq(3).text();
@@ -8672,13 +8328,38 @@
 							const provincia = provincias[0];
 							$('#hdnIDProvincia').val(id);
 							$('#txtCodigoProvincia').val(provincia.Code);
-							$('#ddlPaisProvincia').val(provincia.CodePais).trigger('change');
 							$('#txtDescripcionProvincia').val(provincia.Descripcion);
 
-							$('#modalProvinciaLabel').html('<i class="fas fa-map me-2"></i>Editar Provincia');
-							$('#modalProvincia').modal('show');
+							// Primero cargar los países si no están cargados
+							const selectPais = $('#ddlPaisProvincia');
+							const numOpciones = selectPais.find('option').length;
+							
+							const promiseCargarPaises = (numOpciones <= 1) 
+								? cargarPaisesParaProvincias() 
+								: $.Deferred().resolve().promise();
+							
+							promiseCargarPaises.then(function() {
+								// Luego establecer el valor del país
+								$('#ddlPaisProvincia').val(provincia.CodePais);
+								
+								// Si Select2 está inicializado, actualizar el valor
+								if ($.fn.select2 && $('#ddlPaisProvincia').hasClass('select2-hidden-accessible')) {
+									$('#ddlPaisProvincia').trigger('change.select2');
+								} else {
+									$('#ddlPaisProvincia').trigger('change');
+								}
+								
+								$('#modalProvinciaLabel').html('<i class="fas fa-map me-2"></i>Editar Provincia');
+								$('#modalProvincia').modal('show');
+							}).fail(function(error) {
+								// Abrir el modal de todas formas
+								$('#modalProvinciaLabel').html('<i class="fas fa-map me-2"></i>Editar Provincia');
+								$('#modalProvincia').modal('show');
+							});
 						}
 					}
+				},
+				error: function(xhr, status, error) {
 				}
 			});
 		}
@@ -8766,7 +8447,6 @@
 
 		// ===== DISTRITOS =====
 		function inicializarDistritos() {
-			console.log('📍 Inicializando Distritos...');
 			cargarPaisesParaDistritos();
 			cargarPaisesParaFiltroDistritos();
 			cargarProvinciasParaFiltroDistritos();
@@ -8830,65 +8510,79 @@
 			});
 		}
 		function cargarPaisesParaDistritos() {
-			$.ajax({
+			return $.ajax({
 				type: "POST",
 				url: "Mantenimientos.aspx/ListarPaises",
 				contentType: "application/json; charset=utf-8",
 				data: JSON.stringify({ filtros: {} }),
-				dataType: "json",
-				success: function (response) {
-					let responseData = response.d;
-					if (typeof responseData === 'string') {
-						responseData = JSON.parse(responseData);
-					}
-
-					if (responseData && responseData.Resultado === 'SUCCESS') {
-						const paises = JSON.parse(responseData.Datos);
-						const selects = ['#ddlPaisDistrito', '#ddlFiltroPaisDistrito'];
-						selects.forEach(function (selector) {
-							const select = $(selector);
-							select.empty().append('<option value="">Seleccionar país...</option>');
-							paises.forEach(function (pais) {
-								select.append(`<option value="${pais.Code}">${pais.Descripcion}</option>`);
-							});
-						});
-					}
+				dataType: "json"
+			}).then(function (response) {
+				let responseData = response.d;
+				if (typeof responseData === 'string') {
+					responseData = JSON.parse(responseData);
 				}
+
+				if (responseData && responseData.Resultado === 'SUCCESS') {
+					const paises = JSON.parse(responseData.Datos);
+					const selects = ['#ddlPaisDistrito', '#ddlFiltroPaisDistrito'];
+					selects.forEach(function (selector) {
+						const select = $(selector);
+						// Si Select2 ya está inicializado, destruirlo
+						if ($.fn.select2 && select.hasClass('select2-hidden-accessible')) {
+							select.select2('destroy');
+						}
+						select.empty().append('<option value="">Seleccionar país...</option>');
+						paises.forEach(function (pais) {
+							select.append(`<option value="${pais.Code}">${pais.Descripcion}</option>`);
+						});
+						
+						// Inicializar Select2 solo para el dropdown del modal (no para el filtro)
+						if (selector === '#ddlPaisDistrito' && $.fn.select2) {
+							select.select2({
+								theme: 'bootstrap-5',
+								placeholder: 'Seleccionar país...',
+								allowClear: true,
+								width: '100%',
+								minimumResultsForSearch: 0,
+								dropdownParent: $('#modalDistrito')
+							});
+						}
+					});
+				}
+			}).fail(function (xhr, status, error) {
 			});
 		}
 
 		function cargarProvinciasPorPaisParaDistrito(codigoPais) {
 			if (!codigoPais) {
 				$('#ddlProvinciaDistrito').empty().append('<option value="">Seleccionar provincia...</option>');
-				return;
+				return $.Deferred().resolve().promise();
 			}
 
-			$.ajax({
+			return $.ajax({
 				type: "POST",
 				url: "Mantenimientos.aspx/ListarProvincias",
 				contentType: "application/json; charset=utf-8",
 				data: JSON.stringify({ filtros: { CodePais: codigoPais } }),
-				dataType: "json",
-				success: function (response) {
-					let responseData = response.d;
-					if (typeof responseData === 'string') {
-						responseData = JSON.parse(responseData);
-					}
+				dataType: "json"
+			}).then(function (response) {
+				let responseData = response.d;
+				if (typeof responseData === 'string') {
+					responseData = JSON.parse(responseData);
+				}
 
-					if (responseData && responseData.Resultado === 'SUCCESS') {
-						const provincias = JSON.parse(responseData.Datos);
-						const select = $('#ddlProvinciaDistrito');
-						select.empty().append('<option value="">Seleccionar provincia...</option>');
-						provincias.forEach(function (provincia) {
-							select.append(`<option value="${provincia.Code}">${provincia.Descripcion}</option>`);
-						});
-					}
+				if (responseData && responseData.Resultado === 'SUCCESS') {
+					const provincias = JSON.parse(responseData.Datos);
+					const select = $('#ddlProvinciaDistrito');
+					select.empty().append('<option value="">Seleccionar provincia...</option>');
+					provincias.forEach(function (provincia) {
+						select.append(`<option value="${provincia.Code}">${provincia.Descripcion}</option>`);
+					});
 				}
 			});
 		}
 
 		function cargarDistritos() {
-			console.log('Cargando distritos...');
 
 			const filtros = {
 				Code: $('#txtFiltroCodigoDistrito').val() || '',
@@ -8986,23 +8680,48 @@
 				}
 			});
 
-			// Reinicializar Select2 cuando se abre el modal
+			// Reinicializar Select2 cuando se abre el modal y cargar países si están vacíos
 			$('#modalDistrito').on('shown.bs.modal', function () {
-				if ($.fn.select2) {
-					const selects = ['#ddlPaisDistrito', '#ddlProvinciaDistrito'];
-					selects.forEach(function (selector) {
-						const select = $(selector);
-						if (!select.hasClass('select2-hidden-accessible')) {
-							select.select2({
-								theme: 'bootstrap-5',
-								placeholder: 'Seleccionar...',
-								allowClear: true,
-								width: '100%',
-								minimumResultsForSearch: 0,
-								dropdownParent: $('#modalDistrito')
+				const selectPais = $('#ddlPaisDistrito');
+				// Si el dropdown de países está vacío o solo tiene la opción por defecto, cargar países
+				if (selectPais.find('option').length <= 1) {
+					cargarPaisesParaDistritos().then(function() {
+						// Después de cargar, inicializar Select2 si es necesario
+						if ($.fn.select2) {
+							const selects = ['#ddlPaisDistrito', '#ddlProvinciaDistrito'];
+							selects.forEach(function (selector) {
+								const select = $(selector);
+								if (!select.hasClass('select2-hidden-accessible')) {
+									select.select2({
+										theme: 'bootstrap-5',
+										placeholder: 'Seleccionar...',
+										allowClear: true,
+										width: '100%',
+										minimumResultsForSearch: 0,
+										dropdownParent: $('#modalDistrito')
+									});
+								}
 							});
 						}
 					});
+				} else {
+					// Si ya tiene opciones, solo inicializar Select2
+					if ($.fn.select2) {
+						const selects = ['#ddlPaisDistrito', '#ddlProvinciaDistrito'];
+						selects.forEach(function (selector) {
+							const select = $(selector);
+							if (!select.hasClass('select2-hidden-accessible')) {
+								select.select2({
+									theme: 'bootstrap-5',
+									placeholder: 'Seleccionar...',
+									allowClear: true,
+									width: '100%',
+									minimumResultsForSearch: 0,
+									dropdownParent: $('#modalDistrito')
+								});
+							}
+						});
+					}
 				}
 			});
 		}
@@ -9027,7 +8746,9 @@
 			const tbody = $('#tblDistritos tbody');
 			const row = tbody.find(`button[onclick="editarDistrito(${id})"]`).closest('tr');
 
-			if (row.length === 0) return;
+			if (row.length === 0) {
+				return;
+			}
 
 			$.ajax({
 				type: "POST",
@@ -9047,16 +8768,29 @@
 						if (distrito) {
 							$('#hdnIDDistrito').val(id);
 							$('#txtCodigoDistrito').val(distrito.Code);
-							$('#ddlPaisDistrito').val(distrito.CodePais).trigger('change');
-							setTimeout(function () {
-								$('#ddlProvinciaDistrito').val(distrito.CodeProvincia).trigger('change');
-							}, 300);
 							$('#txtDescripcionDistrito').val(distrito.Descripcion);
 
-							$('#modalDistritoLabel').html('<i class="fas fa-map-marked-alt me-2"></i>Editar Distrito');
-							$('#modalDistrito').modal('show');
+							// Primero cargar los países si no están cargados
+							const selectPais = $('#ddlPaisDistrito');
+							const promiseCargarPaises = (selectPais.find('option').length <= 1) 
+								? cargarPaisesParaDistritos() 
+								: $.Deferred().resolve().promise();
+							
+							promiseCargarPaises.then(function() {
+								// Luego establecer el país y cargar provincias
+								$('#ddlPaisDistrito').val(distrito.CodePais).trigger('change');
+								return cargarProvinciasPorPaisParaDistrito(distrito.CodePais);
+							}).then(function() {
+								// Finalmente establecer la provincia
+								$('#ddlProvinciaDistrito').val(distrito.CodeProvincia).trigger('change');
+								
+								$('#modalDistritoLabel').html('<i class="fas fa-map-marked-alt me-2"></i>Editar Distrito');
+								$('#modalDistrito').modal('show');
+							});
 						}
 					}
+				},
+				error: function(xhr, status, error) {
 				}
 			});
 		}
@@ -9100,6 +8834,7 @@
 			const id = $('#hdnIDDistrito').val();
 			const codigo = $('#txtCodigoDistrito').val();
 
+
 			if (!codigoPais || !codigoProvincia || !descripcion) {
 				showToast('warning', 'Validación', 'Todos los campos son requeridos');
 				return;
@@ -9108,12 +8843,13 @@
 			$('#btnGuardarDistrito').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando...');
 
 			const distritoData = {
-				ID: id || null,
+				ID: (id && id.trim() !== '') ? id : null,
 				Code: codigo ? parseInt(codigo) : null,
 				CodePais: codigoPais,
 				CodeProvincia: parseInt(codigoProvincia),
 				Descripcion: descripcion
 			};
+
 
 			$.ajax({
 				type: "POST",
@@ -9146,7 +8882,6 @@
 
 		// ===== CORREGIMIENTOS =====
 		function inicializarCorregimientos() {
-			console.log('🏘️ Inicializando Corregimientos...');
 			cargarPaisesParaCorregimientos();
 			cargarPaisesParaFiltroCorregimientos();
 			cargarProvinciasParaFiltroCorregimientos();
@@ -9244,30 +8979,46 @@
 		}
 
 		function cargarPaisesParaCorregimientos() {
-			$.ajax({
+			return $.ajax({
 				type: "POST",
 				url: "Mantenimientos.aspx/ListarPaises",
 				contentType: "application/json; charset=utf-8",
 				data: JSON.stringify({ filtros: {} }),
-				dataType: "json",
-				success: function (response) {
-					let responseData = response.d;
-					if (typeof responseData === 'string') {
-						responseData = JSON.parse(responseData);
-					}
-
-					if (responseData && responseData.Resultado === 'SUCCESS') {
-						const paises = JSON.parse(responseData.Datos);
-						const selects = ['#ddlPaisCorregimiento', '#ddlFiltroPaisCorregimiento'];
-						selects.forEach(function (selector) {
-							const select = $(selector);
-							select.empty().append('<option value="">Seleccionar país...</option>');
-							paises.forEach(function (pais) {
-								select.append(`<option value="${pais.Code}">${pais.Descripcion}</option>`);
-							});
-						});
-					}
+				dataType: "json"
+			}).then(function (response) {
+				let responseData = response.d;
+				if (typeof responseData === 'string') {
+					responseData = JSON.parse(responseData);
 				}
+
+				if (responseData && responseData.Resultado === 'SUCCESS') {
+					const paises = JSON.parse(responseData.Datos);
+					const selects = ['#ddlPaisCorregimiento', '#ddlFiltroPaisCorregimiento'];
+					selects.forEach(function (selector) {
+						const select = $(selector);
+						// Si Select2 ya está inicializado, destruirlo
+						if ($.fn.select2 && select.hasClass('select2-hidden-accessible')) {
+							select.select2('destroy');
+						}
+						select.empty().append('<option value="">Seleccionar país...</option>');
+						paises.forEach(function (pais) {
+							select.append(`<option value="${pais.Code}">${pais.Descripcion}</option>`);
+						});
+						
+						// Inicializar Select2 solo para el dropdown del modal (no para el filtro)
+						if (selector === '#ddlPaisCorregimiento' && $.fn.select2) {
+							select.select2({
+								theme: 'bootstrap-5',
+								placeholder: 'Seleccionar país...',
+								allowClear: true,
+								width: '100%',
+								minimumResultsForSearch: 0,
+								dropdownParent: $('#modalCorregimiento')
+							});
+						}
+					});
+				}
+			}).fail(function (xhr, status, error) {
 			});
 		}
 
@@ -9275,66 +9026,109 @@
 			if (!codigoPais) {
 				$('#ddlProvinciaCorregimiento').empty().append('<option value="">Seleccionar provincia...</option>');
 				$('#ddlDistritoCorregimiento').empty().append('<option value="">Seleccionar distrito...</option>');
-				return;
+				return $.Deferred().resolve().promise();
 			}
 
-			$.ajax({
+			return $.ajax({
 				type: "POST",
 				url: "Mantenimientos.aspx/ListarProvincias",
 				contentType: "application/json; charset=utf-8",
 				data: JSON.stringify({ filtros: { CodePais: codigoPais } }),
-				dataType: "json",
-				success: function (response) {
-					let responseData = response.d;
-					if (typeof responseData === 'string') {
-						responseData = JSON.parse(responseData);
-					}
+				dataType: "json"
+			}).then(function (response) {
+				let responseData = response.d;
+				if (typeof responseData === 'string') {
+					responseData = JSON.parse(responseData);
+				}
 
-					if (responseData && responseData.Resultado === 'SUCCESS') {
-						const provincias = JSON.parse(responseData.Datos);
-						const select = $('#ddlProvinciaCorregimiento');
-						select.empty().append('<option value="">Seleccionar provincia...</option>');
-						provincias.forEach(function (provincia) {
-							select.append(`<option value="${provincia.Code}">${provincia.Descripcion}</option>`);
-						});
-						$('#ddlDistritoCorregimiento').empty().append('<option value="">Seleccionar distrito...</option>');
-					}
+				if (responseData && responseData.Resultado === 'SUCCESS') {
+					const provincias = JSON.parse(responseData.Datos);
+					const select = $('#ddlProvinciaCorregimiento');
+					select.empty().append('<option value="">Seleccionar provincia...</option>');
+					provincias.forEach(function (provincia) {
+						select.append(`<option value="${provincia.Code}">${provincia.Descripcion}</option>`);
+					});
+					$('#ddlDistritoCorregimiento').empty().append('<option value="">Seleccionar distrito...</option>');
 				}
 			});
 		}
 
 		function cargarDistritosPorProvinciaParaCorregimiento(codigoProvincia) {
+			
 			if (!codigoProvincia) {
-				$('#ddlDistritoCorregimiento').empty().append('<option value="">Seleccionar distrito...</option>');
-				return;
+				const select = $('#ddlDistritoCorregimiento');
+				// Destruir Select2 si está inicializado
+				if (select.data('select2')) {
+					select.select2('destroy');
+				}
+				select.empty().append('<option value="">Seleccionar distrito...</option>');
+				// Reinicializar Select2
+				if ($.fn.select2) {
+					select.select2({
+						theme: 'bootstrap-5',
+						placeholder: 'Seleccionar distrito...',
+						allowClear: true,
+						width: '100%',
+						minimumResultsForSearch: 0,
+						dropdownParent: $('#modalCorregimiento')
+					});
+				}
+				return $.Deferred().resolve().promise();
 			}
 
-			$.ajax({
+			return $.ajax({
 				type: "POST",
 				url: "Mantenimientos.aspx/ListarDistritos",
 				contentType: "application/json; charset=utf-8",
 				data: JSON.stringify({ filtros: { CodeProvincia: codigoProvincia } }),
-				dataType: "json",
-				success: function (response) {
-					let responseData = response.d;
-					if (typeof responseData === 'string') {
+				dataType: "json"
+			}).then(function (response) {
+				let responseData = response.d;
+				if (typeof responseData === 'string') {
+					try {
 						responseData = JSON.parse(responseData);
-					}
-
-					if (responseData && responseData.Resultado === 'SUCCESS') {
-						const distritos = JSON.parse(responseData.Datos);
-						const select = $('#ddlDistritoCorregimiento');
-						select.empty().append('<option value="">Seleccionar distrito...</option>');
-						distritos.forEach(function (distrito) {
-							select.append(`<option value="${distrito.Code}">${distrito.Descripcion}</option>`);
-						});
+					} catch (parseError) {
+						showToast('error', 'Error', 'Error al procesar la respuesta de distritos');
+						return $.Deferred().reject().promise();
 					}
 				}
+
+				if (responseData && responseData.Resultado === 'SUCCESS') {
+					const distritos = JSON.parse(responseData.Datos);
+					const select = $('#ddlDistritoCorregimiento');
+					
+					// Destruir Select2 si ya está inicializado
+					if (select.data('select2')) {
+						select.select2('destroy');
+					}
+					
+					select.empty().append('<option value="">Seleccionar distrito...</option>');
+					distritos.forEach(function (distrito) {
+						select.append(`<option value="${distrito.Code}">${distrito.Descripcion}</option>`);
+					});
+					
+					// Inicializar Select2 después de cargar las opciones
+					if ($.fn.select2) {
+						select.select2({
+							theme: 'bootstrap-5',
+							placeholder: 'Seleccionar distrito...',
+							allowClear: true,
+							width: '100%',
+							minimumResultsForSearch: 0,
+							dropdownParent: $('#modalCorregimiento')
+						});
+					}
+				} else {
+					showToast('error', 'Error', responseData.Mensaje || 'Error al cargar distritos');
+					return $.Deferred().reject().promise();
+				}
+			}).fail(function (xhr, status, error) {
+				showToast('error', 'Error', 'Error al cargar distritos');
+				return $.Deferred().reject().promise();
 			});
 		}
 
 		function cargarCorregimientos() {
-			console.log('Cargando corregimientos...');
 
 			const filtros = {
 				Code: $('#txtFiltroCodigoCorregimiento').val() || '',
@@ -9443,23 +9237,48 @@
 				}
 			});
 
-			// Reinicializar Select2 cuando se abre el modal
+			// Reinicializar Select2 cuando se abre el modal y cargar países si están vacíos
 			$('#modalCorregimiento').on('shown.bs.modal', function () {
-				if ($.fn.select2) {
-					const selects = ['#ddlPaisCorregimiento', '#ddlProvinciaCorregimiento', '#ddlDistritoCorregimiento'];
-					selects.forEach(function (selector) {
-						const select = $(selector);
-						if (!select.hasClass('select2-hidden-accessible')) {
-							select.select2({
-								theme: 'bootstrap-5',
-								placeholder: 'Seleccionar...',
-								allowClear: true,
-								width: '100%',
-								minimumResultsForSearch: 0,
-								dropdownParent: $('#modalCorregimiento')
+				const selectPais = $('#ddlPaisCorregimiento');
+				// Si el dropdown de países está vacío o solo tiene la opción por defecto, cargar países
+				if (selectPais.find('option').length <= 1) {
+					cargarPaisesParaCorregimientos().then(function() {
+						// Después de cargar, inicializar Select2 si es necesario
+						if ($.fn.select2) {
+							const selects = ['#ddlPaisCorregimiento', '#ddlProvinciaCorregimiento', '#ddlDistritoCorregimiento'];
+							selects.forEach(function (selector) {
+								const select = $(selector);
+								if (!select.hasClass('select2-hidden-accessible')) {
+									select.select2({
+										theme: 'bootstrap-5',
+										placeholder: 'Seleccionar...',
+										allowClear: true,
+										width: '100%',
+										minimumResultsForSearch: 0,
+										dropdownParent: $('#modalCorregimiento')
+									});
+								}
 							});
 						}
 					});
+				} else {
+					// Si ya tiene opciones, solo inicializar Select2
+					if ($.fn.select2) {
+						const selects = ['#ddlPaisCorregimiento', '#ddlProvinciaCorregimiento', '#ddlDistritoCorregimiento'];
+						selects.forEach(function (selector) {
+							const select = $(selector);
+							if (!select.hasClass('select2-hidden-accessible')) {
+								select.select2({
+									theme: 'bootstrap-5',
+									placeholder: 'Seleccionar...',
+									allowClear: true,
+									width: '100%',
+									minimumResultsForSearch: 0,
+									dropdownParent: $('#modalCorregimiento')
+								});
+							}
+						});
+					}
 				}
 			});
 		}
@@ -9486,7 +9305,9 @@
 			const tbody = $('#tblCorregimientos tbody');
 			const row = tbody.find(`button[onclick="editarCorregimiento(${id})"]`).closest('tr');
 
-			if (row.length === 0) return;
+			if (row.length === 0) {
+				return;
+			}
 
 			$.ajax({
 				type: "POST",
@@ -9506,19 +9327,33 @@
 						if (corregimiento) {
 							$('#hdnIDCorregimiento').val(id);
 							$('#txtCodigoCorregimiento').val(corregimiento.Code);
-							$('#ddlPaisCorregimiento').val(corregimiento.CodePais).trigger('change');
-							setTimeout(function () {
-								$('#ddlProvinciaCorregimiento').val(corregimiento.CodeProvincia).trigger('change');
-								setTimeout(function () {
-									$('#ddlDistritoCorregimiento').val(corregimiento.CodeDistrito).trigger('change');
-								}, 300);
-							}, 300);
 							$('#txtDescripcionCorregimiento').val(corregimiento.Descripcion);
 
-							$('#modalCorregimientoLabel').html('<i class="fas fa-map-pin me-2"></i>Editar Corregimiento');
-							$('#modalCorregimiento').modal('show');
+							// Primero cargar los países si no están cargados
+							const selectPais = $('#ddlPaisCorregimiento');
+							const promiseCargarPaises = (selectPais.find('option').length <= 1) 
+								? cargarPaisesParaCorregimientos() 
+								: $.Deferred().resolve().promise();
+							
+							promiseCargarPaises.then(function() {
+								// Luego establecer el país y cargar provincias
+								$('#ddlPaisCorregimiento').val(corregimiento.CodePais).trigger('change');
+								return cargarProvinciasPorPaisParaCorregimiento(corregimiento.CodePais);
+							}).then(function() {
+								// Luego establecer la provincia y cargar distritos
+								$('#ddlProvinciaCorregimiento').val(corregimiento.CodeProvincia).trigger('change');
+								return cargarDistritosPorProvinciaParaCorregimiento(corregimiento.CodeProvincia);
+							}).then(function() {
+								// Finalmente establecer el distrito
+								$('#ddlDistritoCorregimiento').val(corregimiento.CodeDistrito).trigger('change');
+								
+								$('#modalCorregimientoLabel').html('<i class="fas fa-map-pin me-2"></i>Editar Corregimiento');
+								$('#modalCorregimiento').modal('show');
+							});
 						}
 					}
+				},
+				error: function(xhr, status, error) {
 				}
 			});
 		}
@@ -9563,6 +9398,7 @@
 			const id = $('#hdnIDCorregimiento').val();
 			const codigo = $('#txtCodigoCorregimiento').val();
 
+
 			if (!codigoPais || !codigoProvincia || !codigoDistrito || !descripcion) {
 				showToast('warning', 'Validación', 'Todos los campos son requeridos');
 				return;
@@ -9571,13 +9407,14 @@
 			$('#btnGuardarCorregimiento').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando...');
 
 			const corregimientoData = {
-				ID: id || null,
+				ID: (id && id.trim() !== '') ? id : null,
 				Code: codigo ? parseInt(codigo) : null,
 				CodePais: codigoPais,
 				CodeProvincia: parseInt(codigoProvincia),
 				CodeDistrito: parseInt(codigoDistrito),
 				Descripcion: descripcion
 			};
+
 
 			$.ajax({
 				type: "POST",

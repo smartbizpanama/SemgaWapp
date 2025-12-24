@@ -153,7 +153,12 @@ BEGIN
         s.NumeroAsociado,
         CONCAT(s.Nombre, ' ', s.Apellido) AS NombreCompleto,
         s.NumeroIdentificacion,
-        ta.TipoAsociado
+        ta.TipoAsociado,
+        s.CodTipoDoc,
+        (SELECT COUNT(*) 
+         FROM tbAuxiliares a 
+         WHERE a.NumeroAsociado = s.NumeroAsociado 
+         AND a.snEliminado = 0) AS CantAuxiliares
     FROM tbAsociados s
     LEFT JOIN tbTipoAsociado ta ON s.IdTipoAsociado = ta.IdTipoAsociado
     WHERE s.snEliminado = 0 
@@ -426,7 +431,12 @@ BEGIN
         s.NumeroAsociado,
         CONCAT(s.Nombre, ' ', s.Apellido) AS NombreCompleto,
         s.NumeroIdentificacion,
-        ta.TipoAsociado
+        ta.TipoAsociado,
+        s.CodTipoDoc,
+        (SELECT COUNT(*) 
+         FROM tbAuxiliares a 
+         WHERE a.NumeroAsociado = s.NumeroAsociado 
+         AND a.snEliminado = 0) AS CantAuxiliares
     FROM tbAsociados s
     LEFT JOIN tbTipoAsociado ta ON s.IdTipoAsociado = ta.IdTipoAsociado
     WHERE s.snEliminado = 0 

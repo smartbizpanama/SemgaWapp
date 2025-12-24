@@ -5,6 +5,7 @@ Imports SBSqlClient
 Imports SBUtility
 Imports System.Data
 Imports System.Web.Security
+Imports System.Text.RegularExpressions
 
 Public Class Transacciones
 	Inherits System.Web.UI.Page
@@ -40,13 +41,13 @@ Public Class Transacciones
 			Dim sSql As String
 			If esNumero Then
 				sSql = "Exec spBuscarAsociadoPorID"
-				ModGlobal.EscribirLog("📡 Ejecutando SQL por ID: " & sSql)
+				ModGlobal.EscribirLog("Ejecutando SQL por ID: " & sSql)
 				With objSql.Parametros
 					.Add("@NumeroAsociado", numeroAsociado)
 				End With
 			Else
 				sSql = "Exec spBuscarAsociados"
-				ModGlobal.EscribirLog("📡 Ejecutando SQL por texto: " & sSql)
+				ModGlobal.EscribirLog("Ejecutando SQL por texto: " & sSql)
 				With objSql.Parametros
 					.Add("@Busqueda", busqueda)
 				End With
@@ -383,7 +384,7 @@ Public Class Transacciones
 	Public Shared Function GuardarMovimiento(movimientoData As String) As Object
 		Try
 			ModGlobal.EscribirLog("GuardarMovimiento iniciado")
-			ModGlobal.EscribirLog("📄 Datos recibidos: " & movimientoData)
+			ModGlobal.EscribirLog("Datos recibidos: " & movimientoData)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim movimientoDict As Dictionary(Of String, Object) = DirectCast(New JavaScriptSerializer().Deserialize(movimientoData, GetType(Dictionary(Of String, Object))), Dictionary(Of String, Object))
@@ -407,6 +408,7 @@ Public Class Transacciones
 				.Add("@Monto", montoParam)
 				.Add("@Observaciones", If(String.IsNullOrEmpty(movimientoDict("Observaciones").ToString()), "", movimientoDict("Observaciones")))
 				.Add("@UsuarioID", HttpContext.Current.Session(VariablesSesion.UsuarioId))
+				.Add("@MensajeVal", "")
 			End With
 
 			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
@@ -457,25 +459,56 @@ Public Class Transacciones
 				}
 			End If
 
-			' Intentar extraer MovimientoID de manera flexible
-			Dim movimientoId As String = ""
-			If dt.Columns.Contains("MovimientoID") AndAlso Not IsDBNull(row("MovimientoID")) Then
-				movimientoId = row("MovimientoID").ToString()
-			ElseIf dt.Columns.Contains("IdMovimiento") AndAlso Not IsDBNull(row("IdMovimiento")) Then
-				movimientoId = row("IdMovimiento").ToString()
-			ElseIf dt.Columns.Contains("MovimientoId") AndAlso Not IsDBNull(row("MovimientoId")) Then
-				movimientoId = row("MovimientoId").ToString()
-			ElseIf dt.Columns.Count > 0 AndAlso Not IsDBNull(row(0)) Then
-				' Fallback: tomar primera columna si parece numérica
-				movimientoId = row(0).ToString()
+			' Extraer CapitalMovimientoID e InteresesMovimientoID (ahora el SP devuelve 0 en lugar de NULL)
+			Dim capitalMovimientoId As String = ""
+			Dim interesesMovimientoId As String = ""
+			
+			' Leer CapitalMovimientoID (0 si no existe)
+			If dt.Columns.Contains("CapitalMovimientoID") Then
+				Dim valorCapital As Integer = Convert.ToInt32(row("CapitalMovimientoID"))
+				If valorCapital > 0 Then
+					capitalMovimientoId = valorCapital.ToString()
+				End If
+			End If
+			
+			' Leer InteresesMovimientoID (0 si no existe)
+			If dt.Columns.Contains("InteresesMovimientoID") Then
+				Dim valorIntereses As Integer = Convert.ToInt32(row("InteresesMovimientoID"))
+				If valorIntereses > 0 Then
+					interesesMovimientoId = valorIntereses.ToString()
+				End If
+			End If
+			
+			' Si no se encuentran los nuevos campos, intentar con el campo antiguo para compatibilidad
+			If String.IsNullOrEmpty(capitalMovimientoId) AndAlso String.IsNullOrEmpty(interesesMovimientoId) Then
+				If dt.Columns.Contains("MovimientoID") AndAlso Not IsDBNull(row("MovimientoID")) Then
+					Dim valorMovimiento As Integer = Convert.ToInt32(row("MovimientoID"))
+					If valorMovimiento > 0 Then
+						capitalMovimientoId = valorMovimiento.ToString()
+					End If
+				ElseIf dt.Columns.Contains("IdMovimiento") AndAlso Not IsDBNull(row("IdMovimiento")) Then
+					Dim valorMovimiento As Integer = Convert.ToInt32(row("IdMovimiento"))
+					If valorMovimiento > 0 Then
+						capitalMovimientoId = valorMovimiento.ToString()
+					End If
+				ElseIf dt.Columns.Contains("MovimientoId") AndAlso Not IsDBNull(row("MovimientoId")) Then
+					Dim valorMovimiento As Integer = Convert.ToInt32(row("MovimientoId"))
+					If valorMovimiento > 0 Then
+						capitalMovimientoId = valorMovimiento.ToString()
+					End If
+				End If
 			End If
 
-			ModGlobal.EscribirLog($"GuardarMovimiento OK. MovimientoID='{movimientoId}', MensajeSP='{mensajeSp}'")
+			' Formatear valores para el log
+			Dim capitalIdLog As String = If(String.IsNullOrEmpty(capitalMovimientoId), "0 (no existe)", capitalMovimientoId)
+			Dim interesesIdLog As String = If(String.IsNullOrEmpty(interesesMovimientoId), "0 (no existe)", interesesMovimientoId)
+			ModGlobal.EscribirLog($"GuardarMovimiento OK. CapitalMovimientoID='{capitalIdLog}', InteresesMovimientoID='{interesesIdLog}', MensajeSP='{mensajeSp}'")
 
 			Return New With {
 				.Resultado = "SUCCESS",
 				.Mensaje = If(mensajeSp <> "", mensajeSp, "Movimiento guardado correctamente"),
-				.MovimientoID = movimientoId
+				.CapitalMovimientoID = capitalMovimientoId,
+				.InteresesMovimientoID = interesesMovimientoId
 			}
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en GuardarMovimiento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
@@ -488,71 +521,212 @@ Public Class Transacciones
 
 	<WebMethod()>
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
-	Public Shared Function GenerarComprobante(movimientoId As String) As Object
+	Public Shared Function GenerarComprobante(capitalMovimientoId As String, interesesMovimientoId As String) As Object
 		Try
-			ModGlobal.EscribirLog("🖨️ GenerarComprobante iniciado. MovimientoID: " & movimientoId)
+			ModGlobal.EscribirLog($"GenerarComprobante iniciado. CapitalMovimientoID: {capitalMovimientoId}, InteresesMovimientoID: {interesesMovimientoId}")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 
-			' Obtener datos del movimiento usando stored procedure
-			Dim sSql As String = "Exec spMovimientos_ObtenerDatosComprobante"
-
-			With objSql.Parametros
-				.Add("@MovimientoID", Integer.Parse(movimientoId))
-			End With
-
-			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
-
-			' Verificar si hubo error en la base de datos
-			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("Error en BD al obtener datos del comprobante: " & objSql.MensajeError)
-				Return New With {
-					.Resultado = "ERROR",
-					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
-				}
+			' Obtener datos del movimiento de capital (si existe)
+			Dim dtCapital As DataTable = Nothing
+			Dim rowCapital As DataRow = Nothing
+			ModGlobal.EscribirLog($"Verificando capitalMovimientoId: '{capitalMovimientoId}' (IsNullOrEmpty: {String.IsNullOrEmpty(capitalMovimientoId)})")
+			If Not String.IsNullOrEmpty(capitalMovimientoId) Then
+				Dim sSqlCapital As String = "Exec spMovimientos_ObtenerDatosComprobante"
+				With objSql.Parametros
+					.Clear()
+					.Add("@MovimientoID", Integer.Parse(capitalMovimientoId))
+				End With
+				dtCapital = objSql.GetDataTableSql(sSqlCapital)
+				
+				If objSql.MensajeError <> "" Then
+					ModGlobal.EscribirLog("Error en BD al obtener datos del comprobante de capital: " & objSql.MensajeError)
+				ElseIf dtCapital.Rows.Count > 0 Then
+					rowCapital = dtCapital.Rows(0)
+					ModGlobal.EscribirLog($"Datos de capital obtenidos correctamente. Monto: {rowCapital("Monto")}")
+				Else
+					ModGlobal.EscribirLog("No se encontraron datos para el movimiento de capital")
+				End If
 			Else
-				ModGlobal.EscribirLog("Comando ejecutado correctamente - GenerarComprobante")
+				ModGlobal.EscribirLog("capitalMovimientoId está vacío o nulo, no se buscará movimiento de capital")
 			End If
 
-			If dt.Rows.Count = 0 Then
-				ModGlobal.EscribirLog("No se encontró el movimiento con ID: " & movimientoId)
+			' Obtener datos del movimiento de intereses (si existe)
+			Dim dtIntereses As DataTable = Nothing
+			Dim rowIntereses As DataRow = Nothing
+			ModGlobal.EscribirLog($"Verificando interesesMovimientoId: '{interesesMovimientoId}' (IsNullOrEmpty: {String.IsNullOrEmpty(interesesMovimientoId)})")
+			If Not String.IsNullOrEmpty(interesesMovimientoId) Then
+				Dim sSqlIntereses As String = "Exec spMovimientos_ObtenerDatosComprobante"
+				With objSql.Parametros
+					.Clear()
+					.Add("@MovimientoID", Integer.Parse(interesesMovimientoId))
+				End With
+				dtIntereses = objSql.GetDataTableSql(sSqlIntereses)
+				
+				If objSql.MensajeError <> "" Then
+					ModGlobal.EscribirLog("Error en BD al obtener datos del comprobante de intereses: " & objSql.MensajeError)
+				ElseIf dtIntereses.Rows.Count > 0 Then
+					rowIntereses = dtIntereses.Rows(0)
+					ModGlobal.EscribirLog($"Datos de intereses obtenidos correctamente. Monto: {rowIntereses("Monto")}")
+				Else
+					ModGlobal.EscribirLog("No se encontraron datos para el movimiento de intereses")
+				End If
+			Else
+				ModGlobal.EscribirLog("interesesMovimientoId está vacío o nulo, no se buscará movimiento de intereses")
+			End If
+
+			' Validar que al menos uno de los movimientos exista
+			If rowCapital Is Nothing AndAlso rowIntereses Is Nothing Then
+				ModGlobal.EscribirLog("No se encontró ningún movimiento")
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "No se encontró el movimiento"
 				}
 			End If
 
-			Dim row As DataRow = dt.Rows(0)
+			' Usar el movimiento de capital como referencia principal, o intereses si no hay capital
+			Dim rowPrincipal As DataRow = If(rowCapital IsNot Nothing, rowCapital, rowIntereses)
+			Dim movimientoIdPrincipal As String = If(Not String.IsNullOrEmpty(capitalMovimientoId), capitalMovimientoId, interesesMovimientoId)
 
 			' Formatear MovimientoID con ceros a la izquierda
-			Dim movimientoIdFormateado As String = Right("000000000000" & movimientoId, 12)
+			Dim movimientoIdFormateado As String = Right("000000000000" & movimientoIdPrincipal, 12)
 
 			' Formatear fecha y hora
-			Dim fechaHora As String = Convert.ToDateTime(row("FechaMovimiento")).ToString("dd/MM/yyyy HH:mm")
+			Dim fechaHora As String = Convert.ToDateTime(rowPrincipal("FechaMovimiento")).ToString("dd/MM/yyyy HH:mm")
 
-			' Formatear monto con punto decimal
-			Dim montoFormateado As String = Convert.ToDecimal(row("Monto")).ToString("###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
+			' Formatear montos con formato de moneda (incluyendo símbolo $)
+			Dim montoCapitalFormateado As String = ""
+			Dim montoInteresesFormateado As String = ""
+			Dim montoCapital As Decimal = 0
+			Dim montoIntereses As Decimal = 0
+			
+			If rowCapital IsNot Nothing Then
+				montoCapital = Convert.ToDecimal(rowCapital("Monto"))
+				montoCapitalFormateado = montoCapital.ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
+			End If
+			
+			If rowIntereses IsNot Nothing Then
+				montoIntereses = Convert.ToDecimal(rowIntereses("Monto"))
+				montoInteresesFormateado = montoIntereses.ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
+			End If
+
+			' Calcular total (capital + intereses)
+			Dim montoTotal As Decimal = montoCapital + montoIntereses
+			Dim montoTotalFormateado As String = montoTotal.ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
 
 			' Leer el template HTML
 			Dim templatePath As String = HttpContext.Current.Server.MapPath("~/Forms/Transacciones/ComprobanteTransaccion.html")
 			Dim htmlTemplate As String = System.IO.File.ReadAllText(templatePath)
 
-			' Reemplazar placeholders
+			' Reemplazar placeholders comunes
 			htmlTemplate = htmlTemplate.Replace("@MovimientoID", movimientoIdFormateado)
 			htmlTemplate = htmlTemplate.Replace("@FechaHora", fechaHora)
-			htmlTemplate = htmlTemplate.Replace("@Usuario", row("UsuarioNombre").ToString())
-			htmlTemplate = htmlTemplate.Replace("@NumeroAsociado", row("NumeroAsociado").ToString())
-			htmlTemplate = htmlTemplate.Replace("@NombreAsociado", row("NombreAsociado").ToString())
-			htmlTemplate = htmlTemplate.Replace("@DescripcionAuxiliar", row("DescripcionTipoAuxiliar").ToString())
-			htmlTemplate = htmlTemplate.Replace("@Cuenta", row("Cuenta").ToString())
-			htmlTemplate = htmlTemplate.Replace("@DescripcionTransaccion", row("DescripcionTransaccion").ToString())
-			htmlTemplate = htmlTemplate.Replace("@Monto", montoFormateado)
+			htmlTemplate = htmlTemplate.Replace("@Usuario", rowPrincipal("UsuarioNombre").ToString())
+			htmlTemplate = htmlTemplate.Replace("@NumeroAsociado", rowPrincipal("NumeroAsociado").ToString())
+			htmlTemplate = htmlTemplate.Replace("@NombreAsociado", rowPrincipal("NombreAsociado").ToString())
+			
+			' Agregar identificación del asociado
+			Dim tipoIdentificacion As String = ""
+			Dim numeroIdentificacion As String = ""
+			Dim dtPrincipal As DataTable = If(rowCapital IsNot Nothing, dtCapital, dtIntereses)
+			If dtPrincipal IsNot Nothing AndAlso dtPrincipal.Columns.Contains("TipoIdentificacion") AndAlso Not IsDBNull(rowPrincipal("TipoIdentificacion")) Then
+				tipoIdentificacion = rowPrincipal("TipoIdentificacion").ToString()
+			End If
+			If dtPrincipal IsNot Nothing AndAlso dtPrincipal.Columns.Contains("NumeroIdentificacion") AndAlso Not IsDBNull(rowPrincipal("NumeroIdentificacion")) Then
+				numeroIdentificacion = rowPrincipal("NumeroIdentificacion").ToString()
+			End If
+			htmlTemplate = htmlTemplate.Replace("@TipoIdentificacion", tipoIdentificacion)
+			htmlTemplate = htmlTemplate.Replace("@NumeroIdentificacion", numeroIdentificacion)
+			
+			htmlTemplate = htmlTemplate.Replace("@DescripcionAuxiliar", rowPrincipal("DescripcionTipoAuxiliar").ToString())
+			htmlTemplate = htmlTemplate.Replace("@Cuenta", rowPrincipal("Cuenta").ToString())
+			htmlTemplate = htmlTemplate.Replace("@Total", montoTotalFormateado)
+			
+			' Reemplazar descripción de transacción (usar la del capital si existe, sino la de intereses)
+			Dim descripcionTransaccion As String = ""
+			If rowCapital IsNot Nothing Then
+				descripcionTransaccion = rowCapital("DescripcionTransaccion").ToString()
+			ElseIf rowIntereses IsNot Nothing Then
+				descripcionTransaccion = rowIntereses("DescripcionTransaccion").ToString()
+			End If
+			
+			' Construir descripción de transacción + ' TOTAL '
+			Dim descripcionTransaccionTotal As String = descripcionTransaccion & " TOTAL "
+			htmlTemplate = htmlTemplate.Replace("@DescripcionTransaccionTotal", descripcionTransaccionTotal)
+			htmlTemplate = htmlTemplate.Replace("@DescripcionTransaccion", descripcionTransaccion)
+			
+			' Construir sección de montos dinámicamente
+			Dim nuevaSeccionMontos As String = ""
+			
+			ModGlobal.EscribirLog($"Construyendo sección de montos - Capital: '{montoCapitalFormateado}', Intereses: '{montoInteresesFormateado}'")
+			
+			If Not String.IsNullOrEmpty(montoCapitalFormateado) AndAlso Not String.IsNullOrEmpty(montoInteresesFormateado) Then
+				' Ambos movimientos - mostrar lado a lado
+				nuevaSeccionMontos = "            <div class=""monto-container"">" & vbCrLf &
+					"                <div class=""monto-section capital"">" & vbCrLf &
+					"                    <div class=""monto-label"">Capital</div>" & vbCrLf &
+					"                    <div class=""monto-value"">" & montoCapitalFormateado & "</div>" & vbCrLf &
+					"                </div>" & vbCrLf &
+					"                <div class=""monto-section intereses"">" & vbCrLf &
+					"                    <div class=""monto-label"">Intereses</div>" & vbCrLf &
+					"                    <div class=""monto-value"">" & montoInteresesFormateado & "</div>" & vbCrLf &
+					"                </div>" & vbCrLf &
+					"            </div>"
+				ModGlobal.EscribirLog("Sección de montos: Ambos (Capital e Intereses) - lado a lado")
+			ElseIf Not String.IsNullOrEmpty(montoCapitalFormateado) Then
+				' Solo capital - usar color azul
+				nuevaSeccionMontos = "            <div class=""monto-section capital"">" & vbCrLf &
+					"                <div class=""monto-label"">Capital</div>" & vbCrLf &
+					"                <div class=""monto-value"">" & montoCapitalFormateado & "</div>" & vbCrLf &
+					"            </div>"
+				ModGlobal.EscribirLog("Sección de montos: Solo Capital")
+			ElseIf Not String.IsNullOrEmpty(montoInteresesFormateado) Then
+				' Solo intereses - usar color verde distintivo
+				nuevaSeccionMontos = "            <div class=""monto-section intereses"">" & vbCrLf &
+					"                <div class=""monto-label"">Intereses</div>" & vbCrLf &
+					"                <div class=""monto-value"">" & montoInteresesFormateado & "</div>" & vbCrLf &
+					"            </div>"
+				ModGlobal.EscribirLog("Sección de montos: Solo Intereses")
+			Else
+				' Fallback: usar monto genérico si no hay ninguno
+				nuevaSeccionMontos = "            <div class=""monto-section"">" & vbCrLf &
+					"                <div class=""monto-label"">Monto</div>" & vbCrLf &
+					"                <div class=""monto-value"">0.00</div>" & vbCrLf &
+					"            </div>"
+				ModGlobal.EscribirLog("Sección de montos: Fallback (Monto genérico)")
+			End If
+			
+			' Reemplazar secciones de monto - usar un método más robusto con System.Text.RegularExpressions
+			' Patrón regex para encontrar la sección de monto (más flexible)
+			Dim patronRegex As String = "<div class=""monto-section"">\s*<div class=""monto-label"">Monto</div>\s*<div class=""monto-value"">@Monto</div>\s*</div>"
+			Dim nuevaSeccionSinIndentacion As String = nuevaSeccionMontos.Replace("            ", "").Trim()
+			
+			' Reemplazar usando regex (más flexible con espacios y saltos de línea)
+			htmlTemplate = Regex.Replace(htmlTemplate, patronRegex, nuevaSeccionSinIndentacion, RegexOptions.IgnoreCase Or RegexOptions.Multiline)
+			
+			' También intentar reemplazo directo por si acaso
+			Dim patronBusqueda As String = "<div class=""monto-section"">" & vbCrLf & "                <div class=""monto-label"">Monto</div>" & vbCrLf & "                <div class=""monto-value"">@Monto</div>" & vbCrLf & "            </div>"
+			While htmlTemplate.Contains(patronBusqueda)
+				htmlTemplate = htmlTemplate.Replace(patronBusqueda, nuevaSeccionSinIndentacion)
+			End While
+			
+			' Verificar si el reemplazo funcionó
+			Dim reemplazoExitoso As Boolean = Not htmlTemplate.Contains("@Monto") OrElse (htmlTemplate.Contains("Intereses") AndAlso Not String.IsNullOrEmpty(montoInteresesFormateado)) OrElse (htmlTemplate.Contains("Capital") AndAlso Not String.IsNullOrEmpty(montoCapitalFormateado))
+			ModGlobal.EscribirLog($"Reemplazo de sección de montos completado. Éxito: {reemplazoExitoso}, Longitud del HTML: {htmlTemplate.Length}")
+			
+			' Si aún contiene @Monto y debería haber sido reemplazado, hacer un último intento
+			If htmlTemplate.Contains("@Monto") AndAlso (Not String.IsNullOrEmpty(montoCapitalFormateado) OrElse Not String.IsNullOrEmpty(montoInteresesFormateado)) Then
+				ModGlobal.EscribirLog("Advertencia: @Monto aún presente después del reemplazo. Intentando reemplazo directo final.")
+				htmlTemplate = htmlTemplate.Replace("@Monto", If(Not String.IsNullOrEmpty(montoCapitalFormateado), montoCapitalFormateado, If(Not String.IsNullOrEmpty(montoInteresesFormateado), montoInteresesFormateado, "0.00")))
+			End If
 
-			ModGlobal.EscribirLog("Comprobante generado exitosamente para movimiento: " & movimientoId)
+			ModGlobal.EscribirLog($"Comprobante generado exitosamente. Capital: {capitalMovimientoId}, Intereses: {interesesMovimientoId}")
 
 			Return New With {
 				.Resultado = "SUCCESS",
-				.Html = htmlTemplate
+				.Html = htmlTemplate,
+				.CapitalMovimientoID = capitalMovimientoId,
+				.InteresesMovimientoID = interesesMovimientoId
 			}
 
 		Catch ex As Exception
@@ -566,48 +740,65 @@ Public Class Transacciones
 
 	<WebMethod()>
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
-	Public Shared Function MarcarComprobanteImpreso(movimientoId As String) As Object
+	Public Shared Function MarcarComprobanteImpreso(capitalMovimientoId As String, interesesMovimientoId As String) As Object
 		Try
-			ModGlobal.EscribirLog("🖨️ MarcarComprobanteImpreso iniciado. MovimientoID: " & movimientoId)
+			ModGlobal.EscribirLog($"MarcarComprobanteImpreso iniciado. CapitalMovimientoID: {capitalMovimientoId}, InteresesMovimientoID: {interesesMovimientoId}")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim totalFilasAfectadas As Integer = 0
+			Dim errores As New List(Of String)
 
-			' Actualizar el campo snImpreso usando stored procedure
-			Dim sSql As String = "Exec spMovimientos_MarcarImpreso"
+			' Marcar movimiento de capital como impreso (si existe)
+			If Not String.IsNullOrEmpty(capitalMovimientoId) Then
+				Dim sSqlCapital As String = "Exec spMovimientos_MarcarImpreso"
+				With objSql.Parametros
+					.Clear()
+					.Add("@MovimientoID", Integer.Parse(capitalMovimientoId))
+				End With
+				Dim dtCapital As DataTable = objSql.GetDataTableSql(sSqlCapital)
+				
+				If objSql.MensajeError <> "" Then
+					errores.Add("Error al marcar capital como impreso: " & objSql.MensajeError)
+				ElseIf dtCapital.Rows.Count > 0 Then
+					totalFilasAfectadas += Convert.ToInt32(dtCapital.Rows(0)("FilasAfectadas"))
+				End If
+			End If
 
-			With objSql.Parametros
-				.Add("@MovimientoID", Integer.Parse(movimientoId))
-			End With
+			' Marcar movimiento de intereses como impreso (si existe)
+			If Not String.IsNullOrEmpty(interesesMovimientoId) Then
+				Dim sSqlIntereses As String = "Exec spMovimientos_MarcarImpreso"
+				With objSql.Parametros
+					.Clear()
+					.Add("@MovimientoID", Integer.Parse(interesesMovimientoId))
+				End With
+				Dim dtIntereses As DataTable = objSql.GetDataTableSql(sSqlIntereses)
+				
+				If objSql.MensajeError <> "" Then
+					errores.Add("Error al marcar intereses como impreso: " & objSql.MensajeError)
+				ElseIf dtIntereses.Rows.Count > 0 Then
+					totalFilasAfectadas += Convert.ToInt32(dtIntereses.Rows(0)("FilasAfectadas"))
+				End If
+			End If
 
-			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
-
-			' Verificar si hubo error en la base de datos
-			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("Error en BD al marcar como impreso: " & objSql.MensajeError)
+			If errores.Count > 0 Then
+				ModGlobal.EscribirLog("Errores al marcar como impreso: " & String.Join("; ", errores))
 				Return New With {
 					.Resultado = "ERROR",
-					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+					.Mensaje = String.Join("; ", errores)
 				}
-			Else
-				ModGlobal.EscribirLog("Comando ejecutado correctamente - MarcarComprobanteImpreso")
 			End If
 
-			Dim filasAfectadas As Integer = 0
-			If dt.Rows.Count > 0 Then
-				filasAfectadas = Convert.ToInt32(dt.Rows(0)("FilasAfectadas"))
-			End If
-
-			If filasAfectadas > 0 Then
-				ModGlobal.EscribirLog("Comprobante marcado como impreso para movimiento: " & movimientoId)
+			If totalFilasAfectadas > 0 Then
+				ModGlobal.EscribirLog($"Comprobante marcado como impreso. Filas afectadas: {totalFilasAfectadas}")
 				Return New With {
 					.Resultado = "SUCCESS",
 					.Mensaje = "Comprobante marcado como impreso"
 				}
 			Else
-				ModGlobal.EscribirLog("No se encontró el movimiento con ID: " & movimientoId)
+				ModGlobal.EscribirLog("No se encontraron movimientos para marcar como impresos")
 				Return New With {
 					.Resultado = "ERROR",
-					.Mensaje = "No se encontró el movimiento"
+					.Mensaje = "No se encontraron movimientos"
 				}
 			End If
 

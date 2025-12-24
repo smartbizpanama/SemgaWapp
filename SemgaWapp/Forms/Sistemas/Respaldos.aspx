@@ -607,7 +607,6 @@
                         // Mostrar modal
                         document.getElementById('modalCrearRespaldo').style.display = 'block';
                     } catch (parseError) {
-                        console.error('Error al parsear respuesta de ruta:', parseError);
                         // Usar ruta por defecto
                         const nombreRespaldo = `Respaldo_${fechaHora}`;
                         const nombreArchivo = `${nombreRespaldo}.bak`;
@@ -718,7 +717,6 @@
                             mostrarAlerta('Error al crear respaldo: ' + responseData.Message, 'danger');
                         }
                     } catch (parseError) {
-                        console.error('Error al parsear respuesta:', parseError);
                         document.getElementById('divProgress').style.display = 'none';
                         mostrarAlerta('Error al procesar respuesta del servidor', 'danger');
                     }
@@ -758,8 +756,6 @@
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                    console.log('Respuesta del servidor:', response);
-                    
                     try {
                         // Parsear la respuesta si viene como string
                         let responseData;
@@ -768,8 +764,6 @@
                         } else {
                             responseData = response.d;
                         }
-                        
-                        console.log('Datos parseados:', responseData);
                         
                         if (responseData && responseData.Success) {
                             // Verificar si Data es una cadena vacía o un array
@@ -789,7 +783,6 @@
                             `;
                         }
                     } catch (parseError) {
-                        console.error('Error al parsear respuesta:', parseError);
                         divRespaldos.innerHTML = `
                             <div class="alert alert-danger">
                                 <i class="fas fa-exclamation-triangle"></i>
@@ -799,7 +792,6 @@
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('Error AJAX:', xhr.responseText);
                     divRespaldos.innerHTML = `
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-triangle"></i>
@@ -864,7 +856,7 @@
                     });
                 }
             } catch (error) {
-                console.warn('No se pudo formatear la fecha', fechaTexto, error);
+                // Si no se pudo formatear, retornar texto original
             }
 
             // Si no se pudo formatear, retornar texto original
@@ -982,7 +974,6 @@
                             mostrarAlerta('Error al eliminar respaldo: ' + responseData.Message, 'danger');
                         }
                     } catch (parseError) {
-                        console.error('Error al parsear respuesta:', parseError);
                         mostrarAlerta('Error al procesar respuesta del servidor', 'danger');
                     }
                 },

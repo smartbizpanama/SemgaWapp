@@ -3140,80 +3140,45 @@ Public Class Mantenimientos
 				})
 			End If
 
-			' Verificar si el código ya existe entre registros activos (excluyendo el registro actual si es actualización)
-			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbEmpresas WHERE Code = @Code AND snEliminado = 0"
-			If Not String.IsNullOrEmpty(id) Then
-				sSqlVerificar += " AND ID != @ID"
+			' Convertir código a entero
+			Dim codigoInt As Integer
+			If Not Integer.TryParse(codigo, codigoInt) Or codigoInt <= 0 Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "El código debe ser un número entero mayor a cero"
+				})
 			End If
 
+			' Usar stored procedure
+			Dim sSql As String = "Exec spEmpresas_Guardar"
 			With objSql.Parametros
 				.Clear()
-				.Add("@Code", codigo)
 				If Not String.IsNullOrEmpty(id) Then
-					.Add("@ID", id)
+					.Add("@ID", Convert.ToInt32(id))
 				End If
+				.Add("@Code", codigoInt)
+				.Add("@Descripcion", descripcion)
 			End With
 
-			Dim dtVerificar As DataTable = objSql.GetDataTableSql(sSqlVerificar)
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 			If objSql.MensajeError <> "" Then
 				Return serializer.Serialize(New With {
 					.Resultado = "ERROR",
-					.Mensaje = "Error al verificar código: " & objSql.MensajeError
+					.Mensaje = "Error al guardar empresa: " & objSql.MensajeError
 				})
 			End If
 
-			If Convert.ToInt32(dtVerificar.Rows(0)(0)) > 0 Then
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
 				Return serializer.Serialize(New With {
-					.Resultado = "ERROR",
-					.Mensaje = "El código ingresado ya existe"
-				})
-			End If
-
-			' Determinar si es inserción o actualización
-			If String.IsNullOrEmpty(id) Then
-				' Inserción
-				Dim sSqlInsert As String = "INSERT INTO tbEmpresas (Code, Descripcion, snEliminado) VALUES (@Code, @Descripcion, 0)"
-				With objSql.Parametros
-					.Clear()
-					.Add("@Code", codigo)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlInsert)
-				If objSql.MensajeError <> "" Then
-					Return serializer.Serialize(New With {
-						.Resultado = "ERROR",
-						.Mensaje = "Error al crear empresa: " & objSql.MensajeError
-					})
-				End If
-
-				ModGlobal.EscribirLog("Empresa creada exitosamente")
-				Return serializer.Serialize(New With {
-					.Resultado = "SUCCESS",
-					.Mensaje = "Empresa creada exitosamente"
+					.Resultado = resultado,
+					.Mensaje = mensaje
 				})
 			Else
-				' Actualización
-				Dim sSqlUpdate As String = "UPDATE tbEmpresas SET Code = @Code, Descripcion = @Descripcion WHERE ID = @ID"
-				With objSql.Parametros
-					.Clear()
-					.Add("@Code", codigo)
-					.Add("@Descripcion", descripcion)
-					.Add("@ID", id)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlUpdate)
-				If objSql.MensajeError <> "" Then
-					Return serializer.Serialize(New With {
-						.Resultado = "ERROR",
-						.Mensaje = "Error al actualizar empresa: " & objSql.MensajeError
-					})
-				End If
-
-				ModGlobal.EscribirLog("Empresa actualizada exitosamente")
 				Return serializer.Serialize(New With {
-					.Resultado = "SUCCESS",
-					.Mensaje = "Empresa actualizada exitosamente"
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
 				})
 			End If
 
@@ -3231,34 +3196,46 @@ Public Class Mantenimientos
 	Public Shared Function EliminarEmpresa(id As Integer) As String
 		Dim serializer As New JavaScriptSerializer()
 		Try
-			ModGlobal.EscribirLog("EliminarEmpresa iniciado para ID: " & id)
+			ModGlobal.EscribirLog($"EliminarEmpresa iniciado para ID: {id}")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
-			Dim sSql As String = "UPDATE tbEmpresas SET snEliminado = 1 WHERE ID = @ID"
+			Dim sSql As String = "Exec spEmpresas_Eliminar"
 
 			With objSql.Parametros
 				.Clear()
 				.Add("@ID", id)
 			End With
 
-			objSql.ExecuteNonQuerySql(sSql)
+			ModGlobal.EscribirLog($"EliminarEmpresa - Ejecutando SP: {sSql} con parámetro @ID = {id}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			ModGlobal.EscribirLog($"EliminarEmpresa - Resultado: Filas={dt.Rows.Count}, Error={objSql.MensajeError}")
 
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("Error al eliminar empresa: " & objSql.MensajeError)
+				ModGlobal.EscribirLog($"EliminarEmpresa - Error al eliminar empresa: {objSql.MensajeError}")
 				Return serializer.Serialize(New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error al eliminar empresa: " & objSql.MensajeError
 				})
 			End If
 
-			ModGlobal.EscribirLog("Empresa eliminada exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "Empresa eliminada exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog($"EliminarEmpresa - Respuesta SP: Resultado={resultado}, Mensaje={mensaje}")
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				ModGlobal.EscribirLog("EliminarEmpresa - ERROR: No se recibió respuesta del servidor (dt.Rows.Count = 0)")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
-			ModGlobal.EscribirLog("Error en EliminarEmpresa: " & ex.Message)
+			ModGlobal.EscribirLog($"EliminarEmpresa - Error en EliminarEmpresa: {ex.Message} | StackTrace: {ex.StackTrace}")
 			Return serializer.Serialize(New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al eliminar empresa: " & ex.Message
@@ -3354,56 +3331,18 @@ Public Class Mantenimientos
 			Dim codigo As Integer = Convert.ToInt32(ocupacionDict("Code"))
 			Dim descripcion As String = ocupacionDict("Descripcion").ToString()
 
-			' Verificar si el código ya existe entre registros activos (excluyendo el registro actual si es actualización)
-			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbOcupaciones WHERE Code = @Code AND snEliminado = 0"
-			If Not String.IsNullOrEmpty(id) Then
-				sSqlVerificar += " AND ID != @ID"
-			End If
-
+			' Usar stored procedure
+			Dim sSql As String = "Exec spOcupaciones_Guardar"
 			With objSql.Parametros
 				.Clear()
-				.Add("@Code", codigo)
 				If Not String.IsNullOrEmpty(id) Then
 					.Add("@ID", Convert.ToInt32(id))
 				End If
+				.Add("@Code", codigo)
+				.Add("@Descripcion", descripcion)
 			End With
 
-			Dim count As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
-
-			If count > 0 Then
-				ModGlobal.EscribirLog("Código de ocupación ya existe")
-				Return serializer.Serialize(New With {
-					.Resultado = "ERROR",
-					.Mensaje = "El código ingresado ya existe. Por favor, ingrese un código diferente."
-				})
-			End If
-
-			' Insertar o actualizar
-			If String.IsNullOrEmpty(id) Then
-				' Insertar nuevo
-				Dim sSqlInsert As String = "INSERT INTO tbOcupaciones (Code, Descripcion, snEliminado) VALUES (@Code, @Descripcion, 0)"
-				With objSql.Parametros
-					.Clear()
-					.Add("@Code", codigo)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlInsert)
-				ModGlobal.EscribirLog("Ocupación insertada exitosamente")
-			Else
-				' Actualizar existente
-				Dim sSqlUpdate As String = "UPDATE tbOcupaciones SET Code = @Code, Descripcion = @Descripcion WHERE ID = @ID"
-				With objSql.Parametros
-					.Clear()
-					.Add("@ID", Convert.ToInt32(id))
-					.Add("@Code", codigo)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlUpdate)
-				ModGlobal.EscribirLog("Ocupación actualizada exitosamente")
-			End If
-
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 			If objSql.MensajeError <> "" Then
 				ModGlobal.EscribirLog("Error al guardar ocupación: " & objSql.MensajeError)
 				Return serializer.Serialize(New With {
@@ -3412,11 +3351,20 @@ Public Class Mantenimientos
 				})
 			End If
 
-			ModGlobal.EscribirLog("Ocupación guardada exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "Ocupación guardada exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog("Ocupación guardada: " & mensaje)
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en GuardarOcupacion: " & ex.Message)
@@ -3435,14 +3383,14 @@ Public Class Mantenimientos
 			ModGlobal.EscribirLog("EliminarOcupacion iniciado para ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
-			Dim sSql As String = "UPDATE tbOcupaciones SET snEliminado = 1 WHERE ID = @ID"
+			Dim sSql As String = "Exec spOcupaciones_Eliminar"
 
 			With objSql.Parametros
 				.Clear()
 				.Add("@ID", id)
 			End With
 
-			objSql.ExecuteNonQuerySql(sSql)
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
 			If objSql.MensajeError <> "" Then
 				ModGlobal.EscribirLog("Error al eliminar ocupación: " & objSql.MensajeError)
@@ -3452,11 +3400,20 @@ Public Class Mantenimientos
 				})
 			End If
 
-			ModGlobal.EscribirLog("Ocupación eliminada exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "Ocupación eliminada exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog("Ocupación eliminada: " & mensaje)
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en EliminarOcupacion: " & ex.Message)
@@ -3483,10 +3440,10 @@ Public Class Mantenimientos
 			If filtros IsNot Nothing Then
 				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
 				If filtrosDict IsNot Nothing Then
-					If Not String.IsNullOrEmpty(filtrosDict("CodigoISO")?.ToString()) Then
+					If filtrosDict.ContainsKey("CodigoISO") AndAlso Not String.IsNullOrEmpty(filtrosDict("CodigoISO")?.ToString()) Then
 						sSql += " AND Code LIKE '%" & filtrosDict("CodigoISO").ToString().Replace("'", "''") & "%'"
 					End If
-					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+					If filtrosDict.ContainsKey("Descripcion") AndAlso Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
 						sSql += " AND Descripcion LIKE '%" & filtrosDict("Descripcion").ToString().Replace("'", "''") & "%'"
 					End If
 				End If
@@ -3563,56 +3520,18 @@ Public Class Mantenimientos
 				})
 			End If
 
-			' Verificar si el código ya existe (excluyendo el registro actual si es actualización)
-			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbPaises WHERE Code = @Code AND snEliminado = 0"
-			If Not String.IsNullOrEmpty(id) Then
-				sSqlVerificar += " AND ID != @ID"
-			End If
-
+			' Usar stored procedure
+			Dim sSql As String = "Exec spPaises_Guardar"
 			With objSql.Parametros
 				.Clear()
-				.Add("@Code", codigo)
 				If Not String.IsNullOrEmpty(id) Then
 					.Add("@ID", Convert.ToInt32(id))
 				End If
+				.Add("@Code", codigo)
+				.Add("@Descripcion", descripcion)
 			End With
 
-			Dim count As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
-
-			If count > 0 Then
-				ModGlobal.EscribirLog("Código ISO ya existe")
-				Return serializer.Serialize(New With {
-					.Resultado = "ERROR",
-					.Mensaje = "El código ISO ingresado ya existe. Por favor, ingrese un código diferente."
-				})
-			End If
-
-			' Insertar o actualizar
-			If String.IsNullOrEmpty(id) Then
-				' Insertar nuevo
-				Dim sSqlInsert As String = "INSERT INTO tbPaises (Code, Descripcion, snEliminado) VALUES (@Code, @Descripcion, 0)"
-				With objSql.Parametros
-					.Clear()
-					.Add("@Code", codigo)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlInsert)
-				ModGlobal.EscribirLog("País insertado exitosamente")
-			Else
-				' Actualizar existente
-				Dim sSqlUpdate As String = "UPDATE tbPaises SET Code = @Code, Descripcion = @Descripcion WHERE ID = @ID"
-				With objSql.Parametros
-					.Clear()
-					.Add("@ID", Convert.ToInt32(id))
-					.Add("@Code", codigo)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlUpdate)
-				ModGlobal.EscribirLog("País actualizado exitosamente")
-			End If
-
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 			If objSql.MensajeError <> "" Then
 				ModGlobal.EscribirLog("Error al guardar país: " & objSql.MensajeError)
 				Return serializer.Serialize(New With {
@@ -3621,11 +3540,20 @@ Public Class Mantenimientos
 				})
 			End If
 
-			ModGlobal.EscribirLog("País guardado exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "País guardado exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog("País guardado: " & mensaje)
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en GuardarPais: " & ex.Message)
@@ -3644,14 +3572,14 @@ Public Class Mantenimientos
 			ModGlobal.EscribirLog("EliminarPais iniciado para ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
-			Dim sSql As String = "UPDATE tbPaises SET snEliminado = 1 WHERE ID = @ID"
+			Dim sSql As String = "Exec spPaises_Eliminar"
 
 			With objSql.Parametros
 				.Clear()
 				.Add("@ID", id)
 			End With
 
-			objSql.ExecuteNonQuerySql(sSql)
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
 			If objSql.MensajeError <> "" Then
 				ModGlobal.EscribirLog("Error al eliminar país: " & objSql.MensajeError)
@@ -3661,11 +3589,20 @@ Public Class Mantenimientos
 				})
 			End If
 
-			ModGlobal.EscribirLog("País eliminado exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "País eliminado exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog("País eliminado: " & mensaje)
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en EliminarPais: " & ex.Message)
@@ -3695,13 +3632,13 @@ Public Class Mantenimientos
 			If filtros IsNot Nothing Then
 				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
 				If filtrosDict IsNot Nothing Then
-					If Not String.IsNullOrEmpty(filtrosDict("Code")?.ToString()) Then
+					If filtrosDict.ContainsKey("Code") AndAlso Not String.IsNullOrEmpty(filtrosDict("Code")?.ToString()) Then
 						sSql += " AND p.Code = " & filtrosDict("Code").ToString()
 					End If
-					If Not String.IsNullOrEmpty(filtrosDict("CodePais")?.ToString()) Then
+					If filtrosDict.ContainsKey("CodePais") AndAlso Not String.IsNullOrEmpty(filtrosDict("CodePais")?.ToString()) Then
 						sSql += " AND p.CodePais = '" & filtrosDict("CodePais").ToString().Replace("'", "''") & "'"
 					End If
-					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+					If filtrosDict.ContainsKey("Descripcion") AndAlso Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
 						sSql += " AND p.Descripcion LIKE '%" & filtrosDict("Descripcion").ToString().Replace("'", "''") & "%'"
 					End If
 				End If
@@ -3773,67 +3710,38 @@ Public Class Mantenimientos
 			Dim codigoPais As String = provinciaDict("CodePais")?.ToString().Trim().ToUpper()
 			Dim descripcion As String = provinciaDict("Descripcion")?.ToString().Trim()
 
+			ModGlobal.EscribirLog($"GuardarProvincia - ID recibido: '{id}' (IsNullOrEmpty: {String.IsNullOrEmpty(id)})")
+			ModGlobal.EscribirLog($"GuardarProvincia - Code: {codigo}, CodePais: {codigoPais}, Descripcion: {descripcion}")
+
 			' Validaciones
 			If codigo <= 0 Or String.IsNullOrEmpty(codigoPais) Or String.IsNullOrEmpty(descripcion) Then
+				ModGlobal.EscribirLog("GuardarProvincia - Error de validación: Código, país y descripción son requeridos")
 				Return serializer.Serialize(New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Código, país y descripción son requeridos"
 				})
 			End If
 
-			' Verificar si el código ya existe para el mismo país (excluyendo el registro actual si es actualización)
-			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbProvincias WHERE Code = @Code AND CodePais = @CodePais AND snEliminado = 0"
-			If Not String.IsNullOrEmpty(id) Then
-				sSqlVerificar += " AND ID != @ID"
-			End If
-
+			' Usar stored procedure
+			Dim sSql As String = "Exec spProvincias_Guardar"
 			With objSql.Parametros
 				.Clear()
+				If Not String.IsNullOrEmpty(id) Then
+					Dim idInt As Integer = Convert.ToInt32(id)
+					ModGlobal.EscribirLog($"GuardarProvincia - Agregando parámetro @ID = {idInt}")
+					.Add("@ID", idInt)
+				Else
+					ModGlobal.EscribirLog("GuardarProvincia - No se agrega parámetro @ID (es NULL/vacío)")
+				End If
+				ModGlobal.EscribirLog($"GuardarProvincia - Agregando parámetros: @Code={codigo}, @CodePais={codigoPais}, @Descripcion={descripcion}")
 				.Add("@Code", codigo)
 				.Add("@CodePais", codigoPais)
-				If Not String.IsNullOrEmpty(id) Then
-					.Add("@ID", Convert.ToInt32(id))
-				End If
+				.Add("@Descripcion", descripcion)
 			End With
 
-			Dim count As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
-
-			If count > 0 Then
-				ModGlobal.EscribirLog("Código de provincia ya existe para este país")
-				Return serializer.Serialize(New With {
-					.Resultado = "ERROR",
-					.Mensaje = "El código ingresado ya existe para este país. Por favor, ingrese un código diferente."
-				})
-			End If
-
-			' Insertar o actualizar
-			If String.IsNullOrEmpty(id) Then
-				' Insertar nuevo
-				Dim sSqlInsert As String = "INSERT INTO tbProvincias (Code, CodePais, Descripcion, snEliminado) VALUES (@Code, @CodePais, @Descripcion, 0)"
-				With objSql.Parametros
-					.Clear()
-					.Add("@Code", codigo)
-					.Add("@CodePais", codigoPais)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlInsert)
-				ModGlobal.EscribirLog("Provincia insertada exitosamente")
-			Else
-				' Actualizar existente
-				Dim sSqlUpdate As String = "UPDATE tbProvincias SET Code = @Code, CodePais = @CodePais, Descripcion = @Descripcion WHERE ID = @ID"
-				With objSql.Parametros
-					.Clear()
-					.Add("@ID", Convert.ToInt32(id))
-					.Add("@Code", codigo)
-					.Add("@CodePais", codigoPais)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlUpdate)
-				ModGlobal.EscribirLog("Provincia actualizada exitosamente")
-			End If
-
+			ModGlobal.EscribirLog($"GuardarProvincia - Ejecutando SP: {sSql} con parámetros: {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			ModGlobal.EscribirLog($"GuardarProvincia - Resultado: Filas={dt.Rows.Count}, Error={objSql.MensajeError}")
 			If objSql.MensajeError <> "" Then
 				ModGlobal.EscribirLog("Error al guardar provincia: " & objSql.MensajeError)
 				Return serializer.Serialize(New With {
@@ -3842,11 +3750,21 @@ Public Class Mantenimientos
 				})
 			End If
 
-			ModGlobal.EscribirLog("Provincia guardada exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "Provincia guardada exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog($"GuardarProvincia - Respuesta SP: Resultado={resultado}, Mensaje={mensaje}")
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				ModGlobal.EscribirLog("GuardarProvincia - ERROR: No se recibió respuesta del servidor (dt.Rows.Count = 0)")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en GuardarProvincia: " & ex.Message)
@@ -3865,14 +3783,14 @@ Public Class Mantenimientos
 			ModGlobal.EscribirLog("EliminarProvincia iniciado para ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
-			Dim sSql As String = "UPDATE tbProvincias SET snEliminado = 1 WHERE ID = @ID"
+			Dim sSql As String = "Exec spProvincias_Eliminar"
 
 			With objSql.Parametros
 				.Clear()
 				.Add("@ID", id)
 			End With
 
-			objSql.ExecuteNonQuerySql(sSql)
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
 			If objSql.MensajeError <> "" Then
 				ModGlobal.EscribirLog("Error al eliminar provincia: " & objSql.MensajeError)
@@ -3882,11 +3800,20 @@ Public Class Mantenimientos
 				})
 			End If
 
-			ModGlobal.EscribirLog("Provincia eliminada exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "Provincia eliminada exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog("Provincia eliminada: " & mensaje)
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en EliminarProvincia: " & ex.Message)
@@ -3918,16 +3845,16 @@ Public Class Mantenimientos
 			If filtros IsNot Nothing Then
 				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
 				If filtrosDict IsNot Nothing Then
-					If Not String.IsNullOrEmpty(filtrosDict("Code")?.ToString()) Then
+					If filtrosDict.ContainsKey("Code") AndAlso Not String.IsNullOrEmpty(filtrosDict("Code")?.ToString()) Then
 						sSql += " AND d.Code = " & filtrosDict("Code").ToString()
 					End If
-					If Not String.IsNullOrEmpty(filtrosDict("CodePais")?.ToString()) Then
+					If filtrosDict.ContainsKey("CodePais") AndAlso Not String.IsNullOrEmpty(filtrosDict("CodePais")?.ToString()) Then
 						sSql += " AND d.CodePais = '" & filtrosDict("CodePais").ToString().Replace("'", "''") & "'"
 					End If
-					If Not String.IsNullOrEmpty(filtrosDict("CodeProvincia")?.ToString()) Then
+					If filtrosDict.ContainsKey("CodeProvincia") AndAlso Not String.IsNullOrEmpty(filtrosDict("CodeProvincia")?.ToString()) Then
 						sSql += " AND d.CodeProvincia = " & filtrosDict("CodeProvincia").ToString()
 					End If
-					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+					If filtrosDict.ContainsKey("Descripcion") AndAlso Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
 						sSql += " AND d.Descripcion LIKE '%" & filtrosDict("Descripcion").ToString().Replace("'", "''") & "%'"
 					End If
 				End If
@@ -4005,78 +3932,44 @@ Public Class Mantenimientos
 			Dim codigoProvincia As Integer = Convert.ToInt32(distritoDict("CodeProvincia"))
 			Dim descripcion As String = distritoDict("Descripcion")?.ToString().Trim()
 
+			ModGlobal.EscribirLog($"GuardarDistrito - ID recibido: '{id}' (IsNullOrEmpty: {String.IsNullOrEmpty(id)})")
+			ModGlobal.EscribirLog($"GuardarDistrito - Code: {If(codigo.HasValue, codigo.Value.ToString(), "NULL")}, CodePais: {codigoPais}, CodeProvincia: {codigoProvincia}, Descripcion: {descripcion}")
+
 			' Validaciones
 			If String.IsNullOrEmpty(codigoPais) Or codigoProvincia <= 0 Or String.IsNullOrEmpty(descripcion) Then
+				ModGlobal.EscribirLog("GuardarDistrito - Error de validación: País, provincia y descripción son requeridos")
 				Return serializer.Serialize(New With {
 					.Resultado = "ERROR",
 					.Mensaje = "País, provincia y descripción son requeridos"
 				})
 			End If
 
-			' Si es nuevo y no tiene código, obtener el siguiente código
-			If String.IsNullOrEmpty(id) AndAlso (Not codigo.HasValue OrElse codigo.Value <= 0) Then
-				Dim sSqlObtenerCodigo As String = "SELECT ISNULL(MAX(Code), 0) + 1 FROM tbDistritos WHERE snEliminado = 0"
-				objSql.Parametros.Clear()
-				codigo = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlObtenerCodigo))
-				ModGlobal.EscribirLog($"Código generado automáticamente: {codigo}")
-			End If
-
-			' Verificar si el código ya existe para la misma provincia (excluyendo el registro actual si es actualización)
-			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbDistritos WHERE Code = @Code AND CodeProvincia = @CodeProvincia AND CodePais = @CodePais AND snEliminado = 0"
-			If Not String.IsNullOrEmpty(id) Then
-				sSqlVerificar += " AND ID != @ID"
-			End If
-
+			' Usar stored procedure
+			Dim sSql As String = "Exec spDistritos_Guardar"
 			With objSql.Parametros
 				.Clear()
-				.Add("@Code", codigo.Value)
-				.Add("@CodeProvincia", codigoProvincia)
-				.Add("@CodePais", codigoPais)
 				If Not String.IsNullOrEmpty(id) Then
-					.Add("@ID", Convert.ToInt32(id))
+					Dim idInt As Integer = Convert.ToInt32(id)
+					ModGlobal.EscribirLog($"GuardarDistrito - Agregando parámetro @ID = {idInt}")
+					.Add("@ID", idInt)
+				Else
+					ModGlobal.EscribirLog("GuardarDistrito - No se agrega parámetro @ID (es NULL/vacío)")
 				End If
+				If codigo.HasValue AndAlso codigo.Value > 0 Then
+					ModGlobal.EscribirLog($"GuardarDistrito - Agregando parámetro @Code = {codigo.Value}")
+					.Add("@Code", codigo.Value)
+				Else
+					ModGlobal.EscribirLog("GuardarDistrito - No se agrega parámetro @Code (es NULL o <= 0)")
+				End If
+				ModGlobal.EscribirLog($"GuardarDistrito - Agregando parámetros: @CodePais={codigoPais}, @CodeProvincia={codigoProvincia}, @Descripcion={descripcion}")
+				.Add("@CodePais", codigoPais)
+				.Add("@CodeProvincia", codigoProvincia)
+				.Add("@Descripcion", descripcion)
 			End With
 
-			Dim count As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
-
-			If count > 0 Then
-				ModGlobal.EscribirLog("Código de distrito ya existe para esta provincia")
-				Return serializer.Serialize(New With {
-					.Resultado = "ERROR",
-					.Mensaje = "El código ingresado ya existe para esta provincia. Por favor, ingrese un código diferente."
-				})
-			End If
-
-			' Insertar o actualizar
-			If String.IsNullOrEmpty(id) Then
-				' Insertar nuevo
-				Dim sSqlInsert As String = "INSERT INTO tbDistritos (Code, CodePais, CodeProvincia, Descripcion, snEliminado) VALUES (@Code, @CodePais, @CodeProvincia, @Descripcion, 0)"
-				With objSql.Parametros
-					.Clear()
-					.Add("@Code", codigo.Value)
-					.Add("@CodePais", codigoPais)
-					.Add("@CodeProvincia", codigoProvincia)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlInsert)
-				ModGlobal.EscribirLog("Distrito insertado exitosamente")
-			Else
-				' Actualizar existente
-				Dim sSqlUpdate As String = "UPDATE tbDistritos SET Code = @Code, CodePais = @CodePais, CodeProvincia = @CodeProvincia, Descripcion = @Descripcion WHERE ID = @ID"
-				With objSql.Parametros
-					.Clear()
-					.Add("@ID", Convert.ToInt32(id))
-					.Add("@Code", codigo.Value)
-					.Add("@CodePais", codigoPais)
-					.Add("@CodeProvincia", codigoProvincia)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlUpdate)
-				ModGlobal.EscribirLog("Distrito actualizado exitosamente")
-			End If
-
+			ModGlobal.EscribirLog($"GuardarDistrito - Ejecutando SP: {sSql} con parámetros: {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			ModGlobal.EscribirLog($"GuardarDistrito - Resultado: Filas={dt.Rows.Count}, Error={objSql.MensajeError}")
 			If objSql.MensajeError <> "" Then
 				ModGlobal.EscribirLog("Error al guardar distrito: " & objSql.MensajeError)
 				Return serializer.Serialize(New With {
@@ -4085,11 +3978,21 @@ Public Class Mantenimientos
 				})
 			End If
 
-			ModGlobal.EscribirLog("Distrito guardado exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "Distrito guardado exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog($"GuardarDistrito - Respuesta SP: Resultado={resultado}, Mensaje={mensaje}")
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				ModGlobal.EscribirLog("GuardarDistrito - ERROR: No se recibió respuesta del servidor (dt.Rows.Count = 0)")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en GuardarDistrito: " & ex.Message)
@@ -4108,14 +4011,14 @@ Public Class Mantenimientos
 			ModGlobal.EscribirLog("EliminarDistrito iniciado para ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
-			Dim sSql As String = "UPDATE tbDistritos SET snEliminado = 1 WHERE ID = @ID"
+			Dim sSql As String = "Exec spDistritos_Eliminar"
 
 			With objSql.Parametros
 				.Clear()
 				.Add("@ID", id)
 			End With
 
-			objSql.ExecuteNonQuerySql(sSql)
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
 			If objSql.MensajeError <> "" Then
 				ModGlobal.EscribirLog("Error al eliminar distrito: " & objSql.MensajeError)
@@ -4125,11 +4028,20 @@ Public Class Mantenimientos
 				})
 			End If
 
-			ModGlobal.EscribirLog("Distrito eliminado exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "Distrito eliminado exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog("Distrito eliminado: " & mensaje)
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en EliminarDistrito: " & ex.Message)
@@ -4150,39 +4062,34 @@ Public Class Mantenimientos
 			ModGlobal.EscribirLog("ListarCorregimientos iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
-			Dim sSql As String = "SELECT c.ID, c.Code, c.CodePais, c.CodeProvincia, c.CodeDistrito, c.Descripcion, " &
-								"pa.Descripcion AS PaisDescripcion, pr.Descripcion AS ProvinciaDescripcion, d.Descripcion AS DistritoDescripcion " &
-								"FROM tbCorregimientos c " &
-								"LEFT JOIN tbPaises pa ON c.CodePais = pa.Code " &
-								"LEFT JOIN tbProvincias pr ON c.CodeProvincia = pr.Code AND c.CodePais = pr.CodePais " &
-								"LEFT JOIN tbDistritos d ON c.CodeDistrito = d.Code AND c.CodeProvincia = d.CodeProvincia AND c.CodePais = d.CodePais " &
-								"WHERE c.snEliminado = 0"
+			Dim sSql As String = "Exec spCorregimientos_Listar"
 
 			' Aplicar filtros si existen
-			If filtros IsNot Nothing Then
-				Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
-				If filtrosDict IsNot Nothing Then
-					If Not String.IsNullOrEmpty(filtrosDict("Code")?.ToString()) Then
-						sSql += " AND c.Code = " & filtrosDict("Code").ToString()
-					End If
-					If Not String.IsNullOrEmpty(filtrosDict("CodePais")?.ToString()) Then
-						sSql += " AND c.CodePais = '" & filtrosDict("CodePais").ToString().Replace("'", "''") & "'"
-					End If
-					If Not String.IsNullOrEmpty(filtrosDict("CodeProvincia")?.ToString()) Then
-						sSql += " AND c.CodeProvincia = " & filtrosDict("CodeProvincia").ToString()
-					End If
-					If Not String.IsNullOrEmpty(filtrosDict("CodeDistrito")?.ToString()) Then
-						sSql += " AND c.CodeDistrito = " & filtrosDict("CodeDistrito").ToString()
-					End If
-					If Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
-						sSql += " AND c.Descripcion LIKE '%" & filtrosDict("Descripcion").ToString().Replace("'", "''") & "%'"
+			With objSql.Parametros
+				.Clear()
+				If filtros IsNot Nothing Then
+					Dim filtrosDict As Dictionary(Of String, Object) = TryCast(filtros, Dictionary(Of String, Object))
+					If filtrosDict IsNot Nothing Then
+						If filtrosDict.ContainsKey("Code") AndAlso Not String.IsNullOrEmpty(filtrosDict("Code")?.ToString()) Then
+							.Add("@Code", Convert.ToInt32(filtrosDict("Code")))
+						End If
+						If filtrosDict.ContainsKey("CodePais") AndAlso Not String.IsNullOrEmpty(filtrosDict("CodePais")?.ToString()) Then
+							.Add("@CodePais", filtrosDict("CodePais").ToString())
+						End If
+						If filtrosDict.ContainsKey("CodeProvincia") AndAlso Not String.IsNullOrEmpty(filtrosDict("CodeProvincia")?.ToString()) Then
+							.Add("@CodeProvincia", Convert.ToInt32(filtrosDict("CodeProvincia")))
+						End If
+						If filtrosDict.ContainsKey("CodeDistrito") AndAlso Not String.IsNullOrEmpty(filtrosDict("CodeDistrito")?.ToString()) Then
+							.Add("@CodeDistrito", Convert.ToInt32(filtrosDict("CodeDistrito")))
+						End If
+						If filtrosDict.ContainsKey("Descripcion") AndAlso Not String.IsNullOrEmpty(filtrosDict("Descripcion")?.ToString()) Then
+							.Add("@Descripcion", filtrosDict("Descripcion").ToString())
+						End If
 					End If
 				End If
-			End If
+			End With
 
-			sSql += " ORDER BY c.CodePais, c.CodeProvincia, c.CodeDistrito, c.Code"
-
-			ModGlobal.EscribirLog($"Ejecutando: {sSql}")
+			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
 			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
 			If objSql.MensajeError <> "" Then
@@ -4255,81 +4162,45 @@ Public Class Mantenimientos
 			Dim codigoDistrito As Integer = Convert.ToInt32(corregimientoDict("CodeDistrito"))
 			Dim descripcion As String = corregimientoDict("Descripcion")?.ToString().Trim()
 
+			ModGlobal.EscribirLog($"GuardarCorregimiento - ID recibido: '{id}' (IsNullOrEmpty: {String.IsNullOrEmpty(id)})")
+			ModGlobal.EscribirLog($"GuardarCorregimiento - Code: {If(codigo.HasValue, codigo.Value.ToString(), "NULL")}, CodePais: {codigoPais}, CodeProvincia: {codigoProvincia}, CodeDistrito: {codigoDistrito}, Descripcion: {descripcion}")
+
 			' Validaciones
 			If String.IsNullOrEmpty(codigoPais) Or codigoProvincia <= 0 Or codigoDistrito <= 0 Or String.IsNullOrEmpty(descripcion) Then
+				ModGlobal.EscribirLog("GuardarCorregimiento - Error de validación: País, provincia, distrito y descripción son requeridos")
 				Return serializer.Serialize(New With {
 					.Resultado = "ERROR",
 					.Mensaje = "País, provincia, distrito y descripción son requeridos"
 				})
 			End If
 
-			' Si es nuevo y no tiene código, obtener el siguiente código
-			If String.IsNullOrEmpty(id) AndAlso (Not codigo.HasValue OrElse codigo.Value <= 0) Then
-				Dim sSqlObtenerCodigo As String = "SELECT ISNULL(MAX(Code), 0) + 1 FROM tbCorregimientos WHERE snEliminado = 0"
-				objSql.Parametros.Clear()
-				codigo = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlObtenerCodigo))
-				ModGlobal.EscribirLog($"Código generado automáticamente: {codigo}")
-			End If
-
-			' Verificar si el código ya existe para el mismo distrito (excluyendo el registro actual si es actualización)
-			Dim sSqlVerificar As String = "SELECT COUNT(*) FROM tbCorregimientos WHERE Code = @Code AND CodeDistrito = @CodeDistrito AND CodeProvincia = @CodeProvincia AND CodePais = @CodePais AND snEliminado = 0"
-			If Not String.IsNullOrEmpty(id) Then
-				sSqlVerificar += " AND ID != @ID"
-			End If
-
+			' Usar stored procedure
+			Dim sSql As String = "Exec spCorregimientos_Guardar"
 			With objSql.Parametros
 				.Clear()
-				.Add("@Code", codigo.Value)
-				.Add("@CodeDistrito", codigoDistrito)
-				.Add("@CodeProvincia", codigoProvincia)
-				.Add("@CodePais", codigoPais)
 				If Not String.IsNullOrEmpty(id) Then
-					.Add("@ID", Convert.ToInt32(id))
+					Dim idInt As Integer = Convert.ToInt32(id)
+					ModGlobal.EscribirLog($"GuardarCorregimiento - Agregando parámetro @ID = {idInt}")
+					.Add("@ID", idInt)
+				Else
+					ModGlobal.EscribirLog("GuardarCorregimiento - No se agrega parámetro @ID (es NULL/vacío)")
 				End If
+				If codigo.HasValue AndAlso codigo.Value > 0 Then
+					ModGlobal.EscribirLog($"GuardarCorregimiento - Agregando parámetro @Code = {codigo.Value}")
+					.Add("@Code", codigo.Value)
+				Else
+					ModGlobal.EscribirLog("GuardarCorregimiento - No se agrega parámetro @Code (es NULL o <= 0)")
+				End If
+				ModGlobal.EscribirLog($"GuardarCorregimiento - Agregando parámetros: @CodePais={codigoPais}, @CodeProvincia={codigoProvincia}, @CodeDistrito={codigoDistrito}, @Descripcion={descripcion}")
+				.Add("@CodePais", codigoPais)
+				.Add("@CodeProvincia", codigoProvincia)
+				.Add("@CodeDistrito", codigoDistrito)
+				.Add("@Descripcion", descripcion)
 			End With
 
-			Dim count As Integer = Convert.ToInt32(objSql.ExecuteQuerySingleValue(sSqlVerificar))
-
-			If count > 0 Then
-				ModGlobal.EscribirLog("Código de corregimiento ya existe para este distrito")
-				Return serializer.Serialize(New With {
-					.Resultado = "ERROR",
-					.Mensaje = "El código ingresado ya existe para este distrito. Por favor, ingrese un código diferente."
-				})
-			End If
-
-			' Insertar o actualizar
-			If String.IsNullOrEmpty(id) Then
-				' Insertar nuevo
-				Dim sSqlInsert As String = "INSERT INTO tbCorregimientos (Code, CodePais, CodeProvincia, CodeDistrito, Descripcion, snEliminado) VALUES (@Code, @CodePais, @CodeProvincia, @CodeDistrito, @Descripcion, 0)"
-				With objSql.Parametros
-					.Clear()
-					.Add("@Code", codigo.Value)
-					.Add("@CodePais", codigoPais)
-					.Add("@CodeProvincia", codigoProvincia)
-					.Add("@CodeDistrito", codigoDistrito)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlInsert)
-				ModGlobal.EscribirLog("Corregimiento insertado exitosamente")
-			Else
-				' Actualizar existente
-				Dim sSqlUpdate As String = "UPDATE tbCorregimientos SET Code = @Code, CodePais = @CodePais, CodeProvincia = @CodeProvincia, CodeDistrito = @CodeDistrito, Descripcion = @Descripcion WHERE ID = @ID"
-				With objSql.Parametros
-					.Clear()
-					.Add("@ID", Convert.ToInt32(id))
-					.Add("@Code", codigo.Value)
-					.Add("@CodePais", codigoPais)
-					.Add("@CodeProvincia", codigoProvincia)
-					.Add("@CodeDistrito", codigoDistrito)
-					.Add("@Descripcion", descripcion)
-				End With
-
-				objSql.ExecuteNonQuerySql(sSqlUpdate)
-				ModGlobal.EscribirLog("Corregimiento actualizado exitosamente")
-			End If
-
+			ModGlobal.EscribirLog($"GuardarCorregimiento - Ejecutando SP: {sSql} con parámetros: {objSql.getParamList()}")
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			ModGlobal.EscribirLog($"GuardarCorregimiento - Resultado: Filas={dt.Rows.Count}, Error={objSql.MensajeError}")
 			If objSql.MensajeError <> "" Then
 				ModGlobal.EscribirLog("Error al guardar corregimiento: " & objSql.MensajeError)
 				Return serializer.Serialize(New With {
@@ -4338,11 +4209,21 @@ Public Class Mantenimientos
 				})
 			End If
 
-			ModGlobal.EscribirLog("Corregimiento guardado exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "Corregimiento guardado exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog($"GuardarCorregimiento - Respuesta SP: Resultado={resultado}, Mensaje={mensaje}")
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				ModGlobal.EscribirLog("GuardarCorregimiento - ERROR: No se recibió respuesta del servidor (dt.Rows.Count = 0)")
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en GuardarCorregimiento: " & ex.Message)
@@ -4361,14 +4242,14 @@ Public Class Mantenimientos
 			ModGlobal.EscribirLog("EliminarCorregimiento iniciado para ID: " & id)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
-			Dim sSql As String = "UPDATE tbCorregimientos SET snEliminado = 1 WHERE ID = @ID"
+			Dim sSql As String = "Exec spCorregimientos_Eliminar"
 
 			With objSql.Parametros
 				.Clear()
 				.Add("@ID", id)
 			End With
 
-			objSql.ExecuteNonQuerySql(sSql)
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
 			If objSql.MensajeError <> "" Then
 				ModGlobal.EscribirLog("Error al eliminar corregimiento: " & objSql.MensajeError)
@@ -4378,11 +4259,20 @@ Public Class Mantenimientos
 				})
 			End If
 
-			ModGlobal.EscribirLog("Corregimiento eliminado exitosamente")
-			Return serializer.Serialize(New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = "Corregimiento eliminado exitosamente"
-			})
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				ModGlobal.EscribirLog("Corregimiento eliminado: " & mensaje)
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
 
 		Catch ex As Exception
 			ModGlobal.EscribirLog("Error en EliminarCorregimiento: " & ex.Message)

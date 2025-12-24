@@ -20,7 +20,7 @@ Public Class comprobanteText
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function GenerarComprobante(movimientoId As String) As Object
 		Try
-			ModGlobal.EscribirLog("🖨️ GenerarComprobante iniciado. MovimientoID: " & movimientoId)
+			ModGlobal.EscribirLog("GenerarComprobante iniciado. MovimientoID: " & movimientoId)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 
@@ -96,7 +96,7 @@ Public Class comprobanteText
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
 	Public Shared Function MarcarComprobanteImpreso(movimientoId As String) As Object
 		Try
-			ModGlobal.EscribirLog("🖨️ MarcarComprobanteImpreso iniciado. MovimientoID: " & movimientoId)
+			ModGlobal.EscribirLog("MarcarComprobanteImpreso iniciado. MovimientoID: " & movimientoId)
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 
