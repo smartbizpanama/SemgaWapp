@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Movimientos.aspx.vb" Inherits="SemgaWapp.Movimientos" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Movimientos.aspx.vb" Inherits="SemgaWapp.Movimientos" %>
 
 <!DOCTYPE html>
 
@@ -902,7 +902,7 @@
                             <input type="text" id="txtFechaHasta" class="filter-input" placeholder="dd/MM/yyyy" />
                         </td>
                         <td colspan="2" style="text-align: right;">
-                            <button type="button" class="btn-buscar" onclick="buscarMovimientos()">
+                            <button type="button" id="btnBuscarMovimientos" class="btn-buscar" onclick="buscarMovimientos()">
                                 <i class="fas fa-search"></i>
                                 Buscar
                             </button>
@@ -1210,8 +1210,10 @@
             fechaDesde = fechaDesdeConvertida;
             fechaHasta = fechaHastaConvertida;
 
-            // Mostrar indicador de carga
-            showToast('info', 'Buscando', 'Cargando movimientos...');
+            // Mostrar loading en el botón Buscar
+            const btnBuscar = $('#btnBuscarMovimientos');
+            const htmlOriginal = btnBuscar.html();
+            btnBuscar.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Buscando...');
 
             $.ajax({
                 type: "POST",
@@ -1241,6 +1243,9 @@
                 },
                 error: function(xhr, status, error) {
                     mostrarMovimientos([]);
+                },
+                complete: function() {
+                    btnBuscar.prop('disabled', false).html(htmlOriginal);
                 }
             });
         }

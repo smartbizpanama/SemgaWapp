@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -65,7 +65,7 @@
       <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="RBush, Version=4.0.0.0, Culture=neutral, PublicKeyToken=c77e27b81f4d0187, processorArchitecture=MSIL">
       <HintPath>..\packages\RBush.Signed.4.0.0\lib\net47\RBush.dll</HintPath>
@@ -159,6 +159,7 @@
     <Content Include="Forms\Mantenimientos\Mantenimientos.aspx" />
     <Content Include="Forms\Mantenimientos\dashboardSistemas.aspx" />
     <Content Include="Forms\Mantenimientos\GestionUsuarios.aspx" />
+    <Content Include="Forms\Mantenimientos\PermisosMenu.aspx" />
     <Content Include="Forms\Mantenimientos\TestMantenimientos.aspx" />
     <Content Include="Forms\Reportes\dashboardReportes.aspx" />
     <Content Include="Forms\Reportes\Movimientos.aspx" />
@@ -166,7 +167,10 @@
     <Content Include="Forms\Reportes\Reportes.aspx" />
     <Content Include="Forms\Help\Documentacion.aspx" />
     <Content Include="Forms\Sistemas\Respaldos.aspx" />
+    <Content Include="Forms\Socios\EstadoCuenta.html" />
     <Content Include="Forms\Socios\GestionSocios.aspx" />
+    <Content Include="Forms\Transacciones\ComprobanteAuxiliar.html" />
+    <Content Include="Forms\Transacciones\comprobanteLote.html" />
     <Content Include="Forms\Transacciones\comprobanteText.aspx" />
     <Content Include="Forms\Transacciones\ComprobanteTransaccion.html" />
     <Content Include="Forms\Transacciones\plantillaComprobante.html" />
@@ -179,10 +183,14 @@
     <Content Include="Scripts\inactivity-monitor-overlay.js" />
     <Content Include="Scripts\inactivity-monitor-standalone.js" />
     <Content Include="Scripts\inactivity-monitor.js" />
+    <Content Include="Scripts\notifications.js" />
     <Content Include="Scripts\smart-chips.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Clases\BasePage.vb">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="Clases\ModGlobal.vb" />
     <Compile Include="Dashboard.aspx.vb">
       <DependentUpon>Dashboard.aspx</DependentUpon>
@@ -272,6 +280,13 @@
     </Compile>
     <Compile Include="Forms\Mantenimientos\GestionUsuarios.aspx.vb">
       <DependentUpon>GestionUsuarios.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
+    <Compile Include="Forms\Mantenimientos\PermisosMenu.aspx.designer.vb">
+      <DependentUpon>PermisosMenu.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Mantenimientos\PermisosMenu.aspx.vb">
+      <DependentUpon>PermisosMenu.aspx</DependentUpon>
       <SubType>ASPXCodebehind</SubType>
     </Compile>
     <Compile Include="Forms\Mantenimientos\TestMantenimientos.aspx.vb">

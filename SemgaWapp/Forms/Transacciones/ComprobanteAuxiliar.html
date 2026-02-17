@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprobante de Auxiliar</title>
+    <style>
+        @page {
+            size: 8.5in 11in;
+            margin: 0.25in;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            font-size: 10px;
+            line-height: 1.3;
+            background-color: white;
+            color: #333;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+            height: 10.5in;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+        }
+        
+        .mitad-superior {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+        
+        .mitad-inferior {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+        
+        .header-cooperativa {
+            text-align: center;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1.5px solid #2c3e50;
+        }
+        
+        .logo {
+            margin-bottom: 4px;
+        }
+        
+        .logo img {
+            max-width: 100px;
+            height: auto;
+        }
+        
+        .cooperativa-nombre {
+            font-size: 11px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+        }
+        
+        .comprobante {
+            width: 100%;
+            max-height: 100%;
+            border: 1px solid #ddd;
+            margin: 0;
+            padding: 0.1in;
+            position: relative;
+            box-sizing: border-box;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 4px;
+        }
+        
+        .comprobante.copia {
+            position: relative;
+        }
+        
+        .separator {
+            height: 0.05in;
+            border-bottom: 2px dashed #e0e0e0;
+            margin: 0;
+            flex-shrink: 0;
+        }
+        
+        .comprobante.copia::before {
+            content: "COPIA";
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 50px;
+            font-weight: bold;
+            color: rgba(128, 128, 128, 0.35);
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .comprobante.copia::after {
+            content: "COPIA";
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 50px;
+            font-weight: bold;
+            color: rgba(128, 128, 128, 0.35);
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.06in;
+            padding-bottom: 0.06in;
+            border-bottom: 1.5px solid #2c3e50;
+            flex-shrink: 0;
+        }
+        
+        .header-left {
+            flex: 1;
+        }
+        
+        .header-right {
+            flex: 1;
+        }
+        
+        .titulo-comprobante {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.08in;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        
+        .auxiliar-container {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0.06in;
+            margin-bottom: 0.06in;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .auxiliar-header {
+            font-size: 9px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.03in;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid #ced4da;
+            padding-bottom: 0.02in;
+        }
+        
+        .numero-cuenta {
+            font-weight: bold;
+        }
+        
+        .auxiliar-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.02in;
+        }
+        
+        .auxiliar-field {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+        }
+        
+        .auxiliar-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .auxiliar-label::after {
+            content: ":";
+        }
+        
+        .auxiliar-value {
+            color: #212529;
+        }
+        
+        .asociado-container {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0.06in;
+            margin-bottom: 0.06in;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .asociado-header {
+            font-size: 9px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.03in;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid #ced4da;
+            padding-bottom: 0.02in;
+        }
+        
+        .asociado-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.02in;
+        }
+        
+        .asociado-field {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+        }
+        
+        .asociado-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .asociado-label::after {
+            content: ":";
+        }
+        
+        .asociado-value {
+            color: #212529;
+        }
+        
+        .numero-asociado {
+            font-weight: bold;
+            color: #2980b9;
+        }
+        
+        .center-section {
+            flex: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 0.01in 0;
+        }
+        
+        .descripcion-total {
+            font-size: 11px;
+            margin-top: 0.04in;
+            margin-bottom: 0.02in;
+            color: #2c3e50;
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        .monto-total-grande {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            margin-top: 0.02in;
+            margin-bottom: 0.02in;
+        }
+        
+        .tasa-interes {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 0.04in;
+            text-align: center;
+        }
+        
+        .monto-container {
+            display: flex;
+            justify-content: center;
+            gap: 0.1in;
+            margin: 0.01in 0;
+            flex-wrap: wrap;
+        }
+        
+        .monto-section {
+            text-align: center;
+            margin: 0;
+            padding: 0.04in;
+            border: 1px solid #bdc3c7;
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+            flex-shrink: 0;
+            border-radius: 4px;
+            flex: 1;
+            min-width: 1.8in;
+            max-width: 2.5in;
+        }
+        
+        .monto-section.intereses {
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+            border-color: #bdc3c7;
+        }
+        
+        .monto-section.intereses .monto-value {
+            color: #27ae60;
+        }
+        
+        .monto-section.desembolso {
+            background: linear-gradient(to bottom, #e8f5e9, #c8e6c9);
+            border-color: #81c784;
+            border-width: 1px;
+        }
+        
+        .monto-section.desembolso .monto-label {
+            color: #558b2f;
+            font-weight: 600;
+        }
+        
+        .monto-section.desembolso .monto-value {
+            color: #558b2f;
+            font-weight: 700;
+        }
+        
+        .monto-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: #7f8c8d;
+            margin-bottom: 0.01in;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .monto-section.intereses .monto-label {
+            color: #7f8c8d;
+        }
+        
+        .monto-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .footer {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-top: 0;
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+        
+        .espacio-firma {
+            height: 0.8in;
+            flex-shrink: 0;
+        }
+        
+        .firma-section {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .firma-line {
+            border-top: 1px solid #2c3e50;
+            width: 2.5in;
+            margin: 0 auto 0.02in;
+            padding-top: 0.03in;
+        }
+        
+        .firma-label {
+            font-size: 8px;
+            font-weight: 600;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .comprobante {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            
+            .comprobante.copia {
+                border-top: 1px solid #ddd;
+            }
+            
+            .separator {
+                border-bottom: 2px dashed #e0e0e0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <!-- Mitad Superior - Comprobante Original -->
+        <div class="mitad-superior">
+            <div class="comprobante">
+                <div class="header-cooperativa">
+                    <div class="logo">
+                        <img src="/logo.png" alt="Logo Coopsemga" />
+                    </div>
+                    <div class="cooperativa-nombre">
+                        COOPERATIVA DE SERVICIOS MÚLTIPLES GUARARÉ ARRIBA R,L.
+                    </div>
+                </div>
+                
+                <div class="titulo-comprobante">COMPROBANTE DE AUXILIAR</div>
+                <div class="header">
+                    <div class="header-left">
+                        <div class="auxiliar-container">
+                            <div class="auxiliar-header">Información del Auxiliar</div>
+                            <div class="auxiliar-info">
+                                <div class="auxiliar-field">
+                                    <span class="auxiliar-label">Numero</span>
+                                    <span class="auxiliar-value">@AuxiliarNumeroDisplay</span>
+                                </div>
+                                <div class="auxiliar-field">
+                                    <span class="auxiliar-label">Fecha Otorgado</span>
+                                    <span class="auxiliar-value">@FechaOtorgado</span>
+                                </div>
+                                <div class="auxiliar-field">
+                                    <span class="auxiliar-label">Usuario</span>
+                                    <span class="auxiliar-value">@Usuario</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <div class="asociado-container">
+                            <div class="asociado-header">Información del Asociado</div>
+                            <div class="asociado-info">
+                                <div class="asociado-field">
+                                    <span class="asociado-label">Número</span>
+                                    <span class="asociado-value numero-asociado">@NumeroAsociado</span>
+                                </div>
+                                <div class="asociado-field">
+                                    <span class="asociado-label">Nombre</span>
+                                    <span class="asociado-value">@NombreAsociado</span>
+                                </div>
+                                <div class="asociado-field">
+                                    <span class="asociado-label">Identificación</span>
+                                    <span class="asociado-value">@TipoIdentificacion @NumeroIdentificacion</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="center-section">
+                    @SeccionTotal
+                    <div class="tasa-interes">@TasaInteresTexto</div>
+                    @SeccionMontos
+                </div>
+
+                <div class="espacio-firma"></div>
+                <div class="footer">
+                    <div class="firma-section">
+                        <div class="firma-line"></div>
+                        <div class="firma-label">Firma del Cliente</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="separator"></div>
+
+        <!-- Mitad Inferior - Comprobante Copia -->
+        <div class="mitad-inferior">
+            <div class="comprobante copia">
+                <div class="header-cooperativa">
+                    <div class="logo">
+                        <img src="/logo.png" alt="Logo Coopsemga" />
+                    </div>
+                    <div class="cooperativa-nombre">
+                        COOPERATIVA DE SERVICIOS MÚLTIPLES GUARARÉ ARRIBA R,L.
+                    </div>
+                </div>
+                
+                <div class="titulo-comprobante">COMPROBANTE DE AUXILIAR</div>
+                <div class="header">
+                    <div class="header-left">
+                        <div class="auxiliar-container">
+                            <div class="auxiliar-header">Información del Auxiliar</div>
+                            <div class="auxiliar-info">
+                                <div class="auxiliar-field">
+                                    <span class="auxiliar-label">Numero</span>
+                                    <span class="auxiliar-value">@AuxiliarNumeroDisplay</span>
+                                </div>
+                                <div class="auxiliar-field">
+                                    <span class="auxiliar-label">Fecha Otorgado</span>
+                                    <span class="auxiliar-value">@FechaOtorgado</span>
+                                </div>
+                                <div class="auxiliar-field">
+                                    <span class="auxiliar-label">Usuario</span>
+                                    <span class="auxiliar-value">@Usuario</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <div class="asociado-container">
+                            <div class="asociado-header">Información del Asociado</div>
+                            <div class="asociado-info">
+                                <div class="asociado-field">
+                                    <span class="asociado-label">Número</span>
+                                    <span class="asociado-value numero-asociado">@NumeroAsociado</span>
+                                </div>
+                                <div class="asociado-field">
+                                    <span class="asociado-label">Nombre</span>
+                                    <span class="asociado-value">@NombreAsociado</span>
+                                </div>
+                                <div class="asociado-field">
+                                    <span class="asociado-label">Identificación</span>
+                                    <span class="asociado-value">@TipoIdentificacion @NumeroIdentificacion</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="center-section">
+                    @SeccionTotal
+                    <div class="tasa-interes">@TasaInteresTexto</div>
+                    @SeccionMontos
+                </div>
+                
+                <div class="espacio-firma"></div>
+                <div class="footer">
+                    <div class="firma-section">
+                        <div class="firma-line"></div>
+                        <div class="firma-label">Firma del Cliente</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="no-print" style="text-align: center; margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px;">
+        <div style="margin-bottom: 10px;">
+            <button onclick="imprimirYMarcar()" style="padding: 12px 25px; font-size: 16px; background-color: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">
+                Imprimir Comprobante
+            </button>
+            <button onclick="window.close()" style="padding: 12px 25px; font-size: 16px; background-color: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                Cerrar
+            </button>
+        </div>
+        <div style="font-size: 12px; color: #6c757d;">
+            <i class="fas fa-info-circle"></i> Los botones no aparecerán en la impresión
+        </div>
+    </div>
+
+    <script>
+        function obtenerMovimientoId() {
+            const movimientoElement = document.querySelector('.auxiliar-container .auxiliar-value');
+            if (movimientoElement) {
+                return movimientoElement.textContent.trim();
+            }
+            return null;
+        }
+
+        function imprimirYMarcar() {
+            const movimientoId = obtenerMovimientoId();
+            if (!movimientoId) {
+                window.print();
+                return;
+            }
+            marcarComoImpreso(movimientoId);
+            setTimeout(() => window.print(), 100);
+        }
+
+        function marcarComoImpreso(movimientoId) {
+            try {
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({ tipo: 'marcarImpreso', movimientoId: movimientoId }, '*');
+                }
+            } catch (error) {
+                console.error('Error al marcar como impreso:', error);
+            }
+        }
+
+        window.addEventListener('beforeunload', function () {
+            const movimientoId = obtenerMovimientoId();
+            if (movimientoId && window.opener && !window.opener.closed) {
+                window.opener.postMessage({ tipo: 'ventanaCerrada', movimientoId: movimientoId }, '*');
+            }
+        });
+    </script>
+</body>
+</html>

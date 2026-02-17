@@ -1,4 +1,4 @@
-﻿Imports System.Data
+Imports System.Data
 Imports System.Data.SqlClient
 Imports System.Configuration
 Imports System.Web.Services
@@ -8,7 +8,7 @@ Imports SBSqlClient
 Imports SBUtility
 
 Public Class GestionUsuarios
-    Inherits System.Web.UI.Page
+    Inherits BasePage
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         ' Verificar autenticación
@@ -16,6 +16,7 @@ Public Class GestionUsuarios
             Response.Redirect("~/Login.aspx")
             Return
         End If
+        If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
     End Sub
 
     <WebMethod()>

@@ -1,4 +1,4 @@
-﻿Imports System.Web.Services
+Imports System.Web.Services
 Imports System.Web.Script.Services
 Imports System.Web.Script.Serialization
 Imports System.Data
@@ -11,7 +11,7 @@ Imports SBSqlClient
 Imports SBUtility
 
 Public Class Documentacion
-    Inherits System.Web.UI.Page
+    Inherits BasePage
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         ' Verificar sesión
@@ -19,6 +19,7 @@ Public Class Documentacion
             Response.Redirect("~/Login.aspx")
             Return
         End If
+        If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
     End Sub
 
     <WebMethod()>
@@ -815,21 +816,25 @@ Public Class Documentacion
                     Dim sSql As String = "SELECT OBJECT_DEFINITION(OBJECT_ID('dbo." & nombreObjeto & "')) AS Definition " &
                                          "UNION ALL " &
                                          "SELECT OBJECT_DEFINITION(OBJECT_ID('" & nombreObjeto & "')) AS Definition"
-                    
-                    Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
+                    ModGlobal.EscribirLog("Ejecutando: " & sSql)
+                    Dim dt As DataTable = objSql.GetDataTableSql(sSql)
                     If objSql.MensajeError <> "" Then
+                        ModGlobal.EscribirLog("BD ERROR: Documentacion SP - " & objSql.MensajeError)
                         ' Intentar con sys.sql_modules
                         sSql = "SELECT m.definition AS Definition " &
                                "FROM sys.procedures p " &
                                "INNER JOIN sys.sql_modules m ON m.object_id = p.object_id " &
                                "WHERE p.name = '" & nombreObjeto & "'"
+                        ModGlobal.EscribirLog("Ejecutando (fallback): " & sSql)
                         dt = objSql.GetDataTableSql(sSql)
                     End If
 
                     If objSql.MensajeError <> "" Then
+                        ModGlobal.EscribirLog("BD ERROR: Documentacion SP - " & objSql.MensajeError)
                         Throw New Exception("Error en BD: " & objSql.MensajeError)
                     End If
+                    ModGlobal.EscribirLog("BD OK: Documentacion SP")
 
                     If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
                         For Each row As DataRow In dt.Rows
@@ -849,21 +854,25 @@ Public Class Documentacion
                     Dim sSql As String = "SELECT OBJECT_DEFINITION(OBJECT_ID('dbo." & nombreObjeto & "')) AS Definition " &
                                          "UNION ALL " &
                                          "SELECT OBJECT_DEFINITION(OBJECT_ID('" & nombreObjeto & "')) AS Definition"
-                    
-                    Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
+                    ModGlobal.EscribirLog("Ejecutando: " & sSql)
+                    Dim dt As DataTable = objSql.GetDataTableSql(sSql)
                     If objSql.MensajeError <> "" Then
+                        ModGlobal.EscribirLog("BD ERROR: Documentacion VIEW - " & objSql.MensajeError)
                         ' Intentar con sys.sql_modules
                         sSql = "SELECT m.definition AS Definition " &
                                "FROM sys.views v " &
                                "INNER JOIN sys.sql_modules m ON m.object_id = v.object_id " &
                                "WHERE v.name = '" & nombreObjeto & "'"
+                        ModGlobal.EscribirLog("Ejecutando (fallback): " & sSql)
                         dt = objSql.GetDataTableSql(sSql)
                     End If
 
                     If objSql.MensajeError <> "" Then
+                        ModGlobal.EscribirLog("BD ERROR: Documentacion VIEW - " & objSql.MensajeError)
                         Throw New Exception("Error en BD: " & objSql.MensajeError)
                     End If
+                    ModGlobal.EscribirLog("BD OK: Documentacion VIEW")
 
                     If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
                         For Each row As DataRow In dt.Rows
@@ -952,7 +961,13 @@ Public Class Documentacion
                 ' Verificar si es el nombre de una vista
                 Dim objSqlVerificar As SBSqlClientInterface = GetDbaObject(connectionString)
                 Dim sSqlVerificar As String = "SELECT COUNT(*) AS Existe FROM sys.views WHERE name = '" & comandoSQL.Replace("'", "''") & "'"
+                ModGlobal.EscribirLog("Ejecutando: " & sSqlVerificar)
                 Dim dtVerificar As DataTable = objSqlVerificar.GetDataTableSql(sSqlVerificar)
+                If objSqlVerificar.MensajeError <> "" Then
+                    ModGlobal.EscribirLog("BD ERROR: Documentacion VerificarVista - " & objSqlVerificar.MensajeError)
+                Else
+                    ModGlobal.EscribirLog("BD OK: Documentacion VerificarVista")
+                End If
                 If dtVerificar IsNot Nothing AndAlso dtVerificar.Rows.Count > 0 Then
                     esVista = Convert.ToInt32(dtVerificar.Rows(0)("Existe")) > 0
                 End If
@@ -965,11 +980,13 @@ Public Class Documentacion
             ' Ejecutar consulta
             Dim objSql As SBSqlClientInterface = GetDbaObject(connectionString)
             Dim sSqlEjecutar As String = If(esVista, "SELECT * FROM " & comandoSQL, comandoSQL)
+            ModGlobal.EscribirLog("Ejecutando: " & sSqlEjecutar & " " & objSql.getParamList())
             Dim dt As DataTable = objSql.GetDataTableSql(sSqlEjecutar)
-
             If objSql.MensajeError <> "" Then
+                ModGlobal.EscribirLog("BD ERROR: Documentacion EjecutarConsulta - " & objSql.MensajeError)
                 Throw New Exception("Error en BD: " & objSql.MensajeError)
             End If
+            ModGlobal.EscribirLog("BD OK: Documentacion EjecutarConsulta")
 
             ' Convertir DataTable a lista de objetos
             Dim resultados As New List(Of Dictionary(Of String, Object))

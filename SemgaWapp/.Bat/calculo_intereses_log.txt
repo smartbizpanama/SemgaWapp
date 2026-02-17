@@ -1,11 +1,11 @@
 ========================================================= 
-[24/dic/2025 11:39:58.58] INICIO DE PROCESO 
+[11/feb/2026 13:43:01.61] INICIO DE PROCESO DE INTERESES 
 --------------------------------------------------------- 
-Ejecutando spAuxiliares_CalcularIntereses... 
-[24/dic/2025 11:39:58.73] spAuxiliares_CalcularIntereses ejecutado correctamente 
+Ejecutando spBatAuxiliares_CalcularInteresesPR... 
+[11/feb/2026 13:43:01.82] spBatAuxiliares_CalcularInteresesPR ejecutado correctamente 
 --------------------------------------------------------- 
-Ejecutando spAuxiliares_CalcularInteresesAhorro... 
-[24/dic/2025 11:39:58.86] spAuxiliares_CalcularInteresesAhorro ejecutado correctamente 
+Ejecutando spBatAuxiliares_CalcularInteresesAhorro... 
+[11/feb/2026 13:43:01.94] spBatAuxiliares_CalcularInteresesAhorro ejecutado correctamente 
 --------------------------------------------------------- 
-[24/dic/2025 11:39:58.92] FIN DEL PROCESO 
+[11/feb/2026 13:43:02.01] FIN DEL PROCESO DE INTERESES 
 ========================================================= 

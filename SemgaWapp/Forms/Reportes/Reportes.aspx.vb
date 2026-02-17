@@ -1,14 +1,19 @@
-﻿Imports System.Web.Services
+Imports System.Web.Services
 Imports System.Web.Script.Services
-Imports System.Web.Script.Serialization
 Imports System.Data
 Imports SBSqlClient
 Imports SBUtility
+Imports Newtonsoft.Json
 
 Public Class Reportes
-    Inherits System.Web.UI.Page
+    Inherits BasePage
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        If Session(VariablesSesion.UsuarioId) Is Nothing Then
+            Response.Redirect("~/Login.aspx")
+            Return
+        End If
+        If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
         ' Manejar descarga de archivos
         If Request.QueryString("action") = "download" AndAlso Not String.IsNullOrEmpty(Request.QueryString("file")) Then
             DescargarArchivo(Request.QueryString("file"))
@@ -41,7 +46,6 @@ Public Class Reportes
     <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
     Public Shared Function ObtenerReportes() As String
         Dim resultado As String = ""
-        Dim serializer As New JavaScriptSerializer()
 
         Try
             ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO ObtenerReportes")
@@ -61,7 +65,7 @@ Public Class Reportes
                     .Mensaje = "Usuario no autenticado",
                     .Data = ""
                 }
-                Return serializer.Serialize(errorResponse)
+                Return JsonConvert.SerializeObject(errorResponse)
             End If
 
             ' Verificar cadena de conexión
@@ -77,7 +81,7 @@ Public Class Reportes
                     .Mensaje = "Cadena de conexión no encontrada",
                     .Data = ""
                 }
-                Return serializer.Serialize(errorResponse)
+                Return JsonConvert.SerializeObject(errorResponse)
             End If
 
             ' Ejecutar stored procedure usando el patrón correcto
@@ -99,7 +103,7 @@ Public Class Reportes
                     .Mensaje = "Error en la base de datos: " & objSql.MensajeError,
                     .Data = ""
                 }
-                Return serializer.Serialize(errorResponse)
+                Return JsonConvert.SerializeObject(errorResponse)
             End If
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & If(dt IsNot Nothing, dt.Rows.Count.ToString(), "0"))
@@ -125,9 +129,9 @@ Public Class Reportes
                 Dim successResponse As New With {
                     .Resultado = "SUCCESS",
                     .Mensaje = "Reportes obtenidos exitosamente",
-                    .Data = serializer.Serialize(reportes)
+                    .Data = JsonConvert.SerializeObject(reportes)
                 }
-                resultado = serializer.Serialize(successResponse)
+                resultado = JsonConvert.SerializeObject(successResponse)
             Else
                 ModGlobal.EscribirLog("Validacion: No se encontraron reportes")
                 Dim emptyResponse As New With {
@@ -135,7 +139,7 @@ Public Class Reportes
                     .Mensaje = "No se encontraron reportes",
                     .Data = ""
                 }
-                resultado = serializer.Serialize(emptyResponse)
+                resultado = JsonConvert.SerializeObject(emptyResponse)
             End If
 
             ModGlobal.EscribirLog("Metodo ObtenerReportes completado exitosamente")
@@ -147,7 +151,7 @@ Public Class Reportes
                 .Mensaje = "Error al obtener reportes: " & ex.Message,
                 .Data = ""
             }
-            resultado = serializer.Serialize(errorResponse)
+            resultado = JsonConvert.SerializeObject(errorResponse)
         End Try
 
         Return resultado
@@ -157,7 +161,6 @@ Public Class Reportes
     <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
     Public Shared Function EjecutarComandoReporte(idReporte As Integer, nombreReporte As String, comandoSQL As String) As String
         Dim resultado As String = ""
-        Dim serializer As New JavaScriptSerializer()
 
         Try
             ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO EjecutarComandoReporte")
@@ -178,7 +181,7 @@ Public Class Reportes
                     .Mensaje = "Usuario no autenticado",
                     .Data = ""
                 }
-                Return serializer.Serialize(errorResponse)
+                Return JsonConvert.SerializeObject(errorResponse)
             End If
 
             ' Verificar cadena de conexión
@@ -194,7 +197,7 @@ Public Class Reportes
                     .Mensaje = "Cadena de conexión no encontrada",
                     .Data = ""
                 }
-                Return serializer.Serialize(errorResponse)
+                Return JsonConvert.SerializeObject(errorResponse)
             End If
 
             ' Ejecutar comando SQL usando el patrón correcto
@@ -214,7 +217,7 @@ Public Class Reportes
                     .Mensaje = "Error en la base de datos: " & objSql.MensajeError,
                     .Data = ""
                 }
-                Return serializer.Serialize(errorResponse)
+                Return JsonConvert.SerializeObject(errorResponse)
             End If
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & If(dt IsNot Nothing, dt.Rows.Count.ToString(), "0"))
@@ -244,12 +247,13 @@ Public Class Reportes
 
                 ModGlobal.EscribirLog("Resultados procesados: " & resultados.Count.ToString())
 
+                ' Newtonsoft.Json no tiene límite maxJsonLength; evita error en reportes grandes
                 Dim successResponse As New With {
                     .Resultado = "SUCCESS",
                     .Mensaje = "Comando ejecutado exitosamente",
-                    .Data = serializer.Serialize(resultados)
+                    .Data = JsonConvert.SerializeObject(resultados)
                 }
-                resultado = serializer.Serialize(successResponse)
+                resultado = JsonConvert.SerializeObject(successResponse)
             Else
                 ModGlobal.EscribirLog("Validacion: No se encontraron resultados")
                 Dim emptyResponse As New With {
@@ -257,7 +261,7 @@ Public Class Reportes
                     .Mensaje = "No se encontraron resultados",
                     .Data = ""
                 }
-                resultado = serializer.Serialize(emptyResponse)
+                resultado = JsonConvert.SerializeObject(emptyResponse)
             End If
 
             ModGlobal.EscribirLog("Metodo EjecutarComandoReporte completado exitosamente")
@@ -269,7 +273,7 @@ Public Class Reportes
                 .Mensaje = "Error al ejecutar comando: " & ex.Message,
                 .Data = ""
             }
-            resultado = serializer.Serialize(errorResponse)
+            resultado = JsonConvert.SerializeObject(errorResponse)
         End Try
 
         Return resultado
@@ -279,7 +283,6 @@ Public Class Reportes
     <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
     Public Shared Function ExportarAExcel(nombreReporte As String, datos As Object()) As String
         Dim resultado As String = ""
-        Dim serializer As New JavaScriptSerializer()
 
         Try
             ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO ExportarAExcel")
@@ -356,7 +359,7 @@ Public Class Reportes
                 .Mensaje = "Archivo Excel generado exitosamente",
                 .NombreArchivo = nombreArchivo
             }
-            resultado = serializer.Serialize(successResponse)
+            resultado = JsonConvert.SerializeObject(successResponse)
             ModGlobal.EscribirLog("Metodo ExportarAExcel completado exitosamente")
 
         Catch ex As Exception
@@ -367,7 +370,7 @@ Public Class Reportes
                 .Mensaje = "Error al generar archivo Excel: " & ex.Message,
                 .NombreArchivo = ""
             }
-            resultado = serializer.Serialize(errorResponse)
+            resultado = JsonConvert.SerializeObject(errorResponse)
         End Try
 
         Return resultado
@@ -377,7 +380,6 @@ Public Class Reportes
     <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
     Public Shared Function ExportarACSV(nombreReporte As String, datos As Object(), separador As String) As String
         Dim resultado As String = ""
-        Dim serializer As New JavaScriptSerializer()
 
         Try
             ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO ExportarACSV")
@@ -432,7 +434,7 @@ Public Class Reportes
                 .Mensaje = "Archivo CSV generado exitosamente",
                 .NombreArchivo = nombreArchivo
             }
-            resultado = serializer.Serialize(successResponse)
+            resultado = JsonConvert.SerializeObject(successResponse)
             ModGlobal.EscribirLog("Metodo ExportarACSV completado exitosamente")
 
         Catch ex As Exception
@@ -443,7 +445,7 @@ Public Class Reportes
                 .Mensaje = "Error al generar archivo CSV: " & ex.Message,
                 .NombreArchivo = ""
             }
-            resultado = serializer.Serialize(errorResponse)
+            resultado = JsonConvert.SerializeObject(errorResponse)
         End Try
 
         Return resultado

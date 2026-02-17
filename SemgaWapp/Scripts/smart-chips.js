@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Sistema de Chips Inteligentes - Configuración Global
  * Proporciona funciones para crear chips consistentes en toda la aplicación
  */
@@ -19,7 +19,9 @@ const SmartChipsConfig = {
         'PRESTAMO': { color: 'bg-warning', icono: 'fas fa-hand-holding-usd', nombre: 'Préstamo' },
         'APORTE': { color: 'bg-info', icono: 'fas fa-coins', nombre: 'Aporte' },
         'CREDITO': { color: 'bg-danger', icono: 'fas fa-credit-card', nombre: 'Crédito' },
-        'INVERSION': { color: 'bg-purple', icono: 'fas fa-chart-line', nombre: 'Inversión' }
+        'INVERSION': { color: 'bg-purple', icono: 'fas fa-chart-line', nombre: 'Inversión' },
+        'CXC': { color: 'bg-primary', icono: 'fas fa-file-invoice-dollar', nombre: 'CXC' },
+        'CXP': { color: 'bg-primary', icono: 'fas fa-file-invoice', nombre: 'CXP' }
     },
 
     // Configuración para tipos de asociado
@@ -110,6 +112,28 @@ function crearChipDefault(texto = 'N/A') {
 }
 
 /**
+ * Crea un chip para rubros nuevos no configurados: borde azul, fondo blanco, tag azul.
+ * @param {string} descripcion - Descripción del rubro a mostrar
+ * @returns {string} HTML del chip
+ */
+function crearChipRubroNuevo(descripcion) {
+    const texto = (descripcion && String(descripcion).trim()) ? String(descripcion).trim() : 'Nuevo rubro';
+    return `<span class="badge border border-primary bg-white text-primary me-1 d-inline-flex align-items-center chip-rubro-nuevo"><i class="fas fa-tag me-1 text-primary"></i><span class="text-primary">${escapeHtml(texto)}</span></span>`;
+}
+
+/**
+ * Escapa HTML para evitar XSS al mostrar texto dinámico
+ * @param {string} str - Texto a escapar
+ * @returns {string}
+ */
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+/**
  * Funciones específicas para cada tipo de chip
  */
 
@@ -119,9 +143,18 @@ function crearChipTipoDocumento(codTipoDoc, numeroIdentificacion) {
     return resultado;
 }
 
-// Chips para rubros
+// Chips para rubros: si está configurado usa el chip estándar; si no, chip azul (nuevo/no configurado)
 function crearChipRubro(rubro) {
-    return crearChipInteligente('rubros', rubro, '', true);
+    const clave = rubro != null ? String(rubro).trim().toUpperCase() : '';
+    if (!clave) {
+        return crearChipDefault('');
+    }
+    const config = SmartChipsConfig.rubros;
+    const itemConfig = config && config[clave];
+    if (itemConfig) {
+        return crearChipInteligente('rubros', rubro, '', true);
+    }
+    return crearChipRubroNuevo(rubro);
 }
 
 // Chips para tipos de asociado

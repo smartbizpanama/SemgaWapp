@@ -1,4 +1,4 @@
-﻿GuardarCorregimiento <%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Mantenimientos.aspx.vb" Inherits="SemgaWapp.Mantenimientos" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Mantenimientos.aspx.vb" Inherits="SemgaWapp.Mantenimientos" %>
 
 <!DOCTYPE html>
 
@@ -522,7 +522,7 @@
         }
         
         .tab-content .card-header {
-            background: #f8f9fa;
+            background: #f8fafa;
             border-bottom: 1px solid #dee2e6;
             font-weight: 600;
             color: #495057;
@@ -648,7 +648,7 @@
                     
                     <!-- Finanzas -->
                     <h4 class="category-finanzas">Finanzas</h4>
-                    <div class="sidebar-item" data-search="cuentas cuenta" data-tooltip="Cuentas" onclick="showTab('cuentas')" id="sidebar-cuentas">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#cuentas" data-search="cuentas cuenta" data-tooltip="Cuentas" onclick="showTab('cuentas')" id="sidebar-cuentas">
                         <i class="fas fa-wallet"></i>
                         <span>Cuentas</span>
                         <span class="sidebar-tooltip">Cuentas</span>
@@ -656,12 +656,12 @@
                     
                     <!-- Usuarios -->
                     <h4 class="category-usuarios">Usuarios</h4>
-                    <div class="sidebar-item" data-search="roles rol usuario" data-tooltip="Roles de Usuario" onclick="showTab('roles', event)" id="sidebar-roles">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#roles" data-search="roles rol usuario" data-tooltip="Roles de Usuario" onclick="showTab('roles', event)" id="sidebar-roles">
                         <i class="fas fa-user-tag"></i>
                         <span>Roles de Usuario</span>
                         <span class="sidebar-tooltip">Roles de Usuario</span>
                     </div>
-                    <div class="sidebar-item" data-search="departamentos departamento" data-tooltip="Departamentos" onclick="showTab('departamentos')" id="sidebar-departamentos">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#departamentos" data-search="departamentos departamento" data-tooltip="Departamentos" onclick="showTab('departamentos')" id="sidebar-departamentos">
                         <i class="fas fa-building"></i>
                         <span>Departamentos</span>
                         <span class="sidebar-tooltip">Departamentos</span>
@@ -669,22 +669,22 @@
                     
                     <!-- Asociados -->
                     <h4 class="category-asociados">Asociados</h4>
-                    <div class="sidebar-item" data-search="tipo identificación identificacion tipo identificacion documento" data-tooltip="Tipo Identificación" onclick="showTab('tipo-identificacion')" id="sidebar-tipo-identificacion">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#tipo-identificacion" data-search="tipo identificación identificacion tipo identificacion documento" data-tooltip="Tipo Identificación" onclick="showTab('tipo-identificacion')" id="sidebar-tipo-identificacion">
                         <i class="fas fa-id-card"></i>
                         <span>Tipo Identificación</span>
                         <span class="sidebar-tooltip">Tipo Identificación</span>
                     </div>
-                    <div class="sidebar-item" data-search="tipo asociados tipo asociado tipos" data-tooltip="Tipo Asociados" onclick="showTab('tipo-asociados')" id="sidebar-tipo-asociados">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#tipo-asociados" data-search="tipo asociados tipo asociado tipos" data-tooltip="Tipo Asociados" onclick="showTab('tipo-asociados')" id="sidebar-tipo-asociados">
                         <i class="fas fa-user-friends"></i>
                         <span>Tipo Asociados</span>
                         <span class="sidebar-tooltip">Tipo Asociados</span>
                     </div>
-                    <div class="sidebar-item" data-search="parentezcos parentezco parentesco" data-tooltip="Parentezcos" onclick="showTab('parentezcos')" id="sidebar-parentezcos">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#parentezcos" data-search="parentezcos parentezco parentesco" data-tooltip="Parentezcos" onclick="showTab('parentezcos')" id="sidebar-parentezcos">
                         <i class="fas fa-users"></i>
                         <span>Parentezcos</span>
                         <span class="sidebar-tooltip">Parentezcos</span>
                     </div>
-                    <div class="sidebar-item" data-search="estatus asociados status" data-tooltip="Estatus Asociados" onclick="showTab('estatus-asociados')" id="sidebar-estatus-asociados">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#estatus-asociados" data-search="estatus asociados status" data-tooltip="Estatus Asociados" onclick="showTab('estatus-asociados')" id="sidebar-estatus-asociados">
                         <i class="fas fa-user-check"></i>
                         <span>Estatus Asociados</span>
                         <span class="sidebar-tooltip">Estatus Asociados</span>
@@ -692,17 +692,17 @@
                     
                     <!-- Auxiliares -->
                     <h4 class="category-auxiliares">Auxiliares</h4>
-                    <div class="sidebar-item" data-search="códigos transacciones codigos codigo transaccion" data-tooltip="Códigos Transacción" onclick="showTab('codigos-transacciones')" id="sidebar-codigos-transacciones">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#codigos-transacciones" data-search="códigos transacciones codigos codigo transaccion" data-tooltip="Códigos Transacción" onclick="showTab('codigos-transacciones')" id="sidebar-codigos-transacciones">
                         <i class="fas fa-exchange-alt"></i>
                         <span>Códigos Transacción</span>
                         <span class="sidebar-tooltip">Códigos Transacción</span>
                     </div>
-                    <div class="sidebar-item" data-search="rubros rubro" data-tooltip="Rubros" onclick="showTab('rubros')" id="sidebar-rubros">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#rubros" data-search="rubros rubro" data-tooltip="Rubros" onclick="showTab('rubros')" id="sidebar-rubros">
                         <i class="fas fa-list-alt"></i>
                         <span>Rubros</span>
                         <span class="sidebar-tooltip">Rubros</span>
                     </div>
-                    <div class="sidebar-item" data-search="tipos auxiliares tipo auxiliar auxiliares" data-tooltip="Tipos Auxiliares" onclick="showTab('tipos-auxiliares')" id="sidebar-tipos-auxiliares">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#tipos-auxiliares" data-search="tipos auxiliares tipo auxiliar auxiliares" data-tooltip="Tipos Auxiliares" onclick="showTab('tipos-auxiliares')" id="sidebar-tipos-auxiliares">
                         <i class="fas fa-tools"></i>
                         <span>Tipos Auxiliares</span>
                         <span class="sidebar-tooltip">Tipos Auxiliares</span>
@@ -710,22 +710,22 @@
                     
                     <!-- Educación / Profesión -->
                     <h4 class="category-educacion">Educación / Profesión</h4>
-                    <div class="sidebar-item" data-search="niveles estudio nivel nivel estudio educacion" data-tooltip="Niveles de Estudio" onclick="showTab('niveles-estudio')" id="sidebar-niveles-estudio">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#niveles-estudio" data-search="niveles estudio nivel nivel estudio educacion" data-tooltip="Niveles de Estudio" onclick="showTab('niveles-estudio')" id="sidebar-niveles-estudio">
                         <i class="fas fa-graduation-cap"></i>
                         <span>Niveles de Estudio</span>
                         <span class="sidebar-tooltip">Niveles de Estudio</span>
                     </div>
-                    <div class="sidebar-item" data-search="profesiones profesion" data-tooltip="Profesiones" onclick="showTab('profesiones')" id="sidebar-profesiones">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#profesiones" data-search="profesiones profesion" data-tooltip="Profesiones" onclick="showTab('profesiones')" id="sidebar-profesiones">
                         <i class="fas fa-briefcase"></i>
                         <span>Profesiones</span>
                         <span class="sidebar-tooltip">Profesiones</span>
                     </div>
-                    <div class="sidebar-item" data-search="ocupaciones ocupacion" data-tooltip="Ocupaciones" onclick="showTab('ocupaciones')" id="sidebar-ocupaciones">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#ocupaciones" data-search="ocupaciones ocupacion" data-tooltip="Ocupaciones" onclick="showTab('ocupaciones')" id="sidebar-ocupaciones">
                         <i class="fas fa-user-tie"></i>
                         <span>Ocupaciones</span>
                         <span class="sidebar-tooltip">Ocupaciones</span>
                     </div>
-                    <div class="sidebar-item" data-search="empresas empresa" data-tooltip="Empresas" onclick="showTab('empresas')" id="sidebar-empresas">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#empresas" data-search="empresas empresa" data-tooltip="Empresas" onclick="showTab('empresas')" id="sidebar-empresas">
                         <i class="fas fa-building"></i>
                         <span>Empresas</span>
                         <span class="sidebar-tooltip">Empresas</span>
@@ -733,22 +733,22 @@
                     
                     <!-- Regiones -->
                     <h4 class="category-regiones">Regiones</h4>
-                    <div class="sidebar-item" data-search="países pais paises" data-tooltip="Países" onclick="showTab('paises')" id="sidebar-paises">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#paises" data-search="países pais paises" data-tooltip="Países" onclick="showTab('paises')" id="sidebar-paises">
                         <i class="fas fa-globe"></i>
                         <span>Países</span>
                         <span class="sidebar-tooltip">Países</span>
                     </div>
-                    <div class="sidebar-item" data-search="provincias provincia" data-tooltip="Provincias" onclick="showTab('provincias')" id="sidebar-provincias">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#provincias" data-search="provincias provincia" data-tooltip="Provincias" onclick="showTab('provincias')" id="sidebar-provincias">
                         <i class="fas fa-map"></i>
                         <span>Provincias</span>
                         <span class="sidebar-tooltip">Provincias</span>
                     </div>
-                    <div class="sidebar-item" data-search="distritos distrito" data-tooltip="Distritos" onclick="showTab('distritos')" id="sidebar-distritos">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#distritos" data-search="distritos distrito" data-tooltip="Distritos" onclick="showTab('distritos')" id="sidebar-distritos">
                         <i class="fas fa-map-marked-alt"></i>
                         <span>Distritos</span>
                         <span class="sidebar-tooltip">Distritos</span>
                     </div>
-                    <div class="sidebar-item" data-search="corregimientos corregimiento" data-tooltip="Corregimientos" onclick="showTab('corregimientos')" id="sidebar-corregimientos">
+                    <div class="sidebar-item" data-url="forms/mantenimientos/mantenimientos.aspx#corregimientos" data-search="corregimientos corregimiento" data-tooltip="Corregimientos" onclick="showTab('corregimientos')" id="sidebar-corregimientos">
                         <i class="fas fa-map-pin"></i>
                         <span>Corregimientos</span>
                         <span class="sidebar-tooltip">Corregimientos</span>
@@ -826,6 +826,7 @@
                                         <tr>
                                             <th>ID</th>
                                             <th>Rubro</th>
+                                            <th>Tipo Auxiliar</th>
                                             <th>Código</th>
                                             <th>Descripción</th>
                                             <th>Cuenta Contable</th>
@@ -836,7 +837,7 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td colspan="8" class="text-center text-muted">
+                                            <td colspan="9" class="text-center text-muted">
                                                 <i class="fas fa-spinner fa-spin me-2"></i>Cargando datos...
                                             </td>
                                         </tr>
@@ -1891,7 +1892,7 @@
                         <form id="formCodigoTransaccion">
                             <input type="hidden" id="txtCodigoTransaccionID" value="0">
                             
-                            <!-- Fila 1: Rubro - Código Transacción -->
+                            <!-- Fila 1: Rubro - Tipo Auxiliar -->
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
@@ -1903,20 +1904,32 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="txtCodigoTransaccion" class="form-label">Código de Transacción <span class="text-danger">*</span></label>
-                                        <input type="text" id="txtCodigoTransaccion" class="form-control" maxlength="10">
+                                        <label for="ddlTipoAuxiliar" class="form-label">Tipo Auxiliar <span class="text-danger">*</span></label>
+                                        <select id="ddlTipoAuxiliar" class="form-select">
+                                            <option value="">Seleccionar tipo auxiliar...</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Fila 2: Descripción - Tipo -->
+                            <!-- Fila 2: Código de Transacción - Descripción -->
                             <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="txtCodigoTransaccion" class="form-label">Código de Transacción <span class="text-danger">*</span></label>
+                                        <input type="text" id="txtCodigoTransaccion" class="form-control" maxlength="10">
+                                    </div>
+                                </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="txtDescripcion" class="form-label">Descripción <span class="text-danger">*</span></label>
                                         <input type="text" id="txtDescripcion" class="form-control" maxlength="150">
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <!-- Fila 3: Tipo - Activo -->
+                            <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="ddlDebCred" class="form-label">Tipo <span class="text-danger">*</span></label>
@@ -1927,37 +1940,40 @@
                                         </select>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <!-- Fila 3: Cuenta Contable - Contra Cuenta -->
-                            <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="ddlCuentaContable" class="form-label">Cuenta Contable</label>
-                                        <select id="ddlCuentaContable" class="form-select">
-                                            <option value="">Seleccionar cuenta...</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="ddlContraCuenta" class="form-label">Contra Cuenta</label>
-                                        <select id="ddlContraCuenta" class="form-select">
-                                            <option value="">Seleccionar cuenta...</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Fila 4: Activo -->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <div class="form-check">
+                                        <div class="form-check mt-4">
                                             <input class="form-check-input" type="checkbox" id="chkSnActivo" checked>
                                             <label class="form-check-label" for="chkSnActivo">
                                                 Activo
                                             </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Groupbox Contabilidad -->
+                            <div class="card border-primary mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Contabilidad</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="ddlCuentaContable" class="form-label">Cuenta Contable</label>
+                                                <select id="ddlCuentaContable" class="form-select">
+                                                    <option value="">Seleccionar cuenta...</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="ddlContraCuenta" class="form-label">Contra Cuenta</label>
+                                                <select id="ddlContraCuenta" class="form-select">
+                                                    <option value="">Seleccionar cuenta...</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2850,6 +2866,42 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="../../Scripts/smart-chips.js"></script>
     <script>
+		// Permisos de menú: mostrar solo opciones del sidebar (y sus tab-pane) permitidas; ocultar títulos de categoría sin ítems visibles
+		(function() {
+			var permisosMenuAdmin = <%= If(PermisosMenuAdminValue, "true", "false") %>;
+			var permisosMenuUrls = <%= PermisosMenuUrlsJsonValue %>;
+			$(document).ready(function() {
+				document.querySelectorAll('.sidebar-item[data-url]').forEach(function(el) {
+					var url = el.getAttribute('data-url');
+					if (!url) return;
+					var permitido = permisosMenuAdmin || (permisosMenuUrls === true) || (Array.isArray(permisosMenuUrls) && permisosMenuUrls.indexOf(url) !== -1);
+					if (!permitido) {
+						el.style.display = 'none';
+						var idx = url.indexOf('#');
+						var tabId = idx >= 0 ? url.substring(idx + 1) : '';
+						if (tabId) {
+							var tabPane = document.getElementById(tabId);
+							if (tabPane) tabPane.style.display = 'none';
+						}
+					}
+				});
+				// Ocultar títulos (h4) de categoría que no tienen ningún ítem visible debajo
+				var menu = document.getElementById('sidebarMenu');
+				if (menu) {
+					var h4s = menu.querySelectorAll('h4');
+					h4s.forEach(function(h4) {
+						var next = h4.nextElementSibling;
+						var hasVisible = false;
+						while (next && !next.matches('h4')) {
+							if (next.classList.contains('sidebar-item') && next.style.display !== 'none') hasVisible = true;
+							next = next.nextElementSibling;
+						}
+						if (!hasVisible) h4.style.display = 'none';
+					});
+				}
+			});
+		})();
+
 		$(document).ready(function () {
 			// Configurar tooltips del sidebar
 			configurarTooltipsSidebar();
@@ -3374,6 +3426,14 @@
 				guardarCodigoTransaccion();
 			});
 
+			// Evento cuando cambia el rubro en el modal
+			$('#ddlCodigoRubro').on('change', function () {
+				const codigoRubro = $(this).val();
+				cargarTiposAuxiliaresPorRubro(codigoRubro);
+				// Limpiar selección de tipo auxiliar cuando cambia el rubro
+				$('#ddlTipoAuxiliar').val('').removeClass('is-invalid');
+			});
+
 			// Búsqueda en tiempo real
 			$('#txtFiltroCodigo, #txtFiltroDescripcion').on('keyup', function () {
 				clearTimeout(window.busquedaTimeout);
@@ -3648,6 +3708,9 @@
 
 			return cuentaCodigo;
 		}
+		// Variable global para almacenar rubros con sus tipos de auxiliares
+		let catalogoRubros = {};
+
 		function cargarRubros() {
 			$.ajax({
 				type: "POST",
@@ -3657,6 +3720,16 @@
 				success: function (response) {
 					if (response.d && response.d.Resultado === 'SUCCESS') {
 						const rubros = JSON.parse(response.d.Datos);
+
+						// Almacenar rubros con sus tipos de auxiliares
+						catalogoRubros = {};
+						$.each(rubros, function (index, rubro) {
+							catalogoRubros[rubro.CodigoRubro] = {
+								CodigoRubro: rubro.CodigoRubro,
+								Descripcion: rubro.Descripcion,
+								JsonTiposAuxiliares: rubro.JsonTiposAuxiliares || "[]"
+							};
+						});
 
 						// Llenar dropdown de filtro
 						$('#ddlFiltroRubro').empty().append('<option value="">Todos los rubros</option>');
@@ -3675,6 +3748,31 @@
 					showToast('error', 'Error', 'Error al cargar rubros: ' + error);
 				}
 			});
+		}
+
+		function cargarTiposAuxiliaresPorRubro(codigoRubro) {
+			const $ddlTipoAuxiliar = $('#ddlTipoAuxiliar');
+			$ddlTipoAuxiliar.empty().append('<option value="">Seleccionar tipo auxiliar...</option>');
+
+			if (!codigoRubro || !catalogoRubros[codigoRubro]) {
+				return;
+			}
+
+			try {
+				const jsonTiposAuxiliares = catalogoRubros[codigoRubro].JsonTiposAuxiliares;
+				const tiposAuxiliares = JSON.parse(jsonTiposAuxiliares);
+
+				if (Array.isArray(tiposAuxiliares) && tiposAuxiliares.length > 0) {
+					$.each(tiposAuxiliares, function (index, tipo) {
+						$ddlTipoAuxiliar.append(`<option value="${tipo.IDAuxiliar}">${tipo.DescripcionAuxiliar}</option>`);
+					});
+				} else {
+					$ddlTipoAuxiliar.append('<option value="">No hay tipos de auxiliares disponibles</option>');
+				}
+			} catch (e) {
+				console.error('Error al parsear JsonTiposAuxiliares:', e);
+				showToast('warning', 'Advertencia', 'Error al cargar tipos de auxiliares para este rubro');
+			}
 		}
 
 		function cargarCodigosTransaccion() {
@@ -3715,7 +3813,7 @@
 			if (codigos.length === 0) {
 				tbody.append(`
                     <tr>
-                        <td colspan="8" class="text-center text-muted">
+                        <td colspan="9" class="text-center text-muted">
                             <i class="fas fa-info-circle me-2"></i>No hay datos disponibles
                         </td>
                     </tr>
@@ -3730,11 +3828,13 @@
 
 				const cuentaContableTexto = obtenerDescripcionCuenta(codigo.CuentaContable);
 				const contraCuentaTexto = obtenerDescripcionCuenta(codigo.ContraCuenta);
+				const descripcionAuxiliar = codigo.DescripcionAuxiliar || '-';
 
 				const row = `
                     <tr>
                         <td>${codigo.ID}</td>
                         <td>${crearChipRubroInteligente(codigo.CodigoRubro, codigo.DescripcionRubro)}</td>
+                        <td>${descripcionAuxiliar}</td>
                         <td><strong>${codigo.CodigoTransaccion}</strong></td>
                         <td>${codigo.Descripcion}</td>
                         <td>${cuentaContableTexto}</td>
@@ -3874,6 +3974,24 @@
 			}
 			if ($('#ddlCodigoRubro').length > 0) {
 				$('#ddlCodigoRubro').val(codigo.CodigoRubro);
+				// Cargar tipos de auxiliares cuando se selecciona el rubro
+				cargarTiposAuxiliaresPorRubro(codigo.CodigoRubro);
+				// Esperar a que se carguen los tipos de auxiliares antes de seleccionar
+				if (codigo.IdTipoAuxiliar && codigo.IdTipoAuxiliar !== "0") {
+					// Intentar varias veces hasta que el dropdown esté listo
+					let intentos = 0;
+					const maxIntentos = 10;
+					const intervalo = setInterval(function () {
+						intentos++;
+						const $ddlTipoAuxiliar = $('#ddlTipoAuxiliar');
+						if ($ddlTipoAuxiliar.find('option[value="' + codigo.IdTipoAuxiliar + '"]').length > 0) {
+							$ddlTipoAuxiliar.val(codigo.IdTipoAuxiliar);
+							clearInterval(intervalo);
+						} else if (intentos >= maxIntentos) {
+							clearInterval(intervalo);
+						}
+					}, 50);
+				}
 			}
 			if ($('#txtCodigoTransaccion').length > 0) {
 				$('#txtCodigoTransaccion').val(codigo.CodigoTransaccion);
@@ -3900,11 +4018,20 @@
 			if ($('#formCodigoTransaccion').length > 0) {
 				$('#formCodigoTransaccion')[0].reset();
 			}
+			
+			// Limpiar campos específicos
 			$('#txtCodigoTransaccionID').val('0');
 			$('#ddlCodigoRubro').val('');
+			$('#ddlTipoAuxiliar').empty().append('<option value="">Seleccionar tipo auxiliar...</option>');
+			$('#txtCodigoTransaccion').val('');
+			$('#txtDescripcion').val('');
+			$('#ddlDebCred').val('');
 			$('#ddlCuentaContable').val('').trigger('change');
 			$('#ddlContraCuenta').val('').trigger('change');
 			$('#chkSnActivo').prop('checked', true);
+			
+			// Remover clases de validación
+			$('.form-control, .form-select').removeClass('is-invalid');
 		}
 
 		function guardarCodigoTransaccion() {
@@ -3914,6 +4041,7 @@
 
 			// Obtener valores del formulario
 			const codigoRubro = $('#ddlCodigoRubro').val();
+			const idTipoAuxiliar = $('#ddlTipoAuxiliar').val();
 			const codigoTransaccion = $('#txtCodigoTransaccion').val();
 			const descripcion = $('#txtDescripcion').val();
 			const debCred = $('#ddlDebCred').val();
@@ -3924,6 +4052,7 @@
 			const codigoData = {
 				ID: parseInt($('#txtCodigoTransaccionID').val()) || 0,
 				CodigoRubro: codigoRubro,
+				IdTipoAuxiliar: parseInt(idTipoAuxiliar) || 0,
 				CodigoTransaccion: codigoTransaccion,
 				Descripcion: descripcion,
 				DebCred: debCred,
@@ -3962,6 +4091,11 @@
 			// Validar campos requeridos
 			if (!$('#ddlCodigoRubro').val()) {
 				$('#ddlCodigoRubro').addClass('is-invalid');
+				valido = false;
+			}
+
+			if (!$('#ddlTipoAuxiliar').val()) {
+				$('#ddlTipoAuxiliar').addClass('is-invalid');
 				valido = false;
 			}
 

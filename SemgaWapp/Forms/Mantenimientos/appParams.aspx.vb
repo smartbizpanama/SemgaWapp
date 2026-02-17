@@ -1,4 +1,4 @@
-﻿Imports System.Web.Services
+Imports System.Web.Services
 Imports System.Web.Script.Services
 Imports System.Web.Script.Serialization
 Imports System.Data
@@ -7,10 +7,14 @@ Imports SBSqlClient
 Imports SBUtility
 
 Public Class appParams
-    Inherits System.Web.UI.Page
+    Inherits BasePage
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
-        ' Página de carga
+        If Session(VariablesSesion.UsuarioId) Is Nothing Then
+            Response.Redirect("~/Login.aspx")
+            Return
+        End If
+        If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
     End Sub
 
 #Region "WebMethods"

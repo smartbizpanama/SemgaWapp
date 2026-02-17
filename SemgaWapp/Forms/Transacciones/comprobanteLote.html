@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprobante de Transacciones</title>
+    <style>
+        @page { size: 8.5in 11in; margin: 0.35in; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; font-size: 12px; line-height: 1.4; background-color: white; color: #333; }
+        .comprobante { width: 100%; height: 5.05in; min-height: 5.05in; border: 1px solid #ddd; margin-bottom: 0; padding: 0.03in 0.1in 0.06in 0.1in; position: relative; box-sizing: border-box; background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; }
+        .comprobante.copia { position: relative; border-top: 1px solid #ddd; }
+        .espacio-medio { height: 0.08in; min-height: 0.08in; flex-shrink: 0; }
+        .comprobante.copia::before { content: "COPIA"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 60px; font-weight: bold; color: rgba(128, 128, 128, 0.15); z-index: 1; pointer-events: none; }
+        .header-left { flex: 1; min-width: 0; }
+        .id-transaccion { font-size: 12px; font-weight: bold; color: #e74c3c; padding: 2px 5px; border: 1px solid #e74c3c; border-radius: 4px; display: inline-block; background-color: rgba(231, 76, 60, 0.05); margin-bottom: 0.01in; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .fecha { font-size: 11px; color: #7f8c8d; margin-bottom: 0.01in; display: block; }
+        .field { display: flex; align-items: center; margin-bottom: 0; }
+        .field-label { font-weight: 600; margin-right: 0.08in; color: #2c3e50; font-size: 11px; }
+        .field-label::after { content: ":"; }
+        .field-value { color: #34495e; font-size: 11px; }
+        .firma-section { text-align: center; flex-shrink: 0; padding-top: 0.015in; margin-top: 0.04in; }
+        .firma-line { border-top: 1px solid #2c3e50; width: 2.5in; margin: 0 auto 0.01in; padding-top: 0.01in; }
+        .firma-label { font-size: 10px; font-weight: 600; color: #7f8c8d; text-transform: uppercase; }
+        .titulo-comprobante { font-size: 16px; font-weight: 700; color: #2c3e50; margin-bottom: 0.01in; text-align: center; letter-spacing: 0.5px; flex-shrink: 0; }
+        .fila-medio { display: flex; gap: 0.1in; margin-bottom: 0.01in; flex-shrink: 0; align-items: stretch; }
+        .col-izq { flex: 1; min-width: 0; }
+        .col-der { flex: 1; min-width: 0; }
+        .asociado-container { width: 100%; min-width: 0; box-sizing: border-box; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #dee2e6; border-radius: 4px; padding: 0.03in 0.05in; height: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .asociado-header { font-size: 10px; font-weight: 600; color: #2c3e50; margin-bottom: 0.01in; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #ced4da; padding-bottom: 0.01in; }
+        .asociado-info { display: flex; flex-direction: column; gap: 0.01in; }
+        .asociado-field { display: flex; justify-content: space-between; gap: 0.1in; }
+        .asociado-label { font-weight: 600; color: #495057; font-size: 10px; }
+        .asociado-label::after { content: ":"; }
+        .asociado-value { color: #212529; font-size: 10px; }
+        .numero-asociado { font-weight: bold; color: #2980b9; }
+        .tabla-container { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; margin-bottom: 0.15in; }
+        .tabla-lote { width: 100%; border-collapse: collapse; margin: 0; font-size: 10px; table-layout: fixed; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .tabla-lote th, .tabla-lote td { border: 1px solid #dee2e6; padding: 2px 4px; text-align: left; }
+        .tabla-lote th { background-color: #2c3e50 !important; color: white !important; font-weight: 600; text-align: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .tabla-lote th.col-num, .tabla-lote td.col-num { width: 2%; max-width: 22px; text-align: center; }
+        .tabla-lote th.col-id, .tabla-lote td.col-id { width: 5%; max-width: 42px; text-align: center; }
+        .tabla-lote th.col-rubro, .tabla-lote td.col-rubro { width: 10%; }
+        .tabla-lote th.col-cuenta, .tabla-lote td.col-cuenta { width: 10%; }
+        .tabla-lote th.col-monto, .tabla-lote td.col-monto { width: 8%; text-align: center; }
+        .tabla-lote th.col-saldo, .tabla-lote td.col-saldo { width: 8%; text-align: center; }
+        .tabla-lote th.col-obs, .tabla-lote td.col-obs { width: auto; min-width: 30%; }
+        .tabla-lote td.col-num { text-align: center; }
+        .tabla-lote td.col-monto, .tabla-lote td.col-saldo { text-align: center; }
+        .tabla-lote tbody tr:nth-child(even) { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        @media print {
+            body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none; }
+            .comprobante { box-shadow: none; height: 5.05in; min-height: 5.05in; -webkit-print-color-adjust: exact; print-color-adjust: exact; page-break-inside: avoid; }
+            .comprobante.copia { border-top: 1px solid #ddd; }
+            .tabla-lote th, .tabla-lote td { border: 1px solid #dee2e6 !important; }
+            .tabla-lote th { background-color: #2c3e50 !important; color: white !important; }
+            .tabla-lote tbody tr:nth-child(even) { background-color: #f8f9fa !important; }
+            .id-transaccion { border: 1px solid #e74c3c !important; color: #e74c3c !important; background-color: rgba(231, 76, 60, 0.05) !important; }
+            .asociado-container { background: #f0f2f4 !important; border: 1px solid #dee2e6 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="comprobante">
+        <div class="titulo-comprobante">COMPROBANTE DE TRANSACCIONES</div>
+        <div class="fila-medio">
+            <div class="col-izq">
+                <div class="header-left">
+                    <div class="id-transaccion">@IDTransaccion</div>
+                    <div class="fecha">@FechaHora</div>
+                    <div class="field">
+                        <span class="field-label">Cajero</span>
+                        <span class="field-value">@Usuario</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-der">
+                <div class="asociado-container">
+                    <div class="asociado-header">Información del Asociado</div>
+                    <div class="asociado-info">
+                        <div class="asociado-field">
+                            <span class="asociado-label">Número</span>
+                            <span class="asociado-value numero-asociado">@NumeroAsociado</span>
+                        </div>
+                        <div class="asociado-field">
+                            <span class="asociado-label">Nombre</span>
+                            <span class="asociado-value">@NombreAsociado</span>
+                        </div>
+                        <div class="asociado-field">
+                            <span class="asociado-label">Identificación</span>
+                            <span class="asociado-value">@TipoIdentificacion @NumeroIdentificacion</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tabla-container">
+            <table class="tabla-lote">
+                <thead>
+                    <tr>
+                        <th class="col-num">#</th>
+                        <th class="col-id">ID</th>
+                        <th class="col-rubro">Rubro</th>
+                        <th>Auxiliar</th>
+                        <th class="col-cuenta">Cuenta</th>
+                        <th>Tipo Trans</th>
+                        <th class="col-monto">Monto</th>
+                        <th class="col-saldo">Saldo</th>
+                        <th class="col-obs">Obs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @TablaDetalle
+                </tbody>
+            </table>
+        </div>
+        <div class="firma-section">
+            <div class="firma-line"></div>
+            <div class="firma-label">Firma del Cliente</div>
+        </div>
+    </div>
+    <div class="espacio-medio"></div>
+    <div class="comprobante copia">
+        <div class="titulo-comprobante">COMPROBANTE DE TRANSACCIONES</div>
+        <div class="fila-medio">
+            <div class="col-izq">
+                <div class="header-left">
+                    <div class="id-transaccion">@IDTransaccion</div>
+                    <div class="fecha">@FechaHora</div>
+                    <div class="field">
+                        <span class="field-label">Cajero</span>
+                        <span class="field-value">@Usuario</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-der">
+                <div class="asociado-container">
+                    <div class="asociado-header">Información del Asociado</div>
+                    <div class="asociado-info">
+                        <div class="asociado-field">
+                            <span class="asociado-label">Número</span>
+                            <span class="asociado-value numero-asociado">@NumeroAsociado</span>
+                        </div>
+                        <div class="asociado-field">
+                            <span class="asociado-label">Nombre</span>
+                            <span class="asociado-value">@NombreAsociado</span>
+                        </div>
+                        <div class="asociado-field">
+                            <span class="asociado-label">Identificación</span>
+                            <span class="asociado-value">@TipoIdentificacion @NumeroIdentificacion</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tabla-container">
+            <table class="tabla-lote">
+                <thead>
+                    <tr>
+                        <th class="col-num">#</th>
+                        <th class="col-id">ID</th>
+                        <th class="col-rubro">Rubro</th>
+                        <th>Auxiliar</th>
+                        <th class="col-cuenta">Cuenta</th>
+                        <th>Tipo Trans</th>
+                        <th class="col-monto">Monto</th>
+                        <th class="col-saldo">Saldo</th>
+                        <th class="col-obs">Obs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @TablaDetalle
+                </tbody>
+            </table>
+        </div>
+        <div class="firma-section">
+            <div class="firma-line"></div>
+            <div class="firma-label">Firma del Cliente</div>
+        </div>
+    </div>
+</body>
+</html>

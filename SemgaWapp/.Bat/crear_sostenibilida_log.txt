@@ -1,0 +1,8 @@
+========================================================= 
+[11/feb/2026 13:43:19.57] INICIO DE PROCESO DE SOSTENIBILIDAD 
+--------------------------------------------------------- 
+Ejecutando spBatSocios_CalcularSostenibilidad... 
+[11/feb/2026 13:43:19.70] spBatSocios_CalcularSostenibilidad ejecutado correctamente 
+--------------------------------------------------------- 
+[11/feb/2026 13:43:19.73] FIN DEL PROCESO DE SOSTENIBILIDAD 
+========================================================= 

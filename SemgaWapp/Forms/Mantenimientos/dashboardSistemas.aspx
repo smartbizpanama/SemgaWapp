@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="dashboardSistemas.aspx.vb" Inherits="SemgaWapp.dashboardSistemas" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="dashboardSistemas.aspx.vb" Inherits="SemgaWapp.dashboardSistemas" %>
 
 <!DOCTYPE html>
 
@@ -109,9 +109,10 @@
 
         .tiles-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 280px));
             gap: 15px;
             margin-top: 15px;
+            justify-content: start;
         }
 
         .tile {
@@ -125,6 +126,8 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+            aspect-ratio: 1;
+            max-width: 280px;
         }
 
         .tile::before {
@@ -283,13 +286,16 @@
             }
 
             .tiles-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 280px));
+                justify-content: start;
                 gap: 12px;
                 margin-top: 12px;
             }
 
             .tile {
                 padding: 15px;
+                max-width: 280px;
+                aspect-ratio: 1;
             }
 
             .tile-icon {
@@ -446,10 +452,10 @@
                 <h1>Configuraciones del Sistema</h1>
             </div>
 
-            <!-- Tiles Grid -->
+            <!-- Tiles Grid (visibilidad según permisos de menú por URL) -->
             <div class="tiles-grid">
                 <!-- Gestión de Usuarios -->
-                <div class="tile users-tile" onclick="window.location.href='GestionUsuarios.aspx'">
+                <div class="tile users-tile" data-url="forms/mantenimientos/gestionusuarios.aspx" onclick="window.location.href='GestionUsuarios.aspx'">
                     <div class="tile-icon">
                         <i class="fas fa-user-cog"></i>
                     </div>
@@ -460,7 +466,7 @@
                 </div>
 
                 <!-- Tablas de Tipo -->
-                <div class="tile tables-tile" onclick="window.location.href='Mantenimientos.aspx'">
+                <div class="tile tables-tile" data-url="forms/mantenimientos/mantenimientos.aspx" onclick="window.location.href='Mantenimientos.aspx'">
                     <div class="tile-icon">
                         <i class="fas fa-table"></i>
                     </div>
@@ -471,7 +477,7 @@
                 </div>
 
                 <!-- Parámetros del Sistema -->
-                <div class="tile params-tile" onclick="window.location.href='appParams.aspx'">
+                <div class="tile params-tile" data-url="forms/mantenimientos/appparams.aspx" onclick="window.location.href='appParams.aspx'">
                     <div class="tile-icon">
                         <i class="fas fa-cogs"></i>
                     </div>
@@ -482,7 +488,7 @@
                 </div>
 
                 <!-- Respaldo de Datos -->
-                <div class="tile backup-tile" onclick="window.location.href='../Sistemas/Respaldos.aspx'">
+                <div class="tile backup-tile" data-url="forms/sistemas/respaldos.aspx" onclick="window.location.href='../Sistemas/Respaldos.aspx'">
                     <div class="tile-icon">
                         <i class="fas fa-database"></i>
                     </div>
@@ -493,7 +499,7 @@
                 </div>
 
                 <!-- Tablas Históricas -->
-                <div class="tile historial-tile" onclick="window.location.href='../Logs/historialTablas.aspx?origen=sistemas'">
+                <div class="tile historial-tile" data-url="forms/logs/historialtablas.aspx" onclick="window.location.href='../Logs/historialTablas.aspx?origen=sistemas'">
                     <div class="tile-icon">
                         <i class="fas fa-history"></i>
                     </div>
@@ -526,6 +532,20 @@
     </form>
 
     <script type="text/javascript">
+        // Permisos de menú: mostrar solo mosaicos cuya URL esté permitida
+        (function() {
+            var permisosMenuAdmin = <%= If(PermisosMenuAdminValue, "true", "false") %>;
+            var permisosMenuUrls = <%= PermisosMenuUrlsJsonValue %>;
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.tile[data-url]').forEach(function(tile) {
+                    var url = tile.getAttribute('data-url');
+                    if (!url) return;
+                    var permitido = permisosMenuAdmin || (permisosMenuUrls === true) || (Array.isArray(permisosMenuUrls) && permisosMenuUrls.indexOf(url) !== -1);
+                    tile.style.display = permitido ? '' : 'none';
+                });
+            });
+        })();
+
         // Inicializar monitoreo de inactividad cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof initializeInactivityMonitoring === 'function') {

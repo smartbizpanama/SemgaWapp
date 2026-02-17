@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="helpDashboard.aspx.vb" Inherits="SemgaWapp.helpDashboard" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="helpDashboard.aspx.vb" Inherits="SemgaWapp.helpDashboard" %>
 
 <!DOCTYPE html>
 
@@ -106,10 +106,11 @@
 
         .tiles-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 280px));
             gap: 20px;
             margin-top: 20px;
             max-width: 1200px;
+            justify-content: start;
             margin-left: auto;
             margin-right: auto;
         }
@@ -123,7 +124,8 @@
             transition: all 0.3s ease;
             cursor: pointer;
             border: 2px solid transparent;
-            max-width: 100%;
+            max-width: 280px;
+            aspect-ratio: 1;
         }
 
         .tile:hover {
@@ -191,7 +193,7 @@
 
             <div class="tiles-container">
                 <!-- Documentación de Aplicación -->
-                <div class="tile documentacion-tile" onclick="window.location.href='Documentacion.aspx'">
+                <div class="tile documentacion-tile" data-url="forms/help/documentacion.aspx" onclick="window.location.href='Documentacion.aspx'">
                     <div class="tile-icon">
                         <i class="fas fa-book"></i>
                     </div>
@@ -202,7 +204,7 @@
                 </div>
 
                 <!-- Manual de Procesos Técnicos -->
-                <div class="tile procesos-tecnicos-tile" onclick="window.location.href='procesosTecnicos.aspx'">
+                <div class="tile procesos-tecnicos-tile" data-url="forms/help/procesostecnicos.aspx" onclick="window.location.href='procesosTecnicos.aspx'">
                     <div class="tile-icon">
                         <i class="fas fa-cogs"></i>
                     </div>
@@ -214,5 +216,19 @@
             </div>
         </div>
     </form>
+    <script type="text/javascript">
+        (function() {
+            var permisosMenuAdmin = <%= If(PermisosMenuAdminValue, "true", "false") %>;
+            var permisosMenuUrls = <%= PermisosMenuUrlsJsonValue %>;
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.tile[data-url]').forEach(function(tile) {
+                    var url = tile.getAttribute('data-url');
+                    if (!url) return;
+                    var permitido = permisosMenuAdmin || (permisosMenuUrls === true) || (Array.isArray(permisosMenuUrls) && permisosMenuUrls.indexOf(url) !== -1);
+                    tile.style.display = permitido ? '' : 'none';
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

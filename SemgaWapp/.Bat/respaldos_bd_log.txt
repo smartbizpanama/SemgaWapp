@@ -1,0 +1,18 @@
+========================================================= 
+[11/feb/2026 12:54:15.20] INICIO DEL PROCESO DE RESPALDO 
+--------------------------------------------------------- 
+[11/feb/2026 12:54:15.25] Obteniendo ruta de respaldo desde base de datos... 
+[11/feb/2026 12:54:15.39] Ruta obtenida: C:\SB.Apps\BackUpsBD 
+[11/feb/2026 12:54:15.39] Ruta final: C:\SB.Apps\BackUpsBD\ 
+========================================================= 
+[11/feb/2026 12:54:27.83] INICIO DEL PROCESO DE RESPALDO 
+--------------------------------------------------------- 
+[11/feb/2026 12:54:27.87] Obteniendo ruta de respaldo desde base de datos... 
+[11/feb/2026 12:54:27.98] Ruta obtenida: C:\SB.Apps\BackUpsBD 
+[11/feb/2026 12:54:27.98] Ruta final: C:\SB.Apps\BackUpsBD\ 
+========================================================= 
+[11/feb/2026 12:54:38.55] INICIO DEL PROCESO DE RESPALDO 
+--------------------------------------------------------- 
+[11/feb/2026 12:54:38.60] Obteniendo ruta de respaldo desde base de datos... 
+[11/feb/2026 12:54:38.69] Ruta obtenida: C:\SB.Apps\BackUpsBD 
+[11/feb/2026 12:54:38.69] Ruta final: C:\SB.Apps\BackUpsBD\ 

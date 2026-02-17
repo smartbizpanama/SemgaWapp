@@ -1,7 +1,7 @@
 ========================================================= 
-[21/nov/2025 16:58:01.94] INICIO DE PROCESO 
+[11/feb/2026 13:43:33.98] INICIO DE PROCESO 
 Ejecutando sp_sys_HST_GenerarHistorialMensual... 
 --------------------------------------------------------- 
-[21/nov/2025 16:58:02.22] SP ejecutado correctamente 
-[21/nov/2025 16:58:02.22] FIN DEL PROCESO 
+[11/feb/2026 13:43:34.43] SP ejecutado correctamente 
+[11/feb/2026 13:43:34.43] FIN DEL PROCESO 
 --------------------------------------------------------- 

@@ -1,4 +1,4 @@
-﻿Imports System.Collections
+Imports System.Collections
 Imports System.Data
 Imports System.Web.Script.Services
 Imports System.Web.Services
@@ -8,13 +8,14 @@ Imports SBSqlClient
 Imports SBUtility
 
 Partial Public Class Finanzas
-	Inherits System.Web.UI.Page
+	Inherits BasePage
 
 	Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
 		If Session(VariablesSesion.UsuarioId) Is Nothing Then
 			Response.Redirect("~/Login.aspx")
 			Return
 		End If
+		If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
 	End Sub
 
 #Region "Asientos Contables"
@@ -32,15 +33,14 @@ Partial Public Class Finanzas
 			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("Error en BD al obtener cuentas: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("BD ERROR: ObtenerCuentas - " & objSql.MensajeError)
 				Return serializer.Serialize(New With {
 						.Resultado = "ERROR",
 						.Datos = "",
 						.Mensaje = "Error en la base de datos: " & objSql.MensajeError
 					})
 			End If
-
-			ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
+			ModGlobal.EscribirLog("BD OK: ObtenerCuentas - " & dt.Rows.Count.ToString() & " registros")
 
 			Dim cuentas As New List(Of Object)
 			For Each row As DataRow In dt.Rows
@@ -234,12 +234,13 @@ Partial Public Class Finanzas
 			Dim dtResultado As DataTable = objSql.GetDataTableSql("Exec spAsientos_Guardar")
 
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("Error en BD al guardar asiento: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("BD ERROR: spAsientos_Guardar - " & objSql.MensajeError)
 				Return serializer.Serialize(New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
 				})
 			End If
+			ModGlobal.EscribirLog("BD OK: spAsientos_Guardar")
 
 			Dim asientoId As Integer = 0
 			Dim nombreUsuario As String = ""

@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="dashboardReportes.aspx.vb" Inherits="SemgaWapp.dashboardReportes" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="dashboardReportes.aspx.vb" Inherits="SemgaWapp.dashboardReportes" %>
 
 <!DOCTYPE html>
 
@@ -109,9 +109,10 @@
 
         .tiles-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 280px));
             gap: 15px;
             margin-top: 15px;
+            justify-content: start;
         }
 
         .tile {
@@ -125,6 +126,8 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+            aspect-ratio: 1;
+            max-width: 280px;
         }
 
         .tile::before {
@@ -267,10 +270,10 @@
                 <h1>Reportes y Estadísticas</h1>
             </div>
 
-            <!-- Tiles Grid -->
+            <!-- Tiles Grid (visibilidad según permisos de menú por URL) -->
             <div class="tiles-grid">
                 <!-- Reportes del Sistema -->
-                <div class="tile reports-tile" onclick="window.location.href='Reportes.aspx'">
+                <div class="tile reports-tile" data-url="forms/reportes/reportes.aspx" onclick="window.location.href='Reportes.aspx'">
                     <div class="tile-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
@@ -281,7 +284,7 @@
                 </div>
 
                 <!-- Tablas Históricas -->
-                <div class="tile historial-tile" onclick="window.location.href='../Logs/historialTablas.aspx?origen=reportes'">
+                <div class="tile historial-tile" data-url="forms/logs/historialtablas.aspx" onclick="window.location.href='../Logs/historialTablas.aspx?origen=reportes'">
                     <div class="tile-icon">
                         <i class="fas fa-database"></i>
                     </div>
@@ -292,7 +295,7 @@
                 </div>
 
                 <!-- Movimientos -->
-                <div class="tile movimientos-tile" onclick="window.location.href='Movimientos.aspx'">
+                <div class="tile movimientos-tile" data-url="forms/reportes/movimientos.aspx" onclick="window.location.href='Movimientos.aspx'">
                     <div class="tile-icon">
                         <i class="fas fa-exchange-alt"></i>
                     </div>
@@ -304,5 +307,19 @@
             </div>
         </div>
     </form>
+    <script type="text/javascript">
+        (function() {
+            var permisosMenuAdmin = <%= If(PermisosMenuAdminValue, "true", "false") %>;
+            var permisosMenuUrls = <%= PermisosMenuUrlsJsonValue %>;
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.tile[data-url]').forEach(function(tile) {
+                    var url = tile.getAttribute('data-url');
+                    if (!url) return;
+                    var permitido = permisosMenuAdmin || (permisosMenuUrls === true) || (Array.isArray(permisosMenuUrls) && permisosMenuUrls.indexOf(url) !== -1);
+                    tile.style.display = permitido ? '' : 'none';
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

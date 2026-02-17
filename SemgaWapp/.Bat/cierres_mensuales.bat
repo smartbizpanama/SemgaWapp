@@ -49,4 +49,3 @@ echo.
 echo ===========================================
 echo     SP EJECUTADO CORRECTAMENTE
 echo ===========================================
-echo L

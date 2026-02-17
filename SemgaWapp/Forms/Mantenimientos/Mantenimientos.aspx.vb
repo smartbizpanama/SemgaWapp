@@ -1,4 +1,4 @@
-﻿Imports System.Web.Services
+Imports System.Web.Services
 Imports System.Web.Script.Services
 Imports System.Web.Script.Serialization
 Imports SBSqlClient
@@ -6,7 +6,10 @@ Imports SBUtility
 Imports System.Data
 
 Public Class Mantenimientos
-	Inherits System.Web.UI.Page
+	Inherits BasePage
+
+	Protected PermisosMenuAdminValue As Boolean
+	Protected PermisosMenuUrlsJsonValue As String
 
 	Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
 		' Verificar sesión
@@ -14,6 +17,9 @@ Public Class Mantenimientos
 			Response.Redirect("~/Login.aspx")
 			Return
 		End If
+		If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
+		PermisosMenuAdminValue = ModGlobal.EsPermisosMenuAdmin(HttpContext.Current)
+		PermisosMenuUrlsJsonValue = ModGlobal.GetPermisosMenuUrlsJson(HttpContext.Current)
 	End Sub
 
 #Region "CÓDIGOS DE TRANSACCIÓN"
@@ -45,7 +51,8 @@ Public Class Mantenimientos
 			For Each row As DataRow In dt.Rows
 				Dim rubro As New With {
 					.CodigoRubro = row("CodigoRubro").ToString(),
-					.Descripcion = row("Descripcion").ToString()
+					.Descripcion = row("Descripcion").ToString(),
+					.JsonTiposAuxiliares = If(row.Table.Columns.Contains("JsonTiposAuxiliares"), row("JsonTiposAuxiliares").ToString(), "[]")
 				}
 				rubros.Add(rubro)
 			Next
@@ -152,6 +159,8 @@ Public Class Mantenimientos
 					.ID = row("ID").ToString(),
 					.CodigoRubro = row("CodigoRubro").ToString(),
 					.DescripcionRubro = row("DescripcionRubro").ToString(),
+					.IdTipoAuxiliar = If(row.Table.Columns.Contains("IdTipoAuxiliar"), row("IdTipoAuxiliar").ToString(), "0"),
+					.DescripcionAuxiliar = If(row.Table.Columns.Contains("DescripcionAuxiliar"), row("DescripcionAuxiliar").ToString(), ""),
 					.CodigoTransaccion = row("CodigoTransaccion").ToString(),
 					.Descripcion = row("Descripcion").ToString(),
 					.DebCred = row("DebCred").ToString(),
@@ -218,6 +227,8 @@ Public Class Mantenimientos
 					.ID = codigoEncontrado("ID").ToString(),
 					.CodigoRubro = codigoEncontrado("CodigoRubro").ToString(),
 					.DescripcionRubro = codigoEncontrado("DescripcionRubro").ToString(),
+					.IdTipoAuxiliar = If(codigoEncontrado.Table.Columns.Contains("IdTipoAuxiliar"), codigoEncontrado("IdTipoAuxiliar").ToString(), "0"),
+					.DescripcionAuxiliar = If(codigoEncontrado.Table.Columns.Contains("DescripcionAuxiliar"), codigoEncontrado("DescripcionAuxiliar").ToString(), ""),
 					.CodigoTransaccion = codigoEncontrado("CodigoTransaccion").ToString(),
 					.Descripcion = codigoEncontrado("Descripcion").ToString(),
 					.DebCred = codigoEncontrado("DebCred").ToString(),
@@ -263,6 +274,7 @@ Public Class Mantenimientos
 
 			Dim id As Integer = If(codigoData.ContainsKey("ID"), Convert.ToInt32(codigoData("ID")), 0)
 			Dim codigoRubro As String = codigoData("CodigoRubro").ToString()
+			Dim idTipoAuxiliar As Integer = If(codigoData.ContainsKey("IdTipoAuxiliar"), Convert.ToInt32(codigoData("IdTipoAuxiliar")), 0)
 			Dim codigoTransaccion As String = codigoData("CodigoTransaccion").ToString()
 			Dim descripcion As String = codigoData("Descripcion").ToString()
 			Dim debCred As String = codigoData("DebCred").ToString()
@@ -270,13 +282,16 @@ Public Class Mantenimientos
 			Dim contraCuenta As String = If(codigoData.ContainsKey("ContraCuenta"), codigoData("ContraCuenta").ToString(), "")
 			Dim snActivo As Boolean = If(codigoData.ContainsKey("SnActivo"), Convert.ToBoolean(codigoData("SnActivo")), True)
 
-			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, CodigoRubro: {codigoRubro}, CodigoTransaccion: {codigoTransaccion}, Descripcion: {descripcion}, DebCred: {debCred}, CuentaContable: {cuentaContable}, ContraCuenta: {contraCuenta}, SnActivo: {snActivo}")
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, CodigoRubro: {codigoRubro}, IdTipoAuxiliar: {idTipoAuxiliar}, CodigoTransaccion: {codigoTransaccion}, Descripcion: {descripcion}, DebCred: {debCred}, CuentaContable: {cuentaContable}, ContraCuenta: {contraCuenta}, SnActivo: {snActivo}")
 
 			With objSql.Parametros
 				If id > 0 Then
 					.Add("@ID", id)
 				End If
 				.Add("@CodigoRubro", codigoRubro)
+				If idTipoAuxiliar > 0 Then
+					.Add("@IdTipoAuxiliar", idTipoAuxiliar)
+				End If
 				.Add("@CodigoTransaccion", codigoTransaccion)
 				.Add("@Descripcion", descripcion)
 				.Add("@DebCred", debCred)
@@ -2212,7 +2227,7 @@ Public Class Mantenimientos
 			ModGlobal.EscribirLog($"Datos recibidos: {serializer.Serialize(tipoAuxiliarData)}")
 
 			' Agregar parámetros
-			If tipoAuxiliarData.ContainsKey("ID") AndAlso Not String.IsNullOrEmpty(tipoAuxiliarData("ID").ToString()) Then
+			If tipoAuxiliarData.ContainsKey("ID") AndAlso tipoAuxiliarData("ID") IsNot Nothing AndAlso Not String.IsNullOrEmpty(tipoAuxiliarData("ID").ToString()) Then
 				objSql.Parametros.Add("@ID", Convert.ToInt32(tipoAuxiliarData("ID")))
 			End If
 

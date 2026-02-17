@@ -1,0 +1,2 @@
+- Crear código de transacción APCAP para la capitalización (INACTIVO)
+- Crear código de transacción PRMAN para la manejo de intereses (INACTIVO)

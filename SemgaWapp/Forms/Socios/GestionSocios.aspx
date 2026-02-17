@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="GestionSocios.aspx.vb" Inherits="SemgaWapp.GestionSocios" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="GestionSocios.aspx.vb" Inherits="SemgaWapp.GestionSocios" %>
 
 <!DOCTYPE html>
 
@@ -20,9 +20,15 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet"/>
     
     <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        
         body {
             background: #f8f9fa;
-            min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
@@ -33,22 +39,92 @@
             margin: 15px;
             padding: 15px;
             border: 1px solid #e9ecef;
+            height: calc(100vh - 30px);
+            max-height: calc(100vh - 30px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
         }
         
-        .header-section {
+        /* Barra superior: título | filtros | botones en una fila */
+        .top-bar-section {
+            display: flex;
+            align-items: stretch;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+        .top-bar-titulo {
             background: #2c3e50;
             color: white;
-            padding: 10px 15px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
             border-radius: 6px;
-            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
-        
-        .filters-section {
+        .top-bar-titulo h6 {
+            font-size: 15px;
+            margin: 0;
+            white-space: nowrap;
+        }
+        .top-bar-filtros {
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            padding: 8px 12px;
             background: #ffffff;
-            padding: 10px 15px;
+            min-width: 0;
             border-radius: 6px;
-            margin-bottom: 15px;
             border: 1px solid #e9ecef;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .top-bar-filtro-item {
+            flex: 1;
+            min-width: 0;
+        }
+        .top-bar-filtro-item .form-label {
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+        .top-bar-filtro-buscar {
+            flex-shrink: 0;
+            align-self: flex-end;
+        }
+        .top-bar-filtro-buscar .btn {
+            min-width: 38px;
+        }
+        .top-bar-botones {
+            background: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .top-bar-botones .btn-light {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.3);
+            color: white;
+        }
+        .top-bar-botones .btn-light:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            color: white;
+        }
+
+        #modalTransaccionesSocio .modal-header-transacciones {
+            padding: 6px 12px;
+            min-height: auto;
+        }
+        #modalTransaccionesSocio .modal-header-transacciones .modal-title {
+            font-size: 0.9rem;
         }
         
         .btn-primary {
@@ -509,11 +585,11 @@
         }
         
         /* Forzar alineación a la izquierda para la columna de identificación */
-        #tablaSocios td:nth-child(5) {
+        #tablaSocios td:nth-child(7) {
             text-align: left !important;
         }
         
-        #tablaSocios td:nth-child(5) * {
+        #tablaSocios td:nth-child(7) * {
             text-align: left !important;
         }
         
@@ -522,9 +598,9 @@
             position: relative;
         }
         
-        /* Forzar scroll interno en la tabla */
+        /* Forzar scroll interno en la tabla - min-height para ocupar espacio disponible */
         #tablaSocios_wrapper .dataTables_scrollBody {
-            max-height: 400px !important;
+            min-height: 300px !important;
             overflow-y: auto !important;
         }
         
@@ -573,30 +649,110 @@
         
         /* Estilo para el contenedor de la tabla */
         .table-responsive {
-            overflow: visible;
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            height: 100%;
         }
         
-        /* Evitar scroll del navegador */
-        body {
-            overflow-x: hidden;
-        }
-        
-        .main-container {
-            max-height: 100vh;
-            overflow-y: hidden;
+        form {
+            overflow: hidden;
+            height: 100%;
         }
         
         /* Contenedor de la tabla con altura controlada */
         .dataTables_wrapper {
-            max-height: calc(100vh - 200px);
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-height: 0;
+            flex: 1 1 auto;
+            height: 100%;
+            overflow: visible; /* Permitir que el footer sea visible */
+            max-height: 100%;
         }
         
-        /* Asegurar que la tabla tenga scroll interno */
+        /* Área de scroll de DataTables - ocupa todo el espacio disponible */
+        .dataTables_scroll {
+            flex: 1 1 auto;
+            min-height: 200px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dataTables_scrollHead {
+            flex-shrink: 0;
+        }
+
         .dataTables_scrollBody {
-            max-height: 400px !important;
+            flex: 1 1 auto;
+            min-height: 200px;
             overflow-y: auto !important;
-            border: 1px solid #dee2e6;
+            overflow-x: auto !important;
+        }
+        
+        /* Asegurar que la fila con info y paginación sea visible y esté FUERA del scroll */
+        .dataTables_wrapper .row.mt-3 {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            margin-top: 15px !important;
+            padding: 10px 15px !important;
+            border-top: 1px solid #dee2e6 !important;
+            background-color: #f8f9fa !important;
+            border-radius: 4px !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            clear: both !important;
+            min-height: 50px !important;
+            height: auto !important;
+            overflow: visible !important;
+            flex-shrink: 0 !important; /* NO se reduce, siempre visible */
+            flex-grow: 0 !important; /* NO crece más allá de su contenido */
+            flex-basis: auto !important;
+        }
+        
+        .dataTables_info {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        .dataTables_length {
+            text-align: center !important;
+            padding: 12px 15px;
+            margin-top: 15px;
+            flex-shrink: 0;
+        }
+
+        /* Evitar que la flecha del dropdown cubra el número en "Mostrar X registros" */
+        #tablaSocios_wrapper .dataTables_length select {
+            padding-right: 2rem !important;
+            min-width: 70px;
+            padding-left: 0.5rem;
+        }
+        
+        .dataTables_paginate {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        .dataTables_paginate .paginate_button {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            text-decoration: none !important;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled) {
+            background-color: #f8f9fa !important;
+            border-color: #2c3e50 !important;
+            color: #2c3e50 !important;
         }
         
         /* Select2 Custom Styles - Matching form controls */
@@ -975,13 +1131,13 @@
             white-space: normal;
         }
 
-        #tablaSocios thead th:nth-child(5),
-        #tablaSocios tbody td:nth-child(5) {
+        #tablaSocios thead th:nth-child(6),
+        #tablaSocios tbody td:nth-child(6) {
             text-align: center !important;
         }
 
-        #tablaSocios thead th:nth-child(6),
-        #tablaSocios tbody td:nth-child(6) {
+        #tablaSocios thead th:nth-child(7),
+        #tablaSocios tbody td:nth-child(7) {
             text-align: left !important;
         }
 
@@ -993,60 +1149,54 @@
 <body>
     <form id="form1" runat="server">
         <div class="main-container">
-            <!-- Header Section -->
-            <div class="header-section">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h6 class="mb-0" style="font-size: 16px;"><i class="fas fa-users me-2"></i>Gestión de Socios</h6>
-                    </div>
-                    <div class="col-md-6 text-end">
-                        <button type="button" class="btn btn-light me-2" onclick="abrirModalNuevoSocio()">
-                            <i class="fas fa-plus me-1"></i>Nuevo Socio
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="volverDashboard()">
-                            <i class="fas fa-arrow-left me-1"></i>Volver
-                        </button>
-                    </div>
+            <!-- Barra superior: título + filtros + botones en una sola fila -->
+            <div class="top-bar-section">
+                <div class="top-bar-titulo">
+                    <h6 class="mb-0"><i class="fas fa-users me-2"></i>Gestión de Socios</h6>
                 </div>
-            </div>
-
-            <!-- Filters Section -->
-            <div class="filters-section">
-                <div class="row">
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">Nombre</label>
-                        <input type="text" id="filtroNombre" class="form-control" placeholder="Buscar por nombre..."/>
+                <div class="top-bar-filtros">
+                    <div class="top-bar-filtro-item">
+                        <label class="form-label fw-bold">Nombre o N°</label>
+                        <input type="text" id="filtroNombre" class="form-control form-control-sm" placeholder="Buscar..."/>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">Tipo Asociado</label>
-                        <select id="filtroTipo" class="form-select">
-                            <option value="">Todos los tipos</option>
+                    <div class="top-bar-filtro-item">
+                        <label class="form-label fw-bold">Tipo</label>
+                        <select id="filtroTipo" class="form-select form-select-sm">
+                            <option value="">Todos</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="top-bar-filtro-item">
                         <label class="form-label fw-bold">Estatus</label>
-                        <select id="filtroEstatus" class="form-select">
+                        <select id="filtroEstatus" class="form-select form-select-sm">
                             <option value="">Todos</option>
                             <option value="A">Activo</option>
                             <option value="I">Inactivo</option>
                             <option value="S">Suspendido</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">Tipo Documento</label>
-                        <select id="filtroTipoDocumento" class="form-select">
-                            <option value="">Todos los tipos</option>
+                    <div class="top-bar-filtro-item">
+                        <label class="form-label fw-bold">Tipo Doc</label>
+                        <select id="filtroTipoDocumento" class="form-select form-select-sm">
+                            <option value="">Todos</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">identificación</label>
-                        <input type="text" id="filtroIdentificacion" class="form-control" placeholder="número de identificación...">
+                    <div class="top-bar-filtro-item">
+                        <label class="form-label fw-bold">Identificación</label>
+                        <input type="text" id="filtroIdentificacion" class="form-control form-control-sm" placeholder="número...">
                     </div>
-                    <div class="col-md-1 d-flex align-items-end">
-                        <button type="button" class="btn btn-primary w-100" onclick="aplicarFiltros()" title="Buscar">
+                    <div class="top-bar-filtro-buscar">
+                        <button type="button" class="btn btn-light w-100" onclick="aplicarFiltros()" title="Buscar">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
+                </div>
+                <div class="top-bar-botones">
+                    <button type="button" class="btn btn-light btn-sm me-2" onclick="abrirModalNuevoSocio()">
+                        <i class="fas fa-plus me-1"></i>Nuevo
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm" onclick="volverDashboard()">
+                        <i class="fas fa-arrow-left me-1"></i>Volver
+                    </button>
                 </div>
             </div>
 
@@ -1063,8 +1213,9 @@
                 <table id="tablaSocios" class="table table-striped table-hover">
                     <thead>
                         <tr>
-                            <th class="text-center">Movimientos</th>
-                            <th>N° Asociado</th>
+                            <th class="text-center">Trans.</th>
+                            <th class="text-center">Movs.</th>
+                            <th>Num.</th>
                             <th>Tipo Asociado</th>
                             <th>Nombre Completo</th>
                             <th>Estatus</th>
@@ -1131,6 +1282,45 @@
                     </div>
                     <div class="modal-footer global-panel-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Transacciones del Socio -->
+        <div class="modal fade" id="modalTransaccionesSocio" tabindex="-1" aria-labelledby="modalTransaccionesSocioLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header modal-header-transacciones" style="background: #2c3e50; color: white;">
+                        <h6 class="modal-title mb-0" id="modalTransaccionesSocioLabel">
+                            <i class="fas fa-list-ul me-2"></i>Transacciones del socio
+                            <span id="tituloTransaccionesSocio" class="ms-2"></span>
+                        </h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="estadoTransaccionesSocio" class="text-center py-4 d-none">
+                            <i class="fas fa-folder-open fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No se encontraron transacciones.</p>
+                        </div>
+                        <div id="spinnerTransaccionesSocio" class="text-center my-4 d-none">
+                            <div class="spinner-border" role="status"></div>
+                            <p class="mt-2 mb-0">Cargando transacciones...</p>
+                        </div>
+                        <div id="contenedorTablaTransaccionesSocio" style="display: none;">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Fecha/Hora</th>
+                                        <th>Cajero</th>
+                                        <th>Movimientos</th>
+                                        <th>Imprimir</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyTransaccionesSocio"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1210,7 +1400,7 @@
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Estatus</label>
                                         <select id="estatus" class="form-select">
-                                            <option value="A" selected>Activo</option>
+                                            <option value="A" selected="selected">Activo</option>
                                             <option value="I">Inactivo</option>
                                             <option value="S">Suspendido</option>
                                         </select>
@@ -1227,19 +1417,19 @@
                                 <div class="row mt-3">
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Primer Nombre *</label>
-                                        <input type="text" id="nombre" name="nombre" class="form-control">
+                                        <input type="text" id="nombre" name="nombre" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Segundo Nombre</label>
-                                        <input type="text" id="segundoNombre" class="form-control">
+                                        <input type="text" id="segundoNombre" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Primer Apellido *</label>
-                                        <input type="text" id="apellido" name="apellido" class="form-control">
+                                        <input type="text" id="apellido" name="apellido" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Segundo Apellido</label>
-                                        <input type="text" id="segundoApellido" class="form-control">
+                                        <input type="text" id="segundoApellido" class="form-control"/>
                                     </div>
                                 </div>
                                 <div class="row mt-3">
@@ -1255,29 +1445,29 @@
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">número de identificación *</label>
-                                        <input type="text" id="numeroIdentificacion" name="numeroIdentificacion" class="form-control">
+                                        <input type="text" id="numeroIdentificacion" name="numeroIdentificacion" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Fecha de Nacimiento</label>
-                                        <input type="text" id="fechaNacimiento" class="form-control flatpickr-date" placeholder="dd/mm/yyyy">
+                                        <input type="text" id="fechaNacimiento" class="form-control flatpickr-date" placeholder="dd/mm/yyyy"/>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">Correo Electrúnico</label>
-                                        <input type="email" id="correoElectronico" class="form-control">
+                                        <label class="form-label fw-bold">Correo Electrónico</label>
+                                        <input type="email" id="correoElectronico" class="form-control"/>
                                     </div>
                                 </div>
                                 <div class="row mt-3">
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Teléfono Residencia</label>
-                                        <input type="text" id="telefonoResidencia" class="form-control">
+                                        <input type="text" id="telefonoResidencia" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Teléfono Celular</label>
-                                        <input type="text" id="telefonoCelular" class="form-control">
+                                        <input type="text" id="telefonoCelular" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Teléfono de un Familiar</label>
-                                        <input type="text" id="telefonoFamiliar" class="form-control">
+                                        <input type="text" id="telefonoFamiliar" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">Nivel de Estudio</label>
@@ -1530,11 +1720,11 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Nombre *</label>
-                                <input type="text" id="beneficiarioNombre" class="form-control" placeholder="Nombre del beneficiario">
+                                <input type="text" id="beneficiarioNombre" class="form-control" placeholder="Nombre del beneficiario"/>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Apellido *</label>
-                                <input type="text" id="beneficiarioApellido" class="form-control" placeholder="Apellido del beneficiario">
+                                <input type="text" id="beneficiarioApellido" class="form-control" placeholder="Apellido del beneficiario"/>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Tipo ID *</label>
@@ -1544,7 +1734,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">número ID *</label>
-                                <input type="text" id="beneficiarioNumeroIdentificacion" class="form-control" placeholder="número de identificación">
+                                <input type="text" id="beneficiarioNumeroIdentificacion" class="form-control" placeholder="número de identificación"/>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Parentesco *</label>
@@ -1555,7 +1745,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Porcentaje *</label>
                                 <div class="input-group">
-                                    <input type="number" id="beneficiarioPorcentaje" class="form-control" placeholder="0.00" min="0" max="100" step="0.01" oninput="validarPorcentaje(this)">
+                                    <input type="number" id="beneficiarioPorcentaje" class="form-control" placeholder="0.00" min="0" max="100" step="0.01" oninput="validarPorcentaje(this)"/>
                                     <span class="input-group-text">%</span>
                                 </div>
                             </div>
@@ -1586,15 +1776,15 @@
                 </div>
                 <div class="modal-body">
                     <form id="formEditarBeneficiario">
-                        <input type="hidden" id="editarBeneficiarioId" value="">
+                        <input type="hidden" id="editarBeneficiarioId" value=""/>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Nombre *</label>
-                                <input type="text" id="editarBeneficiarioNombre" class="form-control" placeholder="Nombre del beneficiario">
+                                <input type="text" id="editarBeneficiarioNombre" class="form-control" placeholder="Nombre del beneficiario"/>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Apellido *</label>
-                                <input type="text" id="editarBeneficiarioApellido" class="form-control" placeholder="Apellido del beneficiario">
+                                <input type="text" id="editarBeneficiarioApellido" class="form-control" placeholder="Apellido del beneficiario"/>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Tipo ID *</label>
@@ -1832,7 +2022,7 @@
                 inicializarDataTable();
                 tablaSociosInicializada = true;
                 $('#tablaSocios').removeClass('tabla-socios-deshabilitada');
-                cargarSocios();
+                // Con serverSide, la tabla carga automáticamente en el primer draw
             }, 1500);
         }
 
@@ -1840,27 +2030,246 @@
             window.location.href = '/Dashboard.aspx';
         }
 
+        // Función para ajustar la altura del grid basándose en 10 filas fijas
+        function ajustarAlturaGrid() {
+            if (!tablaSocios) return;
+            
+            // Calcular altura máxima disponible restando todos los elementos fijos
+            var viewportHeight = $(window).height();
+            var mainContainer = $('.main-container');
+            var mainContainerOffset = mainContainer.offset();
+            var mainContainerTop = mainContainerOffset ? mainContainerOffset.top : 0;
+            var mainContainerPadding = parseFloat(mainContainer.css('padding-top')) + parseFloat(mainContainer.css('padding-bottom')) || 0;
+            var topBarHeight = $('.top-bar-section').outerHeight(true) || 0;
+            
+            // Obtener altura del footer ANTES de calcular, para asegurar que esté visible
+            var footerRow = $('.dataTables_wrapper .row.mt-3');
+            var footerHeight = footerRow.outerHeight(true) || 60;
+            
+            // Calcular altura disponible para el wrapper de DataTables
+            // Restar espacio adicional para márgenes y padding
+            var espacioAdicional = 30;
+            var alturaDisponible = viewportHeight - mainContainerTop - mainContainerPadding - topBarHeight - espacioAdicional;
+            
+            // Asegurar altura mínima
+            if (alturaDisponible < 300) {
+                alturaDisponible = 300;
+            }
+            
+            // Asegurar que el wrapper de DataTables ocupe todo el espacio disponible
+            var dataTablesWrapper = $('#tablaSocios_wrapper');
+            if (dataTablesWrapper.length) {
+                // Calcular altura para el área de scroll (sin el footer)
+                // El footer debe estar siempre visible, así que restamos su altura
+                var alturaScroll = alturaDisponible - footerHeight;
+                
+                // Asegurar altura mínima para el scroll
+                if (alturaScroll < 200) {
+                    alturaScroll = 200;
+                }
+                
+                // Aplicar altura al wrapper completo
+                dataTablesWrapper.css({
+                    'height': alturaDisponible + 'px',
+                    'max-height': alturaDisponible + 'px',
+                    'min-height': alturaDisponible + 'px'
+                });
+                
+                // Aplicar altura al contenedor de scroll - ocupar todo el espacio disponible
+                var scrollDiv = dataTablesWrapper.find('.dataTables_scroll');
+                var scrollBody = dataTablesWrapper.find('.dataTables_scrollBody');
+                if (scrollDiv.length) {
+                    scrollDiv.css({ 'min-height': alturaScroll + 'px', 'flex': '1 1 auto' });
+                }
+                if (scrollBody.length) {
+                    scrollBody.css({
+                        'min-height': alturaScroll + 'px',
+                        'max-height': alturaScroll + 'px',
+                        'height': alturaScroll + 'px',
+                        'overflow-y': 'auto !important',
+                        'overflow-x': 'auto !important'
+                    });
+                }
+                
+                // Actualizar el scrollY de DataTables dinámicamente
+                if (tablaSocios && tablaSocios.settings()[0].oScroll) {
+                    var settings = tablaSocios.settings()[0];
+                    if (settings.oScroll && settings.oScroll.sY) {
+                        // Actualizar la altura del scroll en la configuración
+                        settings.oScroll.sY = alturaScroll + 'px';
+                        // Forzar recálculo
+                        tablaSocios.columns.adjust();
+                    }
+                }
+                
+                // Asegurar que el footer esté siempre visible
+                footerRow.css({
+                    'display': 'flex !important',
+                    'visibility': 'visible !important',
+                    'opacity': '1 !important',
+                    'flex-shrink': '0 !important',
+                    'flex-grow': '0 !important'
+                });
+            }
+            
+            // Asegurar que los contenedores padre ocupen el espacio disponible
+            var tableResponsive = $('.table-responsive');
+            
+            if (tableResponsive.length) {
+                tableResponsive.css({
+                    'flex': '1 1 auto',
+                    'min-height': '0',
+                    'overflow': 'hidden',
+                    'height': '100%'
+                });
+            }
+        }
+        
         function inicializarDataTable() {
             tablaSocios = $('#tablaSocios').DataTable({
+                serverSide: true,
+                processing: true,
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
                     emptyTable: "Ningún asociado en la lista",
-                    zeroRecords: "Ningún asociado en la lista"
+                    zeroRecords: "Ningún asociado en la lista",
+                    processing: "Cargando socios..."
                 },
-                responsive: true,
-                pageLength: 10, // Menos registros por página
-                order: [[1, 'desc']],
-                scrollY: '400px', // Altura fija para scroll interno
-                scrollCollapse: true, // Colapsar filas vacías
-                paging: true, // Mantener paginación
+                responsive: false,
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                order: [[2, 'desc']], // N° Asociado
+                scrollY: '400px', // Altura inicial, se ajustará dinámicamente en ajustarAlturaGrid
+                scrollCollapse: false,
+                scroller: false,
+                paging: true,
+                autoWidth: false,
                 columnDefs: [
-                    { targets: [0, 10, 11, 12], orderable: false }, // Columnas de acción no ordenables
-                    { targets: [0, 10, 11, 12], className: 'text-center' }, // Centrar botones
-                    { targets: [5], className: 'text-left', createdCell: function (td, cellData, rowData, row, col) {
+                    { targets: [0, 1], width: '48px' }, // Trans. y Movs. mismo ancho
+                    { targets: [2], width: '60px' }, // Num. columna reducida
+                    { targets: [9, 10], visible: false }, // Ocultar Fecha Modificación y Usuario Modificó
+                    { targets: [0, 1, 11, 12], orderable: false }, // Trans, Movs y columnas de acción no ordenables
+                    { targets: [0, 1, 11, 12], className: 'text-center' }, // Centrar botones
+                    { targets: [6], className: 'text-left', createdCell: function (td, cellData, rowData, row, col) {
                         $(td).css('text-align', 'left');
                     }} // Columna de identificación alineada a la izquierda
                 ],
-                dom: 'rtip' // Tabla, información y paginación
+                dom: 'rt<"row mt-3"<"col-sm-12 col-md-4"i><"col-sm-12 col-md-4 text-center"l><"col-sm-12 col-md-4"p>>', // tabla arriba, info izquierda, length centro, paginación derecha abajo
+                searching: false, // Desactivar búsqueda de DataTables ya que usamos filtros personalizados
+                ajax: function(data, callback, settings) {
+                    const order = data.order && data.order[0];
+                    const sortColumn = (order && order.column >= 2 && order.column <= 8) ? order.column - 1 : 1;
+                    const sortDirection = order ? order.dir : 'desc';
+                    const filtros = {
+                        FiltroNombre: $('#filtroNombre').val() || '',
+                        FiltroTipo: $('#filtroTipo').val() || '',
+                        FiltroEstatus: $('#filtroEstatus').val() || '',
+                        FiltroTipoDocumento: $('#filtroTipoDocumento').val() || '',
+                        FiltroIdentificacion: $('#filtroIdentificacion').val() || '',
+                        PageSize: data.length,
+                        PageIndex: Math.floor(data.start / data.length),
+                        SortColumn: sortColumn,
+                        SortDirection: sortDirection
+                    };
+                    $.ajax({
+                        type: "POST",
+                        url: "GestionSocios.aspx/ObtenerSocios",
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify({ filtrosJson: JSON.stringify(filtros) }),
+                        dataType: "json",
+                        success: function(response) {
+                            let payload = response.d;
+                            if (typeof payload === 'string') {
+                                try { payload = JSON.parse(payload); } catch (e) { payload = { Success: false }; }
+                            }
+                            if (!payload.Success) {
+                                mostrarToast(payload.Message || 'No se pudieron cargar los socios.', 'error');
+                                callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                                return;
+                            }
+                            const socios = payload.Data || [];
+                            const totalRegistros = payload.TotalRegistros || 0;
+                            if (totalRegistros === 0 && socios.length === 0) {
+                                mostrarToast('No se encontraron socios.', 'info');
+                            }
+                            const rows = socios.map(function(socio) {
+                                const nombreCompleto = `${socio.Nombre || ''} ${socio.SegundoNombre || ''} ${socio.Apellido || ''} ${socio.SegundoApellido || ''}`.trim();
+                                const identificacion = formatearIdentificacion(socio.TipoIdentificacion, socio.NumeroIdentificacion);
+                                const estatusBadge = obtenerBadgeEstatus(socio.Estatus);
+                                const fechaCreacion = formatearFechaHora(socio.FechaCreacion);
+                                const fechaModificacion = formatearFecha(socio.FechaModificacion);
+                                const botonTrans = `<button type="button" class="btn btn-sm btn-outline-primary" onclick="event.preventDefault(); event.stopPropagation(); verTransaccionesSocio(${socio.NumeroAsociado})" title="Transacciones"><i class="fas fa-list-ul"></i></button>`;
+                                const botonMovimientos = `<button type="button" class="btn btn-sm btn-outline-info" onclick="event.preventDefault(); event.stopPropagation(); verMovimientosSocio(${socio.NumeroAsociado})" title="Ver movimientos"><i class="fas fa-list-ul"></i></button>`;
+                                agregarSocioACache(socio);
+                                return [
+                                    botonTrans,
+                                    botonMovimientos,
+                                    socio.NumeroAsociado,
+                                    socio.TipoAsociado || 'N/A',
+                                    nombreCompleto || 'N/A',
+                                    estatusBadge,
+                                    identificacion || 'N/A',
+                                    fechaCreacion,
+                                    socio.UsuarioCrea || 'N/A',
+                                    fechaModificacion,
+                                    socio.UsuarioModifica || 'N/A',
+                                    `<button type="button" class="btn btn-sm btn-outline-info" onclick="event.preventDefault(); event.stopPropagation(); generarEstadoCuenta(${socio.NumeroAsociado})" title="Generar Estado de Cuenta"><i class="fas fa-file-invoice"></i></button>`,
+                                    `<button type="button" class="btn btn-sm btn-outline-primary" onclick="event.preventDefault(); event.stopPropagation(); verSocio(${socio.NumeroAsociado})" title="Editar socio"><i class="fas fa-edit"></i></button>`,
+                                    `<button type="button" class="btn btn-sm btn-outline-danger" onclick="event.preventDefault(); event.stopPropagation(); eliminarSocio(${socio.NumeroAsociado}, '${(socio.Nombre || '')} ${(socio.Apellido || '')}')" title="Eliminar socio"><i class="fas fa-trash"></i></button>`
+                                ];
+                            });
+                            $('#loadingSocios').hide();
+                            callback({ draw: data.draw, recordsTotal: totalRegistros, recordsFiltered: totalRegistros, data: rows });
+                        },
+                        error: function() {
+                            $('#loadingSocios').hide();
+                            mostrarToast('Error al cargar socios', 'error');
+                            callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                        }
+                    });
+                },
+                drawCallback: function(settings) {
+                    // Ajustar altura del grid después de cada draw
+                    setTimeout(function() {
+                        ajustarAlturaGrid();
+                    }, 50);
+                },
+                initComplete: function(settings, json) {
+                    setTimeout(function() {
+                        // Ajustar altura del grid
+                        ajustarAlturaGrid();
+                        
+                        // Forzar visibilidad de controles de paginación
+                        var paginate = $('.dataTables_paginate');
+                        var info = $('.dataTables_info');
+                        var row = $('.dataTables_wrapper .row.mt-3');
+                        
+                        if (paginate.length) {
+                            paginate.each(function() {
+                                this.style.setProperty('display', 'block', 'important');
+                                this.style.setProperty('visibility', 'visible', 'important');
+                                this.style.setProperty('opacity', '1', 'important');
+                            });
+                        }
+                        
+                        if (info.length) {
+                            info.each(function() {
+                                this.style.setProperty('display', 'inline-block', 'important');
+                                this.style.setProperty('visibility', 'visible', 'important');
+                                this.style.setProperty('opacity', '1', 'important');
+                            });
+                        }
+                        
+                        if (row.length) {
+                            row.each(function() {
+                                this.style.setProperty('display', 'flex', 'important');
+                                this.style.setProperty('visibility', 'visible', 'important');
+                                this.style.setProperty('opacity', '1', 'important');
+                            });
+                        }
+                        
+                    }, 200);
+                }
             });
 
             // Agregar evento de doble clic en las filas
@@ -1868,8 +2277,8 @@
                 e.preventDefault();
                 e.stopPropagation();
                 const data = tablaSocios.row(this).data();
-                if (data && data[1]) { // Verificar que hay datos y que el número de asociado existe
-                    const numeroAsociado = parseInt(data[1]);
+                if (data && data[2]) { // Verificar que hay datos y que el número de asociado existe (col 2 = N° Asociado)
+                    const numeroAsociado = parseInt(data[2]);
                     verSocio(numeroAsociado);
                 }
             });
@@ -1890,6 +2299,25 @@
                     $(this).css('background-color', '');
                     $(this).find('td').css('background-color', '');
                 }
+            });
+            
+            // Ajustar altura cuando se redimensiona la ventana
+            $(window).on('resize', function() {
+                setTimeout(function() {
+                    if (tablaSocios) {
+                        ajustarAlturaGrid();
+                        tablaSocios.columns.adjust().draw();
+                    }
+                }, 100);
+            });
+            
+            // Ajustar altura cuando cambie el número de filas por página
+            $(document).on('change', '.dataTables_length select', function() {
+                setTimeout(function() {
+                    if (tablaSocios) {
+                        ajustarAlturaGrid();
+                    }
+                }, 100);
             });
         }
 
@@ -2082,112 +2510,12 @@
             });
         }
 
-        function cargarSocios() {
+        function cargarSocios(resetPage) {
             if (!tablaSocios) {
-                setTimeout(cargarSocios, 300);
+                setTimeout(function() { cargarSocios(resetPage); }, 300);
                 return;
             }
-            $('#loadingSocios').show();
-            
-            const filtros = {
-                FiltroNombre: $('#filtroNombre').val(),
-                FiltroTipo: $('#filtroTipo').val(),
-                FiltroEstatus: $('#filtroEstatus').val(),
-                FiltroTipoDocumento: $('#filtroTipoDocumento').val(),
-                FiltroIdentificacion: $('#filtroIdentificacion').val()
-            };
-
-            $.ajax({
-                type: "POST",
-                url: "GestionSocios.aspx/ObtenerSocios",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({ filtrosJson: JSON.stringify(filtros) }),
-                dataType: "text",
-                success: function(rawResponse) {
-                    $('#loadingSocios').hide();
-
-                    let payload = rawResponse;
-                    if (typeof rawResponse === 'string') {
-                        const trimmed = rawResponse.trim();
-                        if (trimmed.startsWith('<') || trimmed.startsWith('if')) {
-                            mostrarToast('Respuesta inesperada al cargar socios.', 'error');
-                            return;
-                        }
-                        try {
-                            payload = JSON.parse(trimmed);
-                        } catch (parseError) {
-                            mostrarToast('No se pudo interpretar la respuesta de socios.', 'error');
-                            return;
-                        }
-                    }
-
-                    if (payload && payload.d !== undefined) {
-                        try {
-                            payload = typeof payload.d === 'string' ? JSON.parse(payload.d) : payload.d;
-                        } catch (parseInnerError) {
-                            mostrarToast('No se pudo interpretar el contenido de socios.', 'error');
-                            return;
-                        }
-                    }
-
-                    if (payload.Success) {
-                        const socios = payload.Data;
-                        const totalRegistros = payload.TotalRegistros;
-                        
-                        tablaSocios.clear();
-                        
-                        if (totalRegistros > 0) {
-                        socios.forEach(function(socio) {
-                            const nombreCompleto = `${socio.Nombre || ''} ${socio.SegundoNombre || ''} ${socio.Apellido || ''} ${socio.SegundoApellido || ''}`.trim();
-                            const identificacion = formatearIdentificacion(socio.TipoIdentificacion, socio.NumeroIdentificacion);
-                            const estatusBadge = obtenerBadgeEstatus(socio.Estatus);
-                            const fechaCreacion = formatearFechaHora(socio.FechaCreacion);
-                            const fechaModificacion = formatearFecha(socio.FechaModificacion);
-                            const botonMovimientos = `<button type="button" class="btn btn-sm btn-outline-info" onclick="event.preventDefault(); event.stopPropagation(); verMovimientosSocio(${socio.NumeroAsociado})" title="Ver movimientos"><i class="fas fa-list-ul"></i></button>`;
-
-                            agregarSocioACache(socio);
-
-                            tablaSocios.row.add([
-                                botonMovimientos,
-                                socio.NumeroAsociado,
-                                socio.TipoAsociado || 'N/A',
-                                nombreCompleto || 'N/A',
-                                estatusBadge,
-                                identificacion || 'N/A',
-                                fechaCreacion,
-                                socio.UsuarioCrea || 'N/A',
-                                fechaModificacion,
-                                socio.UsuarioModifica || 'N/A',
-                                `<button type="button" class="btn btn-sm btn-outline-info" onclick="event.preventDefault(); event.stopPropagation(); generarEstadoCuenta(${socio.NumeroAsociado})" title="Generar Estado de Cuenta">
-                                    <i class="fas fa-file-invoice"></i>
-                                </button>`,
-                                `<button type="button" class="btn btn-sm btn-outline-primary" onclick="event.preventDefault(); event.stopPropagation(); verSocio(${socio.NumeroAsociado})" title="Editar socio">
-                                    <i class="fas fa-edit"></i>
-                                </button>`,
-                                `<button type="button" class="btn btn-sm btn-outline-danger" onclick="event.preventDefault(); event.stopPropagation(); eliminarSocio(${socio.NumeroAsociado}, '${socio.Nombre} ${socio.Apellido}')" title="Eliminar socio">
-                                    <i class="fas fa-trash"></i>
-                                </button>`
-                            ]);
-                        });
-                        } else {
-                            // Mostrar mensaje cuando no hay registros
-                            mostrarToast('No se encontraron socios.', 'info');
-                        }
-                        
-                        tablaSocios.draw();
-                    } else {
-                        // Mostrar error del servidor
-
-                        mostrarToast(payload.Message || 'No se pudieron cargar los socios.', 'error');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    $('#loadingSocios').hide();
-					
-
-                    mostrarToast('Error al cargar socios', 'error');
-                }
-            });
+            tablaSocios.ajax.reload(null, !!resetPage); // resetPage=true → ir a página 1 (útil tras crear socio)
         }
 
         function aplicarFiltros() {
@@ -2837,7 +3165,7 @@
                             
                             // Cerrar modal y actualizar lista después de crear socio
                             $('#modalSocio').modal('hide');
-                            cargarSocios();
+                            cargarSocios(true); // Ir a página 1 para ver el socio recién creado
                         } else {
                             // Cerrar modal si es edición
                             $('#modalSocio').modal('hide');
@@ -4625,6 +4953,127 @@
                     mostrarToast('Error al actualizar beneficiario', 'error');
                 }
             });
+        }
+
+        function verTransaccionesSocio(numeroAsociado) {
+            const socio = obtenerSocioDeCache(numeroAsociado);
+            const titulo = socio ? `${socio.Nombre || ''} ${socio.Apellido || ''}`.trim() : '';
+            $('#tituloTransaccionesSocio').html(titulo ? `<span class="badge bg-secondary">#${numeroAsociado}</span> ${titulo}` : `<span class="badge bg-secondary">#${numeroAsociado}</span>`);
+            $('#estadoTransaccionesSocio').addClass('d-none');
+            $('#contenedorTablaTransaccionesSocio').hide();
+            $('#spinnerTransaccionesSocio').removeClass('d-none');
+
+            const modal = new bootstrap.Modal(document.getElementById('modalTransaccionesSocio'));
+            modal.show();
+
+            $.ajax({
+                type: 'POST',
+                url: 'GestionSocios.aspx/ObtenerTransaccionesSocio',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ numeroAsociado: numeroAsociado }),
+                dataType: 'json',
+                success: function(response) {
+                    $('#spinnerTransaccionesSocio').addClass('d-none');
+                    let data = response.d;
+                    if (typeof data === 'string') data = JSON.parse(data);
+                    if (!data.Success) {
+                        mostrarToast(data.Message || 'Error al cargar transacciones', 'error');
+                        $('#estadoTransaccionesSocio').removeClass('d-none').find('p').text(data.Message || 'Error al cargar.');
+                        return;
+                    }
+                    const lista = data.Data || [];
+                    const tbody = $('#tbodyTransaccionesSocio');
+                    tbody.empty();
+                    if (lista.length === 0) {
+                        $('#estadoTransaccionesSocio').removeClass('d-none');
+                    } else {
+                        $('#contenedorTablaTransaccionesSocio').show();
+                        lista.forEach(function(t) {
+                            const fechaHora = t.FechaHora ? (typeof t.FechaHora === 'string' && t.FechaHora.indexOf('/Date(') >= 0
+                                ? new Date(parseInt(t.FechaHora.match(/\d+/)[0])).toLocaleString('es-PA')
+                                : t.FechaHora) : 'N/A';
+                            const btnImprimir = `<button type="button" class="btn btn-sm btn-outline-primary" onclick="imprimirComprobanteLotePorId(${t.IDTransaccion})" title="Imprimir comprobante"><i class="fas fa-print"></i></button>`;
+                            tbody.append(`<tr><td>${t.IDTransaccion || ''}</td><td>${fechaHora}</td><td>${t.Cajero || 'N/A'}</td><td>${t.CantTran || 0}</td><td>${btnImprimir}</td></tr>`);
+                        });
+                    }
+                },
+                error: function() {
+                    $('#spinnerTransaccionesSocio').addClass('d-none');
+                    $('#estadoTransaccionesSocio').removeClass('d-none').find('p').text('Error al cargar transacciones.');
+                    mostrarToast('Error al cargar transacciones', 'error');
+                }
+            });
+        }
+
+        function imprimirComprobanteLotePorId(idTrans) {
+            $.ajax({
+                type: 'POST',
+                url: '../Transacciones/Transacciones.aspx/GenerarComprobanteLote',
+                data: JSON.stringify({ idTrans: idTrans }),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.d && response.d.Resultado === 'SUCCESS') {
+                        mostrarModalComprobante(response.d.Html, '', '');
+                    } else {
+                        mostrarToast((response.d && response.d.Mensaje) || 'Error al generar comprobante', 'error');
+                    }
+                },
+                error: function(xhr, status, err) {
+                    mostrarToast('Error al generar comprobante: ' + (err || xhr.statusText), 'error');
+                }
+            });
+        }
+
+        function mostrarModalComprobante(htmlContent, capitalMovimientoId, interesesMovimientoId) {
+            const modalHtml = `
+                <div id="modalComprobante" class="comprobante-modal-overlay">
+                    <div class="comprobante-modal">
+                        <div class="comprobante-modal-header">
+                            <h5><i class="fas fa-receipt text-primary"></i> Comprobante de Transacción</h5>
+                            <button type="button" class="btn-close-custom" onclick="cerrarModalComprobante()"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="comprobante-modal-body">
+                            <div class="comprobante-container">${htmlContent}</div>
+                        </div>
+                        <div class="comprobante-modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="cerrarModalComprobante()"><i class="fas fa-times"></i> Cerrar</button>
+                            <button type="button" class="btn btn-primary" onclick="imprimirDesdeModal('${capitalMovimientoId || ''}', '${interesesMovimientoId || ''}')"><i class="fas fa-print"></i> Imprimir</button>
+                        </div>
+                    </div>
+                </div>`;
+            $('body').append(modalHtml);
+            if (!$('#comprobanteModalStylesSocios').length) {
+                $('head').append(`
+                    <style id="comprobanteModalStylesSocios">
+                        .comprobante-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10000; }
+                        .comprobante-modal { background: white; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); width: 95%; max-width: 900px; max-height: 95vh; overflow: hidden; display: flex; flex-direction: column; }
+                        .comprobante-modal-header { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+                        .comprobante-modal-body { flex: 1; overflow: auto; padding: 20px; background: #f8f9fa; }
+                        .comprobante-container { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                        .comprobante-modal-footer { padding: 15px 20px; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 10px; }
+                        .btn-close-custom { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 0 5px; }
+                    </style>`);
+            }
+        }
+
+        function cerrarModalComprobante() {
+            $('#modalComprobante').remove();
+        }
+
+        function imprimirDesdeModal(capitalMovimientoId, interesesMovimientoId) {
+            const ventanaImpresion = window.open('', '_blank', 'width=800,height=600');
+            const contenidoComprobante = $('#modalComprobante .comprobante-container').html();
+            ventanaImpresion.document.write(`
+                <!DOCTYPE html><html><head><title>Comprobante de Transacción</title>
+                <style>body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+                .comprobante { height: auto !important; } .no-print { display: none !important; }</style></head>
+                <body>${contenidoComprobante}</body></html>`);
+            ventanaImpresion.document.close();
+            ventanaImpresion.onload = function() {
+                setTimeout(function() { ventanaImpresion.print(); ventanaImpresion.close(); }, 500);
+            };
+            cerrarModalComprobante();
         }
 
         function verMovimientosSocio(numeroAsociado) {

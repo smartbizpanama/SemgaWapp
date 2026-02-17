@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Reportes.aspx.vb" Inherits="SemgaWapp.Reportes" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Reportes.aspx.vb" Inherits="SemgaWapp.Reportes" %>
 
 <!DOCTYPE html>
 
@@ -214,12 +214,51 @@
             margin-bottom: 4px;
         }
         
-        /* Tabla responsive con scroll interno */
+        /* Tabla responsive: scroll en el contenido, paginación siempre visible */
         .table-responsive {
-            overflow-x: hidden !important;
-            overflow-y: auto !important;
             flex: 1;
-            max-height: none;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Contenedor DataTables: hace scroll; info y paginación quedan sticky abajo */
+        .table-responsive .dataTables_wrapper {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: block;
+        }
+
+        /* Footer: leyenda y botones de paginación en la misma fila, siempre visibles */
+        .table-responsive .dataTables_wrapper .dataTables_footer_row {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 16px;
+            background: #fff;
+            z-index: 5;
+            padding: 10px 0;
+            margin: 0;
+            border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+        }
+
+        .table-responsive .dataTables_wrapper .dataTables_footer_row .dataTables_info,
+        .table-responsive .dataTables_wrapper .dataTables_footer_row .dataTables_paginate {
+            margin: 0;
+            padding: 0;
+        }
+
+        .table-responsive .dataTables_wrapper .dataTables_footer_row .dataTables_info {
+            color: #6c757d;
+            font-size: 13px;
         }
 
         .modal-resultados-body .table-responsive {
@@ -229,6 +268,7 @@
         
         .table-container {
             flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -740,35 +780,52 @@
             flex-direction: column;
         }
 
+        /* Contenedor sin scroll: el scroll lo lleva el grid (DataTables scrollBody) */
         .modal-resultados-body .table-responsive {
-            overflow-x: auto !important;
-            overflow-y: auto;
-            max-height: calc(100vh - 120px);
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
             flex: 1;
+            min-height: 0;
+            overflow: visible;
             width: 95%;
             margin: 0 auto;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Scrollbar más sutil */
-        .modal-resultados-body .table-responsive::-webkit-scrollbar {
+        /* Scroll en el cuerpo del grid, footer de paginación siempre visible */
+        .modal-resultados-body .dataTables_wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .modal-resultados-body .dataTables_scroll {
+            flex: 1;
+            min-height: 0;
+        }
+        .modal-resultados-body .dataTables_scrollBody {
+            overflow-y: auto !important;
+            overflow-x: auto !important;
+        }
+        .modal-resultados-body .dataTables_scrollBody::-webkit-scrollbar {
             height: 8px;
             width: 8px;
         }
-
-        .modal-resultados-body .table-responsive::-webkit-scrollbar-track {
+        .modal-resultados-body .dataTables_scrollBody::-webkit-scrollbar-track {
             background: #f8f9fa;
             border-radius: 4px;
         }
-
-        .modal-resultados-body .table-responsive::-webkit-scrollbar-thumb {
+        .modal-resultados-body .dataTables_scrollBody::-webkit-scrollbar-thumb {
             background: #6c757d;
             border-radius: 4px;
         }
-
-        .modal-resultados-body .table-responsive::-webkit-scrollbar-thumb:hover {
+        .modal-resultados-body .dataTables_scrollBody::-webkit-scrollbar-thumb:hover {
             background: #495057;
+        }
+        /* Footer fijo: info y paginación siempre visibles */
+        .modal-resultados-body .dataTables_info,
+        .modal-resultados-body .dataTables_paginate {
+            flex-shrink: 0;
+            padding: 8px 0;
         }
 
         .modal-resultados-body .table {
@@ -855,10 +912,38 @@
             overflow: hidden !important;
         }
 
-        /* Solo permitir scroll en la tabla */
-        .modal-resultados-body .table-responsive {
-            overflow-x: auto !important;
-            overflow-y: auto !important;
+        /* Scroll solo en .dataTables_scrollBody (ya definido arriba) */
+
+        /* Overlay de carga mientras se genera el reporte */
+        .loading-reporte-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .loading-reporte-overlay .spinner-reporte {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #87CEEB;
+            border-radius: 50%;
+            animation: spin-reporte 0.8s linear infinite;
+        }
+        .loading-reporte-overlay .texto-carga {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        @keyframes spin-reporte {
+            to { transform: rotate(360deg); }
         }
 
     </style>
@@ -910,6 +995,12 @@
             </div>
         </div>
     </form>
+
+    <!-- Overlay de carga al generar reporte -->
+    <div id="loadingReporteOverlay" class="loading-reporte-overlay" style="display: none;">
+        <div class="spinner-reporte"></div>
+        <div class="texto-carga">Generando reporte, espere por favor...</div>
+    </div>
 
     <!-- Modal de opciones CSV -->
     <div id="modalOpcionesCSV" class="modal-csv-overlay" style="display: none;">
@@ -998,8 +1089,29 @@
                     { title: 'Descripción' },
                     { title: 'Acción' },
                     { title: 'Comando', visible: false }
-                ]
+                ],
+                drawCallback: function() {
+                    asegurarFooterPaginacionEnFila();
+                }
             });
+            // Agrupar leyenda y paginación en una sola fila (primera vez)
+            setTimeout(asegurarFooterPaginacionEnFila, 0);
+        }
+
+        // Leyenda y botones de paginación en la misma fila
+        function asegurarFooterPaginacionEnFila() {
+            var wrapper = $('#tablaReportes').closest('.table-responsive').find('.dataTables_wrapper');
+            if (!wrapper.length) return;
+            var info = wrapper.find('> .dataTables_info');
+            var paginate = wrapper.find('> .dataTables_paginate');
+            if (!info.length || !paginate.length) return;
+            var row = wrapper.find('.dataTables_footer_row');
+            if (!row.length) {
+                row = $('<div class="dataTables_footer_row"></div>');
+                row.appendTo(wrapper);
+            }
+            info.appendTo(row);
+            paginate.appendTo(row);
         }
 
         // Cargar reportes al inicializar
@@ -1151,6 +1263,8 @@
 
         // Ejecutar comando SQL del reporte
         function ejecutarComandoReporte(id, nombre, comando) {
+            $('#loadingReporteOverlay').show();
+
             $.ajax({
                 type: "POST",
                 url: "Reportes.aspx/EjecutarComandoReporte",
@@ -1186,14 +1300,17 @@
                             mostrarResultadosReporte(nombre, datos);
                         } else {
                             showToast('No se encontraron datos para el reporte', 'warning');
+                            $('#loadingReporteOverlay').hide();
                         }
                         
                     } catch (error) {
                         showToast('Error al procesar los resultados del reporte', 'error');
+                        $('#loadingReporteOverlay').hide();
                     }
                 },
                 error: function(xhr, status, error) {
                     showToast('Error al ejecutar el comando del reporte', 'error');
+                    $('#loadingReporteOverlay').hide();
                 }
             });
         }
@@ -1246,103 +1363,46 @@
             // Llenar tabla con datos
             llenarTablaResultados(datos);
             
-            // Mostrar modal
-            $('#modalResultados').fadeIn(300);
+            // Mostrar modal y ocultar loading solo cuando la ventana esté visible
+            $('#modalResultados').fadeIn(300, function() {
+                $('#loadingReporteOverlay').hide();
+            });
         }
 
-        // Llenar tabla con los resultados
+        // Variable para la DataTable de resultados (paginación 100 filas)
+        let tablaResultadosDT = null;
+
+        // Llenar tabla con los resultados usando DataTables (paginación de 100 filas)
         function llenarTablaResultados(datos) {
             if (!datos || datos.length === 0) {
                 $('#tbodyResultados').html('<tr><td colspan="100%" class="text-center">No hay datos para mostrar</td></tr>');
                 return;
             }
-            
-            // Obtener columnas del primer objeto
+
+            // Destruir DataTable anterior si existe
+            if (tablaResultadosDT && $.fn.DataTable.isDataTable('#tablaResultados')) {
+                tablaResultadosDT.destroy();
+                $('#tablaResultados').empty();
+            }
+
             const columnas = Object.keys(datos[0]);
-            
-            // Crear encabezados con funcionalidad de ordenamiento
-            let theadHTML = '<tr>';
-            columnas.forEach((columna, index) => {
-                theadHTML += `<th class="sortable" data-column="${index}">${columna}</th>`;
-            });
-            theadHTML += '</tr>';
-            $('#theadResultados').html(theadHTML);
-            
-            // Agregar event listeners para ordenamiento
-            agregarFuncionalidadOrdenamiento();
-            
-            // Crear filas de datos
-            let tbodyHTML = '';
-            datos.forEach((fila, index) => {
-                tbodyHTML += '<tr>';
-                columnas.forEach(columna => {
-                    const valor = fila[columna] || '';
-                    tbodyHTML += `<td>${valor}</td>`;
-                });
-                tbodyHTML += '</tr>';
-            });
-            
-            $('#tbodyResultados').html(tbodyHTML);
-        }
+            const columnsDef = columnas.map(col => ({ title: col, data: col }));
 
-        // Agregar funcionalidad de ordenamiento
-        function agregarFuncionalidadOrdenamiento() {
-            $('.modal-resultados-body .table th.sortable').on('click', function() {
-                const columnIndex = parseInt($(this).data('column'));
-                const columnName = $(this).text().trim();
-                
-                // Determinar dirección de ordenamiento basada en la clase actual
-                let sortDirection = 'asc';
-                if ($(this).hasClass('sort-asc')) {
-                    sortDirection = 'desc';
-                } else if ($(this).hasClass('sort-desc')) {
-                    sortDirection = 'asc';
-                }
-                
-                // Remover clases de ordenamiento de todas las columnas
-                $('.modal-resultados-body .table th').removeClass('sort-asc sort-desc');
-                
-                // Agregar clase de ordenamiento a la columna actual
-                $(this).addClass(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
-                
-                // Ordenar datos
-                ordenarDatos(columnIndex, sortDirection);
-            });
-        }
-
-        // Ordenar datos de la tabla
-        function ordenarDatos(columnIndex, direction) {
-            // Obtener datos actuales
-            const tbody = $('#tbodyResultados');
-            const rows = tbody.find('tr').toArray();
-            
-            // Ordenar filas
-            rows.sort((a, b) => {
-                const aValue = $(a).find('td').eq(columnIndex).text().trim();
-                const bValue = $(b).find('td').eq(columnIndex).text().trim();
-                
-                // Intentar convertir a números si es posible para ordenamiento
-                // Solo para comparación, no para modificar los valores mostrados
-                const aNum = parseFloat(aValue.replace(',', '.'));
-                const bNum = parseFloat(bValue.replace(',', '.'));
-                
-                let comparison = 0;
-                if (!isNaN(aNum) && !isNaN(bNum)) {
-                    // Comparación numérica
-                    comparison = aNum - bNum;
-                } else {
-                    // Comparación de texto
-                    comparison = aValue.localeCompare(bValue, 'es', { numeric: true });
-                }
-                
-                const result = direction === 'asc' ? comparison : -comparison;
-                return result;
-            });
-            
-            // Reordenar filas en la tabla
-            tbody.empty();
-            rows.forEach((row, index) => {
-                tbody.append(row);
+            tablaResultadosDT = $('#tablaResultados').DataTable({
+                data: datos,
+                columns: columnsDef,
+                pageLength: 100,
+                lengthMenu: [[100, 200, 500], [100, 200, 500]],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                },
+                order: [[0, 'asc']],
+                responsive: false,
+                scrollX: true,
+                scrollY: 'calc(100vh - 220px)',
+                scroller: false,
+                dom: 'lrtip',
+                search: false
             });
         }
 
@@ -1357,10 +1417,13 @@
                 return;
             }
 
-            // Obtener datos de la tabla actual (con el orden actual)
-            const datosTablaActual = obtenerDatosTablaActual();
+            // Usar todos los datos del reporte para exportar (paginación no afecta la exportación)
+            const datosTablaActual = datosReporteActual;
 
-            // Mostrar indicador de carga
+            // Mostrar mismo loading indicator que al generar reporte
+            $('#loadingReporteOverlay').show();
+            $('.loading-reporte-overlay .texto-carga').text('Exportando a Excel, espere por favor...');
+
             const botonExcel = $('.export-buttons-compact .btn-success');
             const textoOriginal = botonExcel.html();
             botonExcel.html('<i class="fas fa-spinner fa-spin"></i> ...');
@@ -1408,7 +1471,8 @@
                     showToast('Error al exportar a Excel', 'error');
                 },
                 complete: function() {
-                    // Restaurar botón
+                    $('#loadingReporteOverlay').hide();
+                    $('.loading-reporte-overlay .texto-carga').text('Generando reporte, espere por favor...');
                     botonExcel.html(textoOriginal);
                     botonExcel.prop('disabled', false);
                 }
@@ -1444,8 +1508,8 @@
                 }
             }
 
-            // Obtener datos de la tabla actual (con el orden actual)
-            const datosTablaActual = obtenerDatosTablaActual();
+            // Usar todos los datos del reporte para exportar (paginación no afecta la exportación)
+            const datosTablaActual = datosReporteActual;
 
             // Mostrar indicador de carga
             const botonCSV = $('.modal-csv-footer .btn-info');
@@ -1539,6 +1603,10 @@
 
         // Cerrar modal de resultados
         function cerrarModalResultados() {
+            if (tablaResultadosDT && $.fn.DataTable.isDataTable('#tablaResultados')) {
+                tablaResultadosDT.destroy();
+                tablaResultadosDT = null;
+            }
             $('#modalResultados').fadeOut(300, function() {
                 $(this).remove();
             });

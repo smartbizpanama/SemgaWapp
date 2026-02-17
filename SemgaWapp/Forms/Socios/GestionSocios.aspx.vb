@@ -1,4 +1,4 @@
-﻿Imports System.Web.Services
+Imports System.Web.Services
 Imports System.Web.Script.Services
 Imports System.Web.Script.Serialization
 Imports SBSqlClient
@@ -10,7 +10,7 @@ Imports System.Web.Security
 Imports System.Text
 
 Public Class GestionSocios
-    Inherits System.Web.UI.Page
+    Inherits BasePage
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         ' Verificar autenticación
@@ -18,6 +18,7 @@ Public Class GestionSocios
             Response.Redirect("~/Login.aspx")
             Return
         End If
+        If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
 
         ' Manejar descarga de archivos Excel
         If Request.QueryString("action") = "download" AndAlso Not String.IsNullOrEmpty(Request.QueryString("file")) Then
@@ -293,6 +294,22 @@ Public Class GestionSocios
                 If Not String.IsNullOrEmpty(If(filtros("FiltroIdentificacion") IsNot Nothing, filtros("FiltroIdentificacion").ToString(), Nothing)) Then
                     .Add("@FiltroIdentificacion", filtros("FiltroIdentificacion").ToString())
                 End If
+                Dim pageSize As Integer = 25
+                Dim pageIndex As Integer = 0
+                Dim sortColumn As Integer = 1
+                Dim sortDirection As String = "desc"
+                If filtros("PageSize") IsNot Nothing Then Integer.TryParse(filtros("PageSize").ToString(), pageSize)
+                If filtros("PageIndex") IsNot Nothing Then Integer.TryParse(filtros("PageIndex").ToString(), pageIndex)
+                If filtros("SortColumn") IsNot Nothing Then Integer.TryParse(filtros("SortColumn").ToString(), sortColumn)
+                If filtros("SortDirection") IsNot Nothing Then sortDirection = filtros("SortDirection").ToString()
+                If pageSize < 1 Then pageSize = 25
+                If pageIndex < 0 Then pageIndex = 0
+                If sortColumn < 1 OrElse sortColumn > 9 Then sortColumn = 1
+                If String.IsNullOrEmpty(sortDirection) OrElse (sortDirection <> "asc" AndAlso sortDirection <> "desc") Then sortDirection = "desc"
+                .Add("@PageSize", pageSize)
+                .Add("@PageIndex", pageIndex)
+                .Add("@SortColumn", sortColumn)
+                .Add("@SortDirection", sortDirection)
             End With
 
             ModGlobal.EscribirLog($"Ejecutando SQL: {sSql} {uDBA.getParamList()}")
@@ -312,14 +329,22 @@ Public Class GestionSocios
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 
-            ' Convertir DataTable a JSON
+            ' TotalRegistros: leer de la columna del SP (paginación server-side)
+            Dim totalRegistros As Integer = dt.Rows.Count
+            If dt.Rows.Count > 0 AndAlso dt.Columns.Contains("TotalRegistros") Then
+                Integer.TryParse(dt.Rows(0)("TotalRegistros").ToString(), totalRegistros)
+            End If
+
+            ' Convertir DataTable a JSON (excluir TotalRegistros de cada item)
             Dim serializer As New JavaScriptSerializer()
             Dim jsonData As New List(Of Dictionary(Of String, Object))
 
             For Each row As DataRow In dt.Rows
                 Dim item As New Dictionary(Of String, Object)
                 For Each column As DataColumn In dt.Columns
-                    item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
+                    If column.ColumnName <> "TotalRegistros" Then
+                        item(column.ColumnName) = If(row(column) Is DBNull.Value, Nothing, row(column))
+                    End If
                 Next
                 jsonData.Add(item)
             Next
@@ -328,7 +353,7 @@ Public Class GestionSocios
             Dim result As New Dictionary(Of String, Object)
             result("Success") = True
             result("Message") = ""
-            result("TotalRegistros") = dt.Rows.Count
+            result("TotalRegistros") = totalRegistros
             result("Data") = jsonData
 
             ModGlobal.EscribirLog("Metodo ObtenerSocios completado exitosamente")
@@ -345,6 +370,45 @@ Public Class GestionSocios
             result("Data") = New List(Of Object)
 
             Dim serializer As New JavaScriptSerializer()
+            Return serializer.Serialize(result)
+        End Try
+    End Function
+
+    <WebMethod(EnableSession:=True)>
+    <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+    Public Shared Function ObtenerTransaccionesSocio(numeroAsociado As Integer) As String
+        Dim serializer As New JavaScriptSerializer()
+        Try
+            Dim uDBA As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+            uDBA.Parametros.Add("@NumeroAsociado", numeroAsociado)
+            Dim dt As DataTable = uDBA.GetDataTableSql("Exec spTransacciones_Listar")
+
+            If uDBA.MensajeError <> "" Then
+                Dim resultError As New Dictionary(Of String, Object)
+                resultError("Success") = False
+                resultError("Message") = uDBA.MensajeError
+                resultError("Data") = New List(Of Object)
+                Return serializer.Serialize(resultError)
+            End If
+
+            Dim jsonData As New List(Of Dictionary(Of String, Object))
+            For Each row As DataRow In dt.Rows
+                Dim item As New Dictionary(Of String, Object)
+                For Each col As DataColumn In dt.Columns
+                    item(col.ColumnName) = If(row(col) Is DBNull.Value, Nothing, row(col))
+                Next
+                jsonData.Add(item)
+            Next
+
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = True
+            result("Data") = jsonData
+            Return serializer.Serialize(result)
+        Catch ex As Exception
+            Dim result As New Dictionary(Of String, Object)
+            result("Success") = False
+            result("Message") = ex.Message
+            result("Data") = New List(Of Object)
             Return serializer.Serialize(result)
         End Try
     End Function
@@ -573,6 +637,19 @@ Public Class GestionSocios
             End If
 
             ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros devueltos: " & dt.Rows.Count.ToString())
+
+            ' Verificar si el SP devolvió un error lógico en la columna ErrorMessage
+            If dt.Rows.Count > 0 AndAlso dt.Columns.Contains("ErrorMessage") AndAlso
+               dt.Rows(0)("ErrorMessage") IsNot DBNull.Value AndAlso
+               Not String.IsNullOrWhiteSpace(dt.Rows(0)("ErrorMessage").ToString()) Then
+                Dim errorMsg As String = dt.Rows(0)("ErrorMessage").ToString().Trim()
+                ModGlobal.EscribirLog("Error lógico del SP al crear socio: " & errorMsg)
+                Dim resultError As New Dictionary(Of String, Object)
+                resultError("Success") = False
+                resultError("Message") = errorMsg
+                resultError("Data") = Nothing
+                Return serializer.Serialize(resultError)
+            End If
 
             ' Obtener el número de asociado generado
             Dim numeroAsociadoGenerado As Integer = 0
@@ -2151,6 +2228,7 @@ Public Class GestionSocios
                     Dim intereses As String = If(Not IsDBNull(row("Intereses")), Convert.ToDecimal(row("Intereses")).ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture), "$0.00")
                     Dim saldoActual As String = If(Not IsDBNull(row("SaldoActual")), Convert.ToDecimal(row("SaldoActual")).ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture), "$0.00")
                     Dim codigoRubro As String = If(Not IsDBNull(row("CodigoRubro")), row("CodigoRubro").ToString().ToUpper(), "")
+                    Dim descAuxiliar As String = If(Not IsDBNull(row("DescAuxiliar")), row("DescAuxiliar").ToString(), "")
 
                     ' Botón para ver detalle de intereses
                     ' Mostrar siempre el botón (el modal verificará si hay datos)
@@ -2161,6 +2239,7 @@ Public Class GestionSocios
 
                     filasTabla &= $"<tr data-auxiliar-id=""{idAuxiliar}"">" & vbCrLf &
                         $"    <td>{tipoAuxiliar}</td>" & vbCrLf &
+                        $"    <td>{descAuxiliar}</td>" & vbCrLf &
                         $"    <td>{numeroCuenta}</td>" & vbCrLf &
                         $"    <td>{fechaInicio}</td>" & vbCrLf &
                         $"    <td>{montoOriginal}</td>" & vbCrLf &
@@ -2171,7 +2250,7 @@ Public Class GestionSocios
                         $"</tr>" & vbCrLf
                 Next
             Else
-                filasTabla = "<tr><td colspan='8' style='text-align: center; padding: 20px;'>No se encontraron registros</td></tr>"
+                filasTabla = "<tr><td colspan='9' style='text-align: center; padding: 20px;'>No se encontraron registros</td></tr>"
             End If
 
             htmlTemplate = htmlTemplate.Replace("@FilasTabla", filasTabla)

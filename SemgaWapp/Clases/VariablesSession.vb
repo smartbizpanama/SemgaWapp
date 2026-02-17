@@ -1,4 +1,4 @@
-﻿Module VariablesSesion
+Module VariablesSesion
 
     ' Variables de sesión para el usuario autenticado
     Public Const UsuarioId As String = "UsuarioId"
@@ -11,6 +11,11 @@
     Public Const NivelAcceso As String = "NivelAcceso"
     Public Const RolNombre As String = "RolNombre"
     Public Const DepartamentoNombre As String = "DepartamentoNombre"
+
+    ' Permisos de menú (cargados al iniciar sesión)
+    Public Const MenuPermisosJson As String = "MenuPermisosJson"
+    Public Const MenuPermisosAdmin As String = "MenuPermisosAdmin"
+    Public Const MensajePermiso As String = "MensajePermiso"
 
     ' Variables de sesión para la aplicación
     Public Const ConnectionString As String = "ConnectionString"
@@ -26,6 +31,7 @@
 
 
     'PARAM KEYS
+    Public Const CANT_TRANS_LOTE As String = "CANT_TRANS_LOTE"
     Public Const MAYUS_AUTOM_CREACION_SOCIOS As String = "MAYUS_AUTOM_CREACION_SOCIOS"
     Public Const MaxLoginAttempts As String = "MaxLoginAttempts"
     Public Const SessionTimeout As String = "SessionTimeout"

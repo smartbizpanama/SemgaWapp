@@ -1,6 +1,12 @@
 /**
  * Sistema de Notificaciones Toast Global
- * Funciones para mostrar notificaciones y confirmaciones usando Bootstrap 5
+ * Funciones para mostrar notificaciones y confirmaciones usando Bootstrap 5.
+ *
+ * Clase global: .toast-container
+ * Posición del contenedor: usar modificador en el contenedor
+ *   - .toast-container--top-end  → esquina superior derecha (toasts informativos)
+ *   - .toast-container--center   → centro de la ventana (confirms)
+ * Incluir en la página: <link href="Scripts/toast-global.css" rel="stylesheet" />
  */
 
 /**
@@ -11,14 +17,15 @@
  * @param {number} duration - Duración en milisegundos (default: 4000)
  */
 function showToast(type, title, message, duration = 4000) {
-    // Obtener o crear el contenedor de toasts
-    let toastContainer = document.getElementById('toastContainer');
+    // Obtener o crear el contenedor global de toasts (posición: top-end)
+    var toastContainer = document.getElementById('toastContainer');
     if (!toastContainer) {
         toastContainer = document.createElement('div');
         toastContainer.id = 'toastContainer';
-        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-        toastContainer.style.zIndex = '1060';
+        toastContainer.className = 'toast-container toast-container--top-end';
         document.body.appendChild(toastContainer);
+    } else if (!toastContainer.classList.contains('toast-container--top-end')) {
+        toastContainer.classList.add('toast-container--top-end');
     }
 
     const toastId = 'toast-' + Date.now();
@@ -76,88 +83,60 @@ function getToastIcon(type) {
  * @param {function} onCancel - Función a ejecutar al cancelar (opcional)
  */
 function showConfirmToast(type, title, message, onConfirm, onCancel) {
-    console.log('=== showConfirmToast INICIADO ===');
-    console.log('showConfirmToast - type:', type);
-    console.log('showConfirmToast - title:', title);
-    console.log('showConfirmToast - message:', message);
-    console.log('showConfirmToast - onConfirm es función?', typeof onConfirm === 'function');
-    console.log('showConfirmToast - onCancel es función?', typeof onCancel === 'function');
-    
-    // Obtener o crear el contenedor de toasts
-    let toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) {
-        console.log('toastContainer no existe, creándolo...');
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toastContainer';
-        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-        toastContainer.style.zIndex = '1060';
-        document.body.appendChild(toastContainer);
-        console.log('toastContainer creado');
-    } else {
-        console.log('toastContainer encontrado');
+    // Overlay fijo en toda la ventana, centrado con flex (no usa Bootstrap Toast para evitar que se mueva)
+    var overlay = document.createElement('div');
+    overlay.id = 'confirmToastOverlay-' + Date.now();
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', overlay.id + '-title');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;z-index:9999;background:rgba(0,0,0,0.25);padding:1rem;box-sizing:border-box;';
+    overlay.style.pointerEvents = 'auto';
+
+    var iconClass = getToastIcon(type);
+    var toastClass = 'toast-' + type;
+    var boxId = 'confirmToastBox-' + Date.now();
+
+    var boxHtml = '<div id="' + boxId + '" class="toast ' + toastClass + ' toast-confirm shadow" style="min-width:320px;max-width:90vw;pointer-events:auto;">' +
+        '<div class="toast-header">' +
+        '<i class="' + iconClass + ' me-2"></i>' +
+        '<strong class="me-auto" id="' + overlay.id + '-title">' + (title || '') + '</strong>' +
+        '</div>' +
+        '<div class="toast-body">' +
+        '<div class="mb-3">' + (message || '') + '</div>' +
+        '<div class="d-flex gap-2 justify-content-end">' +
+        '<button type="button" class="btn btn-sm btn-outline-secondary btn-cancel-confirm">' +
+        '<i class="fas fa-times me-1"></i>Cancelar</button>' +
+        '<button type="button" class="btn btn-sm btn-primary btn-ok-confirm">' +
+        '<i class="fas fa-check me-1"></i>Confirmar</button>' +
+        '</div></div></div>';
+
+    overlay.innerHTML = boxHtml;
+    document.body.appendChild(overlay);
+
+    var box = document.getElementById(boxId);
+    box.onConfirm = onConfirm;
+    box.onCancel = onCancel || function() {};
+
+    function closeConfirm() {
+        if (overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+        }
     }
 
-    const toastId = 'confirm-toast-' + Date.now();
-    console.log('toastId generado:', toastId);
-    const iconClass = getToastIcon(type);
-    const toastClass = 'toast-' + type;
-    
-    const toastHtml = `
-        <div class="toast ${toastClass} toast-confirm" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <i class="${iconClass} me-2"></i>
-                <strong class="me-auto">${title}</strong>
-            </div>
-            <div class="toast-body">
-                <div class="mb-3">${message}</div>
-                <div class="d-flex gap-2 justify-content-end">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelConfirmToast('${toastId}')">
-                        <i class="fas fa-times me-1"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="confirmToast('${toastId}')">
-                        <i class="fas fa-check me-1"></i>Confirmar
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    console.log('Agregando toast al contenedor...');
-    $(toastContainer).append(toastHtml);
-    console.log('Toast agregado al DOM');
-    
-    const toastElement = document.getElementById(toastId);
-    if (!toastElement) {
-        console.error('ERROR: No se pudo encontrar el elemento toast después de agregarlo');
-        return;
-    }
-    
-    // Almacenar las funciones de callback en el elemento
-    console.log('Almacenando callbacks en el elemento toast...');
-    toastElement.onConfirm = onConfirm;
-    toastElement.onCancel = onCancel || function() {};
-    console.log('Callbacks almacenados. onConfirm:', typeof toastElement.onConfirm === 'function');
-    
-    console.log('Creando instancia de Bootstrap Toast...');
-    const toastInstance = new bootstrap.Toast(toastElement, {
-        autohide: false,
-        delay: 0
+    overlay.querySelector('.btn-ok-confirm').addEventListener('click', function() {
+        if (typeof box.onConfirm === 'function') box.onConfirm();
+        closeConfirm();
     });
-    console.log('Instancia de Toast creada');
-    
-    console.log('Mostrando toast...');
-    toastInstance.show();
-    console.log('toastInstance.show() llamado');
-    
-    // Verificar que el toast se haya mostrado
-    setTimeout(function() {
-        const isVisible = toastElement.classList.contains('show');
-        console.log('Toast visible después de 100ms?', isVisible);
-        if (!isVisible) {
-            console.error('ERROR: El toast no se está mostrando. Forzando clase show...');
-            toastElement.classList.add('show');
+    overlay.querySelector('.btn-cancel-confirm').addEventListener('click', function() {
+        if (typeof box.onCancel === 'function') box.onCancel();
+        closeConfirm();
+    });
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            if (typeof box.onCancel === 'function') box.onCancel();
+            closeConfirm();
         }
-    }, 100);
+    });
 }
 
 /**
@@ -165,58 +144,20 @@ function showConfirmToast(type, title, message, onConfirm, onCancel) {
  * @param {string} toastId - ID del toast
  */
 function confirmToast(toastId) {
-    console.log('=== confirmToast EJECUTADO ===');
-    console.log('confirmToast - toastId:', toastId);
-    
-    const toastElement = document.getElementById(toastId);
-    console.log('toastElement encontrado?', toastElement !== null);
-    
-    if (!toastElement) {
-        console.error('ERROR: No se encontró el elemento toast con ID:', toastId);
-        return;
+    var toastElement = document.getElementById(toastId);
+    if (!toastElement) return;
+    if (toastElement.onConfirm) {
+        try { toastElement.onConfirm(); } catch (e) {}
     }
-    
-    console.log('toastElement.onConfirm existe?', typeof toastElement.onConfirm === 'function');
-    if (toastElement && toastElement.onConfirm) {
-        console.log('Ejecutando onConfirm...');
-        try {
-            toastElement.onConfirm();
-            console.log('onConfirm ejecutado exitosamente');
-        } catch (error) {
-            console.error('ERROR al ejecutar onConfirm:', error);
-        }
-    } else {
-        console.error('ERROR: onConfirm no está definido o no es una función');
-    }
-    
-    const toastInstance = bootstrap.Toast.getInstance(toastElement);
-    console.log('toastInstance encontrado?', toastInstance !== null);
-    if (toastInstance) {
-        console.log('Ocultando toast...');
-        toastInstance.hide();
-    } else {
-        console.error('ERROR: No se encontró la instancia de Toast');
-        // Intentar ocultar manualmente
-        toastElement.classList.remove('show');
-        setTimeout(function() {
-            toastElement.remove();
-        }, 300);
-    }
+    var inst = bootstrap.Toast.getInstance(toastElement);
+    if (inst) inst.hide(); else { toastElement.classList.remove('show'); setTimeout(function() { if (toastElement.parentNode) toastElement.parentNode.removeChild(toastElement); }, 300); }
 }
 
-/**
- * Cancela el toast y ejecuta la función de cancelación
- * @param {string} toastId - ID del toast
- */
 function cancelConfirmToast(toastId) {
-    const toastElement = document.getElementById(toastId);
-    if (toastElement && toastElement.onCancel) {
-        toastElement.onCancel();
-    }
-    const toastInstance = bootstrap.Toast.getInstance(toastElement);
-    if (toastInstance) {
-        toastInstance.hide();
-    }
+    var toastElement = document.getElementById(toastId);
+    if (toastElement && toastElement.onCancel) toastElement.onCancel();
+    var inst = bootstrap.Toast.getInstance(toastElement);
+    if (inst) inst.hide();
 }
 
 

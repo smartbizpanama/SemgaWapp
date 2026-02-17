@@ -1,4 +1,4 @@
-﻿<%@ Page Language="VB" AutoEventWireup="true" CodeBehind="Dashboard.aspx.vb" Inherits="SemgaWapp.Dashboard" %>
+<%@ Page Language="VB" AutoEventWireup="true" CodeBehind="Dashboard.aspx.vb" Inherits="SemgaWapp.Dashboard" %>
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -414,7 +414,7 @@
             <!-- Dashboard Grid -->
             <div class="dashboard-grid">
                 <!-- Members Card -->
-                <div class="card members-card" onclick="window.location.href='Forms/Socios/GestionSocios.aspx'">
+                <div class="card members-card" data-url="forms/socios/gestionsocios.aspx" onclick="window.location.href='Forms/Socios/GestionSocios.aspx'">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-users"></i>
@@ -435,7 +435,7 @@
                 </div>
 
                 <!-- Movimientos Card -->
-                <div class="card loans-card" onclick="window.location.href='Forms/Transacciones/Transacciones.aspx'">
+                <div class="card loans-card" data-url="forms/transacciones/transacciones.aspx" onclick="window.location.href='Forms/Transacciones/Transacciones.aspx'">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-exchange-alt"></i>
@@ -456,7 +456,7 @@
                 </div>
 
                 <!-- Auxiliares Card -->
-                <div class="card auxiliares-card" onclick="window.location.href='Forms/Auxiliares/AuxiliaresAsociados.aspx'">
+                <div class="card auxiliares-card" data-url="forms/auxiliares/auxiliaresasociados.aspx" onclick="window.location.href='Forms/Auxiliares/AuxiliaresAsociados.aspx'">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-users-cog"></i>
@@ -477,7 +477,7 @@
                 </div>
 
                                 <!-- Reports Card -->
-                <div class="card reports-card" onclick="window.location.href='Forms/Reportes/dashboardReportes.aspx'">
+                <div class="card reports-card" data-url="forms/reportes/dashboardreportes.aspx" onclick="window.location.href='Forms/Reportes/dashboardReportes.aspx'">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-chart-bar"></i>
@@ -513,7 +513,7 @@
                 </div>
 
                 <!-- Finanzas Card (solo para Gerentes y Administradores) -->
-                <div class="card finanzas-card" id="finanzasCard" onclick="window.location.href='Forms/Finanzas/Finanzas.aspx'" style="display: none;">
+                <div class="card finanzas-card" id="finanzasCard" data-url="forms/finanzas/finanzas.aspx" onclick="window.location.href='Forms/Finanzas/Finanzas.aspx'" style="display: none;">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-dollar-sign"></i>
@@ -531,7 +531,7 @@
                 </div>
 
                 <!-- Logs and Audit Card -->
-                <div class="card logs-card" id="logsCard" onclick="accederLogs()" style="display: none;">
+                <div class="card logs-card" id="logsCard" data-url="forms/logs/detallelogs.aspx" onclick="accederLogs()" style="display: none;">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-clipboard-list"></i>
@@ -566,9 +566,8 @@
                     </div>
                 </div>
 
-                <!-- Admin Settings Card (solo para nivel 0) -->
-                <% If Session("NivelAcceso") = 0 Then %>
-                                 <div class="card admin-card" onclick="window.location.href='Forms/Mantenimientos/dashboardSistemas.aspx'">
+                <!-- Admin Settings Card (visibilidad solo por permisos de menú) -->
+                <div class="card admin-card" data-url="forms/mantenimientos/dashboardsistemas.aspx" onclick="window.location.href='Forms/Mantenimientos/dashboardSistemas.aspx'">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-cogs"></i>
@@ -602,10 +601,9 @@
                         </div>
                     </div>
                 </div>
-                <% End If %>
 
                 <!-- Help Card -->
-                <div class="card help-card" onclick="window.location.href='Forms/Help/helpDashboard.aspx'">
+                <div class="card help-card" data-url="forms/help/helpdashboard.aspx" onclick="window.location.href='Forms/Help/helpDashboard.aspx'">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-question-circle"></i>
@@ -1067,45 +1065,14 @@
             
         }
 
-        // Función para verificar acceso a logs
-        function verificarAccesoLogs() {
-            // Obtener el nivel de acceso desde la sesión del servidor
-            const nivelAcceso = <%= If(Session("NivelAcceso") IsNot Nothing, Session("NivelAcceso"), 999) %>;
-            
-            if (nivelAcceso <= 1) {
-                // Usuario autorizado - mostrar mosaico de logs
-                $('#logsCard').show();
-            } else {
-                // Usuario no autorizado - mantener mosaico oculto
-                $('#logsCard').hide();
-            }
-        }
-
-        // Función para verificar acceso a finanzas (Gerentes y Administradores)
-        function verificarAccesoFinanzas() {
-            // Obtener el nivel de acceso desde la sesión del servidor
-            const nivelAcceso = <%= If(Session("NivelAcceso") IsNot Nothing, Session("NivelAcceso"), 999) %>;
-            
-            if (nivelAcceso <= 1) {
-                // Usuario autorizado (Gerente nivel 1 o Administrador nivel 0) - mostrar mosaico de finanzas
-                $('#finanzasCard').show();
-            } else {
-                // Usuario no autorizado - mantener mosaico oculto
-                $('#finanzasCard').hide();
-            }
-        }
-
-        // Función para acceder a logs (solo se muestra si tiene permisos)
+        // Acceder a logs (la visibilidad del mosaico se controla por permisos de menú)
         function accederLogs() {
             window.location.href = 'Forms/Logs/DetalleLogs.aspx';
         }
 
         // Funcionalidad del tooltip de ID de sesión
         $(document).ready(function() {
-            // Verificar nivel de acceso para mostrar/ocultar mosaico de logs
-            verificarAccesoLogs();
-            // Verificar nivel de acceso para mostrar/ocultar mosaico de finanzas
-            verificarAccesoFinanzas();
+            // La visibilidad de Finanzas y Logs se controla solo por permisos de menú (script de permisos en DOMContentLoaded)
             
             const userName = $('#userName');
             const sessionTooltip = $('#sessionTooltip');
@@ -1189,6 +1156,24 @@
                 }
             }
         }
+
+        // Permisos de menú: filtrar mosaicos y mensaje de sin permiso
+        (function() {
+            var permisosMenuAdmin = <%= If(PermisosMenuAdmin, "true", "false") %>;
+            var permisosMenuUrls = <%= ObtenerPermisosMenuUrlsJson() %>;
+            var mensajePermiso = <%= Newtonsoft.Json.JsonConvert.SerializeObject(MensajePermiso) %>;
+            document.addEventListener('DOMContentLoaded', function() {
+                if (mensajePermiso && mensajePermiso.length > 0) {
+                    showNotification(mensajePermiso, 'warning');
+                }
+                document.querySelectorAll('.card[data-url]').forEach(function(card) {
+                    var url = card.getAttribute('data-url');
+                    if (!url) return;
+                    var permitido = permisosMenuAdmin || (permisosMenuUrls === true) || (Array.isArray(permisosMenuUrls) && permisosMenuUrls.indexOf(url) !== -1);
+                    card.style.display = permitido ? '' : 'none';
+                });
+            });
+        })();
         
         // Función para mostrar notificaciones
         function showNotification(message, type) {
@@ -1200,7 +1185,7 @@
                 'position': 'fixed',
                 'top': '20px',
                 'right': '20px',
-                'background': type === 'success' ? '#28a745' : '#dc3545',
+                'background': type === 'success' ? '#28a745' : (type === 'warning' ? '#f0ad4e' : '#dc3545'),
                 'color': 'white',
                 'padding': '12px 20px',
                 'border-radius': '8px',

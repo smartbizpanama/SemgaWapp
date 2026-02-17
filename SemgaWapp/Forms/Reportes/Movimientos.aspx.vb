@@ -1,4 +1,4 @@
-﻿Imports System.Web.Services
+Imports System.Web.Services
 Imports System.Web.Script.Services
 Imports System.Web.Script.Serialization
 Imports System.Data
@@ -6,7 +6,7 @@ Imports SBSqlClient
 Imports SBUtility
 
 Public Class Movimientos
-	Inherits System.Web.UI.Page
+	Inherits BasePage
 
 	Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
 		' Verificar sesión
@@ -14,6 +14,7 @@ Public Class Movimientos
 			Response.Redirect("~/Login.aspx")
 			Return
 		End If
+		If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
 
 		' Manejar descarga de archivos
 		If Request.QueryString("action") = "download" AndAlso Not String.IsNullOrEmpty(Request.QueryString("file")) Then
@@ -26,7 +27,7 @@ Public Class Movimientos
 	Public Shared Function ObtenerUsuarios() As String
 		Dim serializer As New JavaScriptSerializer()
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerUsuarios iniciado")
+			ModGlobal.EscribirLog("ObtenerUsuarios iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spUsuarios_Listar"
@@ -77,7 +78,7 @@ Public Class Movimientos
 	Public Shared Function ObtenerRubros() As String
 		Dim serializer As New JavaScriptSerializer()
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerRubros iniciado")
+			ModGlobal.EscribirLog("ObtenerRubros iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spRubros_Listar"
@@ -244,7 +245,7 @@ Public Class Movimientos
 	Public Shared Function ObtenerCodigosTransaccion() As String
 		Dim serializer As New JavaScriptSerializer()
 		Try
-			ModGlobal.EscribirLog("🔍 ObtenerCodigosTransaccion iniciado")
+			ModGlobal.EscribirLog("ObtenerCodigosTransaccion iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spCodigosTransaccion_Listar"
@@ -295,7 +296,7 @@ Public Class Movimientos
 	Public Shared Function BuscarMovimientos(idUsuario As Object, numeroAsociado As Object, fechaDesde As Object, fechaHasta As Object, codigoRubro As Object, codigoTransaccion As Object) As String
 		Dim serializer As New JavaScriptSerializer()
 		Try
-			ModGlobal.EscribirLog("🔍 BuscarMovimientos iniciado")
+			ModGlobal.EscribirLog("BuscarMovimientos iniciado")
 
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
 			Dim sSql As String = "Exec spMovimientos_Listar"
@@ -436,6 +437,7 @@ Public Class Movimientos
 				contenidoRubros &= $"            <tr>" & vbCrLf
 				contenidoRubros &= $"                <th>No. Registro</th>" & vbCrLf
 				contenidoRubros &= $"                <th>F. Tran./hora</th>" & vbCrLf
+				contenidoRubros &= $"                <th>Asociado</th>" & vbCrLf
 				contenidoRubros &= $"                <th>Codigo/Tran.</th>" & vbCrLf
 				contenidoRubros &= $"                <th>Auxiliar</th>" & vbCrLf
 				contenidoRubros &= $"                <th>Cuenta</th>" & vbCrLf
@@ -452,6 +454,7 @@ Public Class Movimientos
 				For Each row As DataRow In movimientosRubro
 					Dim noRegistro As String = If(Not IsDBNull(row("NoRegistro")), row("NoRegistro").ToString(), "")
 					Dim fTranHora As String = If(Not IsDBNull(row("FTranHora")), row("FTranHora").ToString(), "")
+					Dim asociado As String = If(row.Table.Columns.Contains("Asociado") AndAlso Not IsDBNull(row("Asociado")), row("Asociado").ToString(), "")
 					Dim codigoTran As String = If(Not IsDBNull(row("CodigoTran")), row("CodigoTran").ToString(), "")
 					Dim auxiliar As String = If(Not IsDBNull(row("Auxiliar")), row("Auxiliar").ToString(), "")
 					Dim cuenta As String = If(Not IsDBNull(row("Cuenta")), row("Cuenta").ToString(), "")
@@ -468,6 +471,7 @@ Public Class Movimientos
 					contenidoRubros &= $"            <tr>" & vbCrLf
 					contenidoRubros &= $"                <td>{noRegistro}</td>" & vbCrLf
 					contenidoRubros &= $"                <td>{fTranHora}</td>" & vbCrLf
+					contenidoRubros &= $"                <td>{asociado}</td>" & vbCrLf
 					contenidoRubros &= $"                <td>{codigoTran}</td>" & vbCrLf
 					contenidoRubros &= $"                <td>{auxiliar}</td>" & vbCrLf
 					contenidoRubros &= $"                <td>{cuenta}</td>" & vbCrLf

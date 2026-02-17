@@ -1,11 +1,14 @@
-﻿Imports System
+Imports System
 Imports System.Data
 Imports System.Data.SqlClient
+Imports System.Web
 Imports System.Web.Services
+Imports System.Web.Script.Serialization
+Imports SBSqlClient
 Imports SBUtility
 
 Public Class Login
-    Inherits System.Web.UI.Page
+    Inherits BasePage
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         ' Verificar si el usuario ya está autenticado
@@ -34,6 +37,7 @@ Public Class Login
             password = sbEncr.Encrypt(password)
 
             ' Llamar al stored procedure
+            ModGlobal.EscribirLog("Ejecutando: sp_AutenticarUsuario @Usuario=" & username & ", @DireccionIP=" & clientIP)
             Using conn As New SqlConnection(connectionString)
                 Using cmd As New SqlCommand("sp_AutenticarUsuario", conn)
                     cmd.CommandType = CommandType.StoredProcedure
@@ -44,6 +48,7 @@ Public Class Login
                     conn.Open()
                     Using reader As SqlDataReader = cmd.ExecuteReader()
                         If reader.Read() Then
+                            ModGlobal.EscribirLog("BD OK: sp_AutenticarUsuario")
                             Dim resultado As Integer = Convert.ToInt32(reader("Resultado"))
 
                             If resultado = 1 Then
@@ -56,6 +61,7 @@ Public Class Login
                                 Return reader("Mensaje").ToString()
                             End If
                         Else
+                            ModGlobal.EscribirLog("BD OK: sp_AutenticarUsuario (sin filas)")
                             Return "Error al procesar la autenticación"
                         End If
                     End Using
@@ -63,6 +69,7 @@ Public Class Login
             End Using
 
         Catch ex As Exception
+            ModGlobal.EscribirLog("BD ERROR: sp_AutenticarUsuario - " & ex.Message)
             Return "Error interno del servidor: " & ex.Message
         End Try
     End Function
@@ -157,6 +164,9 @@ Public Class Login
 
             ' Cargar parámetros del sistema desde tbParamsKeys
             CargarParametrosSistema(context)
+
+            ' Cargar permisos de menú (spMenu_PermisosUsuarios) y guardar JSON en sesión
+            CargarPermisosMenuEnSesion(context)
             
             ' Crear ticket de autenticación Forms
             CreateAuthenticationTicket(reader("NombreUsuario").ToString(), reader)
@@ -171,6 +181,7 @@ Public Class Login
             ' Desencriptar cadena de conexión
             Dim connectionString As String = GetDecryptedConnectionString()
             
+            ModGlobal.EscribirLog("Ejecutando: SELECT ParamKey, ParamValue FROM tbParamsKeys")
             Using conn As New SqlConnection(connectionString)
                 Using cmd As New SqlCommand("SELECT ParamKey, ParamValue FROM tbParamsKeys", conn)
                     cmd.CommandType = CommandType.Text
@@ -185,10 +196,70 @@ Public Class Login
                     End Using
                 End Using
             End Using
-            
-            
+            ModGlobal.EscribirLog("BD OK: CargarParametrosSistema")
         Catch ex As Exception
+            ModGlobal.EscribirLog("BD ERROR: CargarParametrosSistema - " & ex.Message)
             ' No lanzar excepción para no interrumpir el login
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Ejecuta spMenu_PermisosUsuarios y guarda en sesión el JSON de opciones con permiso (Permitido=1).
+    ''' Si NivelAcceso=0 (administrador), marca MenuPermisosAdmin y no restringe por menú.
+    ''' </summary>
+    Private Shared Sub CargarPermisosMenuEnSesion(context As HttpContext)
+        Try
+            Dim nivelObj As Object = context.Session("NivelAcceso")
+            Dim nivel As Integer = If(nivelObj IsNot Nothing, Convert.ToInt32(nivelObj), 999)
+            If nivel = 0 Then
+                context.Session(VariablesSesion.MenuPermisosAdmin) = True
+                context.Session(VariablesSesion.MenuPermisosJson) = "[]"
+                Return
+            End If
+            context.Session(VariablesSesion.MenuPermisosAdmin) = False
+            Dim usuarioIdObj As Object = context.Session("UsuarioId")
+            If usuarioIdObj Is Nothing Then
+                context.Session(VariablesSesion.MenuPermisosJson) = "[]"
+                Return
+            End If
+            Dim usuarioId As Integer = Convert.ToInt32(usuarioIdObj)
+            Dim cnn As String = TryCast(context.Session(VariablesSesion.ConnectionString), String)
+            If String.IsNullOrEmpty(cnn) Then
+                context.Session(VariablesSesion.MenuPermisosJson) = "[]"
+                Return
+            End If
+            Dim uDBA As SBSqlClientInterface = ModGlobal.GetDbaObject(cnn)
+            uDBA.Parametros.Add("@IdUsuario", usuarioId)
+            Dim sSqlPermisos As String = "EXEC spMenu_PermisosUsuarios @IdUsuario"
+            ModGlobal.EscribirLog("Ejecutando: " & sSqlPermisos & " " & uDBA.getParamList())
+            Dim dt As DataTable = uDBA.GetDataTableSql(sSqlPermisos)
+            If uDBA.MensajeError <> "" Then
+                ModGlobal.EscribirLog("BD ERROR: PermisosMenu - " & uDBA.MensajeError)
+            Else
+                ModGlobal.EscribirLog("BD OK: PermisosMenu")
+            End If
+            Dim lista As New List(Of Dictionary(Of String, Object))
+            If uDBA.MensajeError = "" AndAlso dt IsNot Nothing Then
+                For Each row As DataRow In dt.Rows
+                    Dim permitidoObj As Object = row("Permitido")
+                    If permitidoObj IsNot Nothing AndAlso permitidoObj IsNot DBNull.Value AndAlso Convert.ToBoolean(permitidoObj) Then
+                        Dim d As New Dictionary(Of String, Object) From {
+                            {"IdMenuOpcion", row("IdMenuOpcion")},
+                            {"Clave", If(row("Clave"), "").ToString()},
+                            {"Nombre", If(row("Nombre"), "").ToString()},
+                            {"UrlDestino", If(row("UrlDestino"), "").ToString()},
+                            {"IdPadre", row("IdPadre")},
+                            {"Orden", row("Orden")}
+                        }
+                        lista.Add(d)
+                    End If
+                Next
+            End If
+            Dim serializer As New JavaScriptSerializer()
+            context.Session(VariablesSesion.MenuPermisosJson) = serializer.Serialize(lista)
+        Catch ex As Exception
+            context.Session(VariablesSesion.MenuPermisosAdmin) = False
+            context.Session(VariablesSesion.MenuPermisosJson) = "[]"
         End Try
     End Sub
 

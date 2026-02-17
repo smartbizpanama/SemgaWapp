@@ -6,7 +6,7 @@ Imports SBUtility
 Imports System.Data
 
 Public Class comprobanteText
-	Inherits System.Web.UI.Page
+	Inherits BasePage
 
 	Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
 		' Verificar sesión
@@ -14,6 +14,7 @@ Public Class comprobanteText
 			Response.Redirect("~/Login.aspx")
 			Return
 		End If
+		If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
 	End Sub
 
 	<WebMethod()>
@@ -31,15 +32,16 @@ Public Class comprobanteText
 				.Add("@MovimientoID", Integer.Parse(movimientoId))
 			End With
 
+			ModGlobal.EscribirLog("Ejecutando: " & sSql & " " & objSql.getParamList())
 			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
-
-			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("Error en BD al obtener datos del comprobante: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("BD ERROR: ObtenerDatosComprobante - " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
 				}
+			Else
+				ModGlobal.EscribirLog("BD OK: ObtenerDatosComprobante")
 			End If
 
 			If dt.Rows.Count = 0 Then
@@ -107,15 +109,16 @@ Public Class comprobanteText
 				.Add("@MovimientoID", Integer.Parse(movimientoId))
 			End With
 
+			ModGlobal.EscribirLog("Ejecutando: " & sSql & " " & objSql.getParamList())
 			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
-
-			' Verificar si hubo error en la base de datos
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("Error en BD al marcar como impreso: " & objSql.MensajeError)
+				ModGlobal.EscribirLog("BD ERROR: MarcarImpreso - " & objSql.MensajeError)
 				Return New With {
 					.Resultado = "ERROR",
 					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
 				}
+			Else
+				ModGlobal.EscribirLog("BD OK: MarcarImpreso")
 			End If
 
 			Dim filasAfectadas As Integer = 0

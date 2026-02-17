@@ -1,4 +1,6 @@
-﻿Imports System.Data.SqlClient
+Imports System.Data.SqlClient
+Imports System.Web
+Imports System.Web.Script.Serialization
 Imports SBSqlClient
 Imports SBUtility
 Module ModGlobal
@@ -33,12 +35,16 @@ Module ModGlobal
                 .Add("@jsonSessionInfo", jsonSessionInfo)
             End With
 
-
+            EscribirLogSoloArchivo("Ejecutando: " & sSql & " " & uDBA.getParamList())
             Try
                 uDBA.ExecuteNonQuerySql(sSql)
-                Dim merror As String = uDBA.MensajeError
-
+                If uDBA.MensajeError <> "" Then
+                    EscribirLogSoloArchivo("BD ERROR: InicioSesion - " & uDBA.MensajeError)
+                Else
+                    EscribirLogSoloArchivo("BD OK: InicioSesion")
+                End If
             Catch ex As Exception
+                EscribirLogSoloArchivo("BD ERROR: InicioSesion - " & uDBA.LimpiarMsgErrorDB(ex.Message))
                 log.WriteTxt("[ID.S: " & logID & "] - " & uDBA.LimpiarMsgErrorDB(ex.Message))
             End Try
         End If
@@ -57,19 +63,44 @@ Module ModGlobal
             .Add("@SID", System.Web.HttpContext.Current.Session(VariablesSesion.logID))
         End With
 
-
+        ' Escribir solo a archivo para evitar recursión (EscribirLog -> escribirLogBD -> EscribirLog -> ...)
+        EscribirLogSoloArchivo("Ejecutando: " & sSql & " " & uDBA.getParamList())
         Try
-
             Try
                 uDBA.ExecuteNonQuerySql(sSql)
-
+                If uDBA.MensajeError <> "" Then
+                    EscribirLogSoloArchivo("BD ERROR: LogAdd - " & uDBA.MensajeError)
+                Else
+                    EscribirLogSoloArchivo("BD OK: LogAdd")
+                End If
             Catch ex As SqlException
+                EscribirLogSoloArchivo("BD ERROR: LogAdd - " & ex.Message)
                 log.WriteTxt("[ID.S: " & System.Web.HttpContext.Current.Session(VariablesSesion.logID) & "] - " & ex.Message)
             End Try
-
         Catch ex As Exception
+            EscribirLogSoloArchivo("BD ERROR: LogAdd - " & ex.Message)
             log.WriteTxt("[ID.S: " & System.Web.HttpContext.Current.Session(VariablesSesion.logID) & "] - " & ex.Message)
         End Try
+    End Sub
+
+    ''' <summary>Escribe al log solo en archivo, sin pasar por BD. Evita recursión cuando ya estamos en escribirLogBD.</summary>
+    Private Sub EscribirLogSoloArchivo(mensaje As String)
+        If log Is Nothing Then
+            Debug.WriteLine(mensaje)
+            Return
+        End If
+        Try
+            Dim prefix As String = ""
+            If HttpContext.Current IsNot Nothing AndAlso HttpContext.Current.Session IsNot Nothing Then
+                Dim usr As Object = HttpContext.Current.Session(VariablesSesion.UsuarioId)
+                Dim sid As Object = HttpContext.Current.Session(VariablesSesion.logID)
+                prefix = $"[Usr:{If(usr, "")} ID: {If(sid, "")}] - "
+            End If
+            log.WriteTxt(prefix & mensaje)
+        Catch
+            log.WriteTxt(mensaje)
+        End Try
+        Debug.WriteLine(mensaje)
     End Sub
 
 
@@ -77,7 +108,10 @@ Module ModGlobal
         log.WriteTxt($"[Usr:{HttpContext.Current.Session(VariablesSesion.UsuarioId)} ID: {System.Web.HttpContext.Current.Session(VariablesSesion.logID)}] - " & mensaje)
     End Sub
     Public Sub EscribirLog(Mensaje As String)
-
+        If log Is Nothing Then
+            Debug.WriteLine(Mensaje)
+            Return
+        End If
         Select Case LogType
             Case 0
                 escribirLogFile(Mensaje)
@@ -89,6 +123,31 @@ Module ModGlobal
         End Select
 
         Debug.WriteLine(Mensaje)
+    End Sub
+
+    ''' <summary>Ejecuta GetDataTableSql registrando en log la sentencia antes y el resultado (éxito o error) después.</summary>
+    Public Function EjecutarGetDataTableConLog(objSql As SBSqlClientInterface, sSql As String, Optional descripcion As String = "") As DataTable
+        Dim params As String = If(objSql IsNot Nothing, objSql.getParamList(), "")
+        EscribirLog("Ejecutando: " & sSql & " " & params)
+        Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+        If objSql.MensajeError <> "" Then
+            EscribirLog("BD ERROR: " & If(descripcion <> "", descripcion & " - ", "") & objSql.MensajeError)
+        Else
+            EscribirLog("BD OK: " & If(descripcion <> "", descripcion, "GetDataTable"))
+        End If
+        Return dt
+    End Function
+
+    ''' <summary>Ejecuta ExecuteNonQuerySql registrando en log la sentencia antes y el resultado (éxito o error) después.</summary>
+    Public Sub EjecutarNonQueryConLog(objSql As SBSqlClientInterface, sSql As String, Optional descripcion As String = "")
+        Dim params As String = If(objSql IsNot Nothing, objSql.getParamList(), "")
+        EscribirLog("Ejecutando: " & sSql & " " & params)
+        objSql.ExecuteNonQuerySql(sSql)
+        If objSql.MensajeError <> "" Then
+            EscribirLog("BD ERROR: " & If(descripcion <> "", descripcion & " - ", "") & objSql.MensajeError)
+        Else
+            EscribirLog("BD OK: " & If(descripcion <> "", descripcion, "ExecuteNonQuery"))
+        End If
     End Sub
 
     Public Function GetDbaObject(sCnn As String) As SBSqlClientInterface
@@ -289,6 +348,99 @@ Module ModGlobal
         Catch ex As Exception
             Return "Error: " & ex.Message
         End Try
+    End Function
+
+    ''' <summary>
+    ''' Normaliza una ruta de página para comparación (quita ~/ y query string).
+    ''' </summary>
+    Public Function NormalizarRutaMenu(ruta As String) As String
+        If String.IsNullOrWhiteSpace(ruta) Then Return ""
+        Dim s As String = ruta.Trim().Replace("\"c, "/"c)
+        If s.StartsWith("~/") Then s = s.Substring(2)
+        If s.StartsWith("/") Then s = s.Substring(1)
+        Dim i As Integer = s.IndexOf("?"c)
+        If i >= 0 Then s = s.Substring(0, i)
+        Return s.ToLowerInvariant()
+    End Function
+
+    ''' <summary>
+    ''' Indica si el usuario tiene permiso para acceder a la página actual según los permisos de menú en sesión.
+    ''' Si es administrador (MenuPermisosAdmin) o la ruta actual está en MenuPermisosJson, devuelve True.
+    ''' </summary>
+    Public Function TienePermisoMenuPagina(context As HttpContext) As Boolean
+        If context Is Nothing OrElse context.Session Is Nothing Then Return False
+        If context.Session("UsuarioId") Is Nothing Then Return False
+        If context.Session(VariablesSesion.MenuPermisosAdmin) IsNot Nothing AndAlso
+            Convert.ToBoolean(context.Session(VariablesSesion.MenuPermisosAdmin)) Then
+            Return True
+        End If
+        Dim json As String = TryCast(context.Session(VariablesSesion.MenuPermisosJson), String)
+        If String.IsNullOrWhiteSpace(json) OrElse json = "[]" Then Return False
+        Dim rutaActual As String = NormalizarRutaMenu(context.Request.AppRelativeCurrentExecutionFilePath)
+        If String.IsNullOrEmpty(rutaActual) Then Return False
+        Try
+            Dim serializer As New JavaScriptSerializer()
+            Dim lista As Object() = serializer.Deserialize(Of Object())(json)
+            For Each item As Object In lista
+                Dim d As Dictionary(Of String, Object) = TryCast(item, Dictionary(Of String, Object))
+                If d IsNot Nothing AndAlso d.ContainsKey("UrlDestino") AndAlso d("UrlDestino") IsNot Nothing Then
+                    Dim urlPermitida As String = NormalizarRutaMenu(d("UrlDestino").ToString())
+                    If rutaActual = urlPermitida Then Return True
+                End If
+            Next
+        Catch ex As Exception
+            EscribirLog("TienePermisoMenuPagina: " & ex.Message)
+        End Try
+        Return False
+    End Function
+
+    ''' <summary>
+    ''' Devuelve True si el usuario es administrador de menú (acceso a todos los mosaicos).
+    ''' </summary>
+    Public Function EsPermisosMenuAdmin(context As HttpContext) As Boolean
+        If context Is Nothing OrElse context.Session Is Nothing Then Return False
+        Dim v As Object = context.Session(VariablesSesion.MenuPermisosAdmin)
+        Return v IsNot Nothing AndAlso Convert.ToBoolean(v)
+    End Function
+
+    ''' <summary>
+    ''' Devuelve JSON con array de URLs permitidas para el menú (para filtrar mosaicos en cliente). "true" si es admin.
+    ''' </summary>
+    Public Function GetPermisosMenuUrlsJson(context As HttpContext) As String
+        If context Is Nothing OrElse context.Session Is Nothing Then Return "[]"
+        Try
+            If EsPermisosMenuAdmin(context) Then Return "true"
+            Dim json As String = TryCast(context.Session(VariablesSesion.MenuPermisosJson), String)
+            If String.IsNullOrWhiteSpace(json) OrElse json = "[]" Then Return "[]"
+            Dim serializer As New JavaScriptSerializer()
+            Dim lista As Object() = serializer.Deserialize(Of Object())(json)
+            Dim urls As New List(Of String)
+            For Each item As Object In lista
+                Dim d As Dictionary(Of String, Object) = TryCast(item, Dictionary(Of String, Object))
+                If d IsNot Nothing AndAlso d.ContainsKey("UrlDestino") AndAlso d("UrlDestino") IsNot Nothing Then
+                    urls.Add(NormalizarRutaMenu(d("UrlDestino").ToString()))
+                End If
+            Next
+            Return serializer.Serialize(urls)
+        Catch
+            Return "[]"
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' Valida permiso de menú para la página actual. Si no tiene permiso, guarda mensaje en sesión y redirige al Dashboard.
+    ''' Llamar al inicio de Page_Load en páginas que requieren validación (excepto Login y Dashboard).
+    ''' </summary>
+    ''' <returns>True si se redirigió (sin permiso); False si el usuario tiene permiso y puede continuar.</returns>
+    Public Function ValidarYRedirigirSiSinPermiso(context As HttpContext) As Boolean
+        If context Is Nothing Then Return False
+        If Not TienePermisoMenuPagina(context) Then
+            context.Session(VariablesSesion.MensajePermiso) = "No tiene permiso para acceder a esta opción."
+            context.Response.Redirect("~/Dashboard.aspx", False)
+            context.ApplicationInstance.CompleteRequest()
+            Return True
+        End If
+        Return False
     End Function
 
 End Module

@@ -86,3 +86,4 @@ La columna `DescripcionLogica` debe contener HTML formateado que se renderizará
 3. **Mantener consistencia**: Usar los mismos estilos para elementos similares
 4. **Legibilidad**: Usar párrafos y listas para mejorar la legibilidad
 
+

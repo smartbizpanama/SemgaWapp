@@ -1,4 +1,4 @@
-﻿Imports System.Web.Services
+Imports System.Web.Services
 Imports System.Web.Script.Services
 Imports System.Web.Script.Serialization
 Imports System.Data
@@ -12,7 +12,7 @@ Imports SBSqlClient
 Imports SBUtility
 
 Public Class procesosTecnicos
-    Inherits System.Web.UI.Page
+    Inherits BasePage
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         ' Verificar sesión
@@ -20,6 +20,7 @@ Public Class procesosTecnicos
             Response.Redirect("~/Login.aspx")
             Return
         End If
+        If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
     End Sub
 
     <WebMethod()>
@@ -583,9 +584,15 @@ Public Class procesosTecnicos
                 .Add("@NombreObjeto", nombreObjeto)
                 .Add("@TipoObjeto", tipoObjeto)
             End With
-            
+
+            ModGlobal.EscribirLog("Ejecutando: " & sSql & " " & objSql.getParamList())
             Dim dt As DataTable = objSql.GetDataTableSql(sSql)
-            
+            If objSql.MensajeError <> "" Then
+                ModGlobal.EscribirLog("BD ERROR: ObtenerDescripcionDesdeBD - " & objSql.MensajeError)
+            Else
+                ModGlobal.EscribirLog("BD OK: ObtenerDescripcionDesdeBD")
+            End If
+
             If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
                 descripcion = If(IsDBNull(dt.Rows(0)("DescripcionLogica")), "", dt.Rows(0)("DescripcionLogica").ToString())
                 spsLlamados = If(IsDBNull(dt.Rows(0)("SPsLlamados")), "", dt.Rows(0)("SPsLlamados").ToString())
@@ -912,21 +919,25 @@ Public Class procesosTecnicos
                     Dim sSql As String = "SELECT OBJECT_DEFINITION(OBJECT_ID('dbo." & nombreObjeto & "')) AS Definition " &
                                          "UNION ALL " &
                                          "SELECT OBJECT_DEFINITION(OBJECT_ID('" & nombreObjeto & "')) AS Definition"
-                    
-                    Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
+                    ModGlobal.EscribirLog("Ejecutando: " & sSql)
+                    Dim dt As DataTable = objSql.GetDataTableSql(sSql)
                     If objSql.MensajeError <> "" Then
+                        ModGlobal.EscribirLog("BD ERROR: ObtenerDefinicionSQL SP - " & objSql.MensajeError)
                         ' Intentar con sys.sql_modules
                         sSql = "SELECT m.definition AS Definition " &
                                "FROM sys.procedures p " &
                                "INNER JOIN sys.sql_modules m ON m.object_id = p.object_id " &
                                "WHERE p.name = '" & nombreObjeto & "'"
+                        ModGlobal.EscribirLog("Ejecutando (fallback): " & sSql)
                         dt = objSql.GetDataTableSql(sSql)
                     End If
 
                     If objSql.MensajeError <> "" Then
+                        ModGlobal.EscribirLog("BD ERROR: ObtenerDefinicionSQL SP - " & objSql.MensajeError)
                         Throw New Exception("Error en BD: " & objSql.MensajeError)
                     End If
+                    ModGlobal.EscribirLog("BD OK: ObtenerDefinicionSQL SP")
 
                     If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
                         For Each row As DataRow In dt.Rows
@@ -946,10 +957,11 @@ Public Class procesosTecnicos
                     Dim sSql As String = "SELECT OBJECT_DEFINITION(OBJECT_ID('dbo." & nombreObjeto & "')) AS Definition " &
                                          "UNION ALL " &
                                          "SELECT OBJECT_DEFINITION(OBJECT_ID('" & nombreObjeto & "')) AS Definition"
-                    
-                    Dim dt As DataTable = objSql.GetDataTableSql(sSql)
 
+                    ModGlobal.EscribirLog("Ejecutando: " & sSql)
+                    Dim dt As DataTable = objSql.GetDataTableSql(sSql)
                     If objSql.MensajeError <> "" Then
+                        ModGlobal.EscribirLog("BD ERROR: ObtenerDefinicionSQL FUNCTION - " & objSql.MensajeError)
                         sSql = "SELECT m.definition AS Definition " &
                                "FROM sys.objects o " &
                                "INNER JOIN sys.sql_modules m ON m.object_id = o.object_id " &
@@ -958,8 +970,10 @@ Public Class procesosTecnicos
                     End If
 
                     If objSql.MensajeError <> "" Then
+                        ModGlobal.EscribirLog("BD ERROR: ObtenerDefinicionSQL FUNCTION - " & objSql.MensajeError)
                         Throw New Exception("Error en BD: " & objSql.MensajeError)
                     End If
+                    ModGlobal.EscribirLog("BD OK: ObtenerDefinicionSQL FUNCTION")
 
                     If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
                         For Each row As DataRow In dt.Rows
@@ -1118,11 +1132,13 @@ Public Class procesosTecnicos
                 .Add("@NombreTabla", nombreTabla)
             End With
 
+            ModGlobal.EscribirLog("Ejecutando: " & sSql & " " & objSql.getParamList())
             Dim dt As DataTable = objSql.GetDataTableSql(sSql)
-
             If objSql.MensajeError <> "" Then
+                ModGlobal.EscribirLog("BD ERROR: ObtenerEstructuraTabla - " & objSql.MensajeError)
                 Throw New Exception("Error en BD: " & objSql.MensajeError)
             End If
+            ModGlobal.EscribirLog("BD OK: ObtenerEstructuraTabla")
 
             Dim columnas As New List(Of Object)
             If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then

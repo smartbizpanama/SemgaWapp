@@ -516,6 +516,25 @@
         $(document).ready(function() {
             cargarFormularios();
             
+            // Manejar el cierre del modal de estructura de tabla para limpiar backdrops
+            $('#modalTablaEstructura').on('hidden.bs.modal', function () {
+                // Limpiar backdrops sobrantes correctamente
+                setTimeout(function() {
+                    const backdrops = $('.modal-backdrop');
+                    const modalSQL = $('#modalSQL');
+                    const isSQLModalOpen = modalSQL.hasClass('show');
+                    
+                    if (!isSQLModalOpen) {
+                        // Si el modal SQL no está abierto, limpiar todos los backdrops
+                        backdrops.remove();
+                        $('body').removeClass('modal-open').css('padding-right', '');
+                    } else if (backdrops.length > 1) {
+                        // Si hay más de un backdrop y el SQL está abierto, eliminar solo el último
+                        backdrops.last().remove();
+                    }
+                }, 50);
+            });
+            
             // Toggle sidebar
             $('#btnToggleSidebar').on('click', function(e) {
                 e.preventDefault();
@@ -1184,9 +1203,23 @@
                             
                             $("#tablaEstructuraContent").html(htmlContent);
                             // Asegurar que el modal de tabla esté por encima del modal de SQL
-                            $("#modalTablaEstructura").css('z-index', '1060');
-                            $('.modal-backdrop:last').css('z-index', '1055');
-                            $("#modalTablaEstructura").modal('show');
+                            const modalTabla = $("#modalTablaEstructura");
+                            modalTabla.css('z-index', '1060');
+                            
+                            // Mostrar el modal
+                            const modalTablaBootstrap = new bootstrap.Modal(modalTabla[0], {
+                                backdrop: true,
+                                keyboard: true
+                            });
+                            modalTablaBootstrap.show();
+                            
+                            // Ajustar z-index del backdrop del modal de tabla después de que se muestre
+                            setTimeout(function() {
+                                const backdrops = $('.modal-backdrop');
+                                if (backdrops.length > 1) {
+                                    backdrops.last().css('z-index', '1055');
+                                }
+                            }, 100);
                         } else {
                             $("#tablaEstructuraContent").html('<p class="text-danger">Error: ' + (respuesta ? (respuesta.Mensaje || "Error desconocido") : "Error al procesar respuesta") + '</p>');
                         }

@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Finanzas.aspx.vb" Inherits="SemgaWapp.Finanzas" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Finanzas.aspx.vb" Inherits="SemgaWapp.Finanzas" %>
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -221,13 +221,17 @@
                             <div class="col-md-6">
                                 <div class="totals-box">
                                     <div class="row">
-                                        <div class="col-6">
+                                        <div class="col-4">
                                             <div class="total-label">Total Débito</div>
                                             <div class="total-value text-success" id="lblTotalDebito">0.00</div>
                                         </div>
-                                        <div class="col-6">
+                                        <div class="col-4">
                                             <div class="total-label">Total Crédito</div>
                                             <div class="total-value text-indigo" id="lblTotalCredito">0.00</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="total-label">Balance</div>
+                                            <div class="total-value text-success" id="lblBalance">0.00</div>
                                         </div>
                                     </div>
                                 </div>
@@ -845,6 +849,16 @@
 
             $('#lblTotalDebito').text(formatCurrency(totalDebito));
             $('#lblTotalCredito').text(formatCurrency(totalCredito));
+
+            const balance = totalDebito - totalCredito;
+            const $lblBalance = $('#lblBalance');
+            $lblBalance.text(formatCurrency(balance));
+            $lblBalance.removeClass('text-danger text-success');
+            if (Math.abs(balance) < 0.01) {
+                $lblBalance.addClass('text-success');
+            } else {
+                $lblBalance.addClass('text-danger');
+            }
 
             return {
                 totalDebito,

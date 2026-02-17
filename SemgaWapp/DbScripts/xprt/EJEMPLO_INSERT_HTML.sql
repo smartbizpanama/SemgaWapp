@@ -84,3 +84,4 @@ NULL, 'tbAuxiliares, tbAsociados, tbRubros, tbTiposAuxiliares, tbControlConsecut
 -- sin saltos de línea, dentro de las comillas simples. SQL Server acepta cadenas largas en una sola línea.
 -- Este ejemplo con formato es solo para visualización y referencia.
 
+

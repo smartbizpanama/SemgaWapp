@@ -1,4 +1,4 @@
-﻿Imports System.Web.Services
+Imports System.Web.Services
 Imports System.Web.Script.Services
 Imports System.IO
 Imports System.Data.SqlClient
@@ -6,9 +6,14 @@ Imports SBUtility
 Imports SBSqlClient
 
 Public Class Respaldos
-    Inherits System.Web.UI.Page
+    Inherits BasePage
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        If Session(VariablesSesion.UsuarioId) Is Nothing Then
+            Response.Redirect("~/Login.aspx")
+            Return
+        End If
+        If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
         ' Manejar descarga de respaldo
         If Request.QueryString("action") = "download" AndAlso Not String.IsNullOrEmpty(Request.QueryString("id")) Then
             Dim id As Integer
@@ -65,6 +70,7 @@ Public Class Respaldos
             Dim comandoRespaldo As String = $"BACKUP DATABASE [{nombreBaseDatos}] TO DISK = '{rutaCompleta}' WITH FORMAT, INIT, NAME = '{nombreRespaldoAutomatico}', DESCRIPTION = '{descripcion}'"
 
             ' Ejecutar respaldo
+            ModGlobal.EscribirLog("Ejecutando: " & comandoRespaldo)
             Using connection As New SqlConnection(connectionStringDecrypted)
                 connection.Open()
                 Using command As New SqlCommand(comandoRespaldo, connection)
@@ -72,6 +78,7 @@ Public Class Respaldos
                     command.ExecuteNonQuery()
                 End Using
             End Using
+            ModGlobal.EscribirLog("BD OK: BACKUP DATABASE")
 
             ' Validar que el archivo de respaldo se creó correctamente
             If Not File.Exists(rutaCompleta) Then
@@ -111,12 +118,10 @@ Public Class Respaldos
                 .Add("@Size", tamañoArchivo)
             End With
 
-
+            ModGlobal.EscribirLog("Ejecutando: " & sSql & " " & objSql.getParamList())
             Dim dt As DataTable = objSql.GetDataTableSql(sSql)
-
-            ' Verificar si hubo error en la base de datos
             If objSql.MensajeError <> "" Then
-                ModGlobal.EscribirLog("Error al guardar respaldo en BD: " & objSql.MensajeError)
+                ModGlobal.EscribirLog("BD ERROR: spRespaldos_Guardar - " & objSql.MensajeError)
                 Dim resultadoError As New With {
                     .Success = False,
                     .Message = "Error al guardar información del respaldo: " & objSql.MensajeError
@@ -124,6 +129,7 @@ Public Class Respaldos
                 Dim serializer3 As New System.Web.Script.Serialization.JavaScriptSerializer()
                 Return serializer3.Serialize(resultadoError)
             End If
+            ModGlobal.EscribirLog("BD OK: spRespaldos_Guardar")
 
             Dim resultadoExito As New With {
                 .Success = True,
@@ -136,7 +142,7 @@ Public Class Respaldos
             Return serializer4.Serialize(resultadoExito)
 
         Catch ex As Exception
-            ModGlobal.EscribirLog("Error al crear respaldo: " & ex.Message)
+            ModGlobal.EscribirLog("BD ERROR: CrearRespaldo - " & ex.Message)
             Dim resultadoCatch As New With {
                 .Success = False,
                 .Message = "Error al crear respaldo: " & ex.Message
@@ -158,12 +164,10 @@ Public Class Respaldos
                 .Add("@IncluirEliminados", False)
             End With
 
+            ModGlobal.EscribirLog("Ejecutando: " & sSql & " " & objSql.getParamList())
             Dim dt As DataTable = objSql.GetDataTableSql(sSql)
-            ModGlobal.EscribirLog($"DataTable obtenido: {If(dt IsNot Nothing, dt.Rows.Count.ToString(), "NULL")} filas")
-
-            ' Verificar si hubo error en la base de datos
             If objSql.MensajeError <> "" Then
-                ModGlobal.EscribirLog("Error al obtener respaldos: " & objSql.MensajeError)
+                ModGlobal.EscribirLog("BD ERROR: spRespaldos_Listar - " & objSql.MensajeError)
                 Dim resultadoError As New With {
                     .Success = False,
                     .Message = "Error al obtener respaldos: " & objSql.MensajeError,
@@ -172,6 +176,7 @@ Public Class Respaldos
                 Dim serializer6 As New System.Web.Script.Serialization.JavaScriptSerializer()
                 Return serializer6.Serialize(resultadoError)
             End If
+            ModGlobal.EscribirLog("BD OK: spRespaldos_Listar - " & If(dt IsNot Nothing, dt.Rows.Count.ToString(), "0") & " filas")
 
             Dim respaldos As New List(Of Object)
 
@@ -242,11 +247,10 @@ Public Class Respaldos
                 .Add("@EliminarFisicamente", False)
             End With
 
+            ModGlobal.EscribirLog("Ejecutando: " & sSql & " " & objSql.getParamList())
             Dim dt As DataTable = objSql.GetDataTableSql(sSql)
-
-            ' Verificar si hubo error en la base de datos
             If objSql.MensajeError <> "" Then
-                ModGlobal.EscribirLog("Error al eliminar respaldo: " & objSql.MensajeError)
+                ModGlobal.EscribirLog("BD ERROR: spRespaldos_Eliminar - " & objSql.MensajeError)
                 Dim resultadoError As New With {
                     .Success = False,
                     .Message = "Error al eliminar respaldo: " & objSql.MensajeError
@@ -254,6 +258,7 @@ Public Class Respaldos
                 Dim serializer9 As New System.Web.Script.Serialization.JavaScriptSerializer()
                 Return serializer9.Serialize(resultadoError)
             End If
+            ModGlobal.EscribirLog("BD OK: spRespaldos_Eliminar")
 
             If dt.Rows.Count > 0 Then
                 Dim resultadoExito As New With {
@@ -322,7 +327,13 @@ Public Class Respaldos
                 .Add("@ID", id)
             End With
 
+            ModGlobal.EscribirLog("Ejecutando: " & sSql & " " & objSql.getParamList())
             Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+            If objSql.MensajeError <> "" Then
+                ModGlobal.EscribirLog("BD ERROR: DescargarRespaldo SELECT - " & objSql.MensajeError)
+            Else
+                ModGlobal.EscribirLog("BD OK: DescargarRespaldo SELECT")
+            End If
 
             If dt.Rows.Count = 0 Then
                 HttpContext.Current.Response.Write("Respaldo no encontrado")

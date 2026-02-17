@@ -1,4 +1,4 @@
-﻿Imports System.Web.Services
+Imports System.Web.Services
 Imports System.Web.Script.Services
 Imports System.Web.Script.Serialization
 Imports SBSqlClient
@@ -8,7 +8,18 @@ Imports System.Web.Security
 Imports System.Text.RegularExpressions
 
 Public Class Transacciones
-	Inherits System.Web.UI.Page
+	Inherits BasePage
+
+	''' <summary>Cantidad máxima de transacciones por lote (parámetro CANT_TRANS_LOTE en sesión). Por defecto 10.</summary>
+	Public ReadOnly Property CantTransLoteMax As Integer
+		Get
+			Dim val As Object = Session(VariablesSesion.CANT_TRANS_LOTE)
+			If val Is Nothing OrElse String.IsNullOrWhiteSpace(val.ToString()) Then Return 10
+			Dim n As Integer
+			If Integer.TryParse(val.ToString().Trim(), n) AndAlso n > 0 Then Return n
+			Return 10
+		End Get
+	End Property
 
 	Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
 		' Verificar sesión
@@ -16,6 +27,7 @@ Public Class Transacciones
 			Response.Redirect("~/Login.aspx")
 			Return
 		End If
+		If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
 	End Sub
 
 
@@ -379,143 +391,107 @@ Public Class Transacciones
 		End Try
 	End Function
 
+	' GuardarMovimiento eliminado: el guardado se hace solo vía GuardarLote (spMovimientos_GuardarLote).
+	' Ver DbScripts/spMovimientos_GuardarMovimiento_REFERENCIA.sql para la definición del SP (usado internamente por GuardarLote en BD).
+
 	<WebMethod()>
 	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
-	Public Shared Function GuardarMovimiento(movimientoData As String) As Object
+	Public Shared Function GuardarLote(numeroAsociado As Integer, jsonLote As String) As Object
 		Try
-			ModGlobal.EscribirLog("GuardarMovimiento iniciado")
-			ModGlobal.EscribirLog("Datos recibidos: " & movimientoData)
-
+			ModGlobal.EscribirLog("GuardarLote iniciado. NumeroAsociado: " & numeroAsociado)
+			Dim usuarioId As Integer = Convert.ToInt32(HttpContext.Current.Session(VariablesSesion.UsuarioId))
 			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
-			Dim movimientoDict As Dictionary(Of String, Object) = DirectCast(New JavaScriptSerializer().Deserialize(movimientoData, GetType(Dictionary(Of String, Object))), Dictionary(Of String, Object))
-
-			Dim sSql As String = "Exec spMovimientos_GuardarMovimiento"
-
-			' Convertir el monto a decimal, normalizando coma decimal a punto decimal
-			Dim montoStr As String = movimientoDict("Monto").ToString().Replace(",", ".")
-			Dim montoDecimal As Decimal = Convert.ToDecimal(montoStr, System.Globalization.CultureInfo.InvariantCulture)
-			ModGlobal.EscribirLog($"💰 Monto original: {movimientoDict("Monto")}, normalizado: {montoStr}, decimal: {montoDecimal}")
-
-			' Convertir el decimal a string con punto decimal para el parámetro
-			Dim montoParam As String = montoDecimal.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
-			ModGlobal.EscribirLog($"💰 Monto para parámetro: {montoParam}")
-
-			With objSql.Parametros
-				.Add("@NumeroAsociado", movimientoDict("NumeroAsociado"))
-				.Add("@CodigoRubro", movimientoDict("CodigoRubro"))
-				.Add("@IDAuxiliar", movimientoDict("IDAuxiliar"))
-				.Add("@CodigoTransaccion", movimientoDict("CodigoTransaccion"))
-				.Add("@Monto", montoParam)
-				.Add("@Observaciones", If(String.IsNullOrEmpty(movimientoDict("Observaciones").ToString()), "", movimientoDict("Observaciones")))
-				.Add("@UsuarioID", HttpContext.Current.Session(VariablesSesion.UsuarioId))
-				.Add("@MensajeVal", "")
-			End With
-
-			ModGlobal.EscribirLog($"Ejecutando: {sSql} {objSql.getParamList()}")
-			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
-
-			' Verificar si hubo error en la ejecución del comando
+			objSql.Parametros.Clear()
+			objSql.Parametros.Add("@NumeroAsociado", numeroAsociado)
+			objSql.Parametros.Add("@UsuarioID", usuarioId)
+			objSql.Parametros.Add("@JsonLote", jsonLote)
+			ModGlobal.EscribirLog("Ejecutando: Exec dbo.spMovimientos_GuardarLote " & objSql.getParamList())
+			Dim dt As DataTable = objSql.GetDataTableSql("Exec dbo.spMovimientos_GuardarLote")
 			If objSql.MensajeError <> "" Then
-				ModGlobal.EscribirLog("Error en BD al guardar movimiento: " & objSql.MensajeError)
-				Return New With {
-					.Resultado = "ERROR",
-					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
-				}
+				ModGlobal.EscribirLog("BD ERROR: GuardarLote - " & objSql.MensajeError)
+				Return New With { .Resultado = "ERROR", .Mensaje = "Error en la base de datos: " & objSql.MensajeError, .Detalles = New Object() {} }
 			End If
-
-			' Validar la respuesta del SP (puede retornar un mensaje de error aun sin excepción)
+			ModGlobal.EscribirLog("BD OK: GuardarLote")
 			If dt Is Nothing OrElse dt.Rows.Count = 0 Then
-				ModGlobal.EscribirLog("Respuesta vacía del SP spMovimientos_GuardarMovimiento")
-				Return New With {
-					.Resultado = "ERROR",
-					.Mensaje = "Respuesta vacía del procedimiento almacenado"
-				}
+				Return New With { .Resultado = "ERROR", .Mensaje = "El procedimiento no devolvió datos.", .Detalles = New Object() {} }
 			End If
-
-			Dim row As DataRow = dt.Rows(0)
-			Dim resultadoSp As String = ""
-			Dim mensajeSp As String = ""
-
-			If dt.Columns.Contains("Resultado") AndAlso Not IsDBNull(row("Resultado")) Then
-				resultadoSp = row("Resultado").ToString().Trim().ToUpper()
+			Dim jsonStr As String = dt.Rows(0)(0).ToString()
+			If String.IsNullOrWhiteSpace(jsonStr) Then
+				Return New With { .Resultado = "ERROR", .Mensaje = "Respuesta vacía del procedimiento.", .Detalles = New Object() {} }
 			End If
-			If dt.Columns.Contains("Mensaje") AndAlso Not IsDBNull(row("Mensaje")) Then
-				mensajeSp = row("Mensaje").ToString().Trim()
-			End If
-
-			' Si el SP indica explícitamente error por columnas conocidas, devolver ERROR
-			If resultadoSp <> "" AndAlso resultadoSp <> "OK" AndAlso resultadoSp <> "SUCCESS" Then
-				ModGlobal.EscribirLog($"SP retornó Resultado='{resultadoSp}' Mensaje='{mensajeSp}'")
-				Return New With {
-					.Resultado = "ERROR",
-					.Mensaje = If(mensajeSp <> "", mensajeSp, "El procedimiento almacenado reportó un error")
-				}
-			End If
-			If mensajeSp <> "" AndAlso mensajeSp.ToUpper().Contains("ERROR") Then
-				ModGlobal.EscribirLog($"SP retornó Mensaje con indicio de error: '{mensajeSp}'")
-				Return New With {
-					.Resultado = "ERROR",
-					.Mensaje = mensajeSp
-				}
-			End If
-
-			' Extraer CapitalMovimientoID e InteresesMovimientoID (ahora el SP devuelve 0 en lugar de NULL)
-			Dim capitalMovimientoId As String = ""
-			Dim interesesMovimientoId As String = ""
-			
-			' Leer CapitalMovimientoID (0 si no existe)
-			If dt.Columns.Contains("CapitalMovimientoID") Then
-				Dim valorCapital As Integer = Convert.ToInt32(row("CapitalMovimientoID"))
-				If valorCapital > 0 Then
-					capitalMovimientoId = valorCapital.ToString()
-				End If
-			End If
-			
-			' Leer InteresesMovimientoID (0 si no existe)
-			If dt.Columns.Contains("InteresesMovimientoID") Then
-				Dim valorIntereses As Integer = Convert.ToInt32(row("InteresesMovimientoID"))
-				If valorIntereses > 0 Then
-					interesesMovimientoId = valorIntereses.ToString()
-				End If
-			End If
-			
-			' Si no se encuentran los nuevos campos, intentar con el campo antiguo para compatibilidad
-			If String.IsNullOrEmpty(capitalMovimientoId) AndAlso String.IsNullOrEmpty(interesesMovimientoId) Then
-				If dt.Columns.Contains("MovimientoID") AndAlso Not IsDBNull(row("MovimientoID")) Then
-					Dim valorMovimiento As Integer = Convert.ToInt32(row("MovimientoID"))
-					If valorMovimiento > 0 Then
-						capitalMovimientoId = valorMovimiento.ToString()
-					End If
-				ElseIf dt.Columns.Contains("IdMovimiento") AndAlso Not IsDBNull(row("IdMovimiento")) Then
-					Dim valorMovimiento As Integer = Convert.ToInt32(row("IdMovimiento"))
-					If valorMovimiento > 0 Then
-						capitalMovimientoId = valorMovimiento.ToString()
-					End If
-				ElseIf dt.Columns.Contains("MovimientoId") AndAlso Not IsDBNull(row("MovimientoId")) Then
-					Dim valorMovimiento As Integer = Convert.ToInt32(row("MovimientoId"))
-					If valorMovimiento > 0 Then
-						capitalMovimientoId = valorMovimiento.ToString()
-					End If
-				End If
-			End If
-
-			' Formatear valores para el log
-			Dim capitalIdLog As String = If(String.IsNullOrEmpty(capitalMovimientoId), "0 (no existe)", capitalMovimientoId)
-			Dim interesesIdLog As String = If(String.IsNullOrEmpty(interesesMovimientoId), "0 (no existe)", interesesMovimientoId)
-			ModGlobal.EscribirLog($"GuardarMovimiento OK. CapitalMovimientoID='{capitalIdLog}', InteresesMovimientoID='{interesesIdLog}', MensajeSP='{mensajeSp}'")
-
-			Return New With {
-				.Resultado = "SUCCESS",
-				.Mensaje = If(mensajeSp <> "", mensajeSp, "Movimiento guardado correctamente"),
-				.CapitalMovimientoID = capitalMovimientoId,
-				.InteresesMovimientoID = interesesMovimientoId
-			}
+			Dim serializer As New JavaScriptSerializer()
+			Dim obj As Object = serializer.Deserialize(Of Object)(jsonStr)
+			Return obj
 		Catch ex As Exception
-			ModGlobal.EscribirLog("Error en GuardarMovimiento: " & ex.Message & " | StackTrace: " & ex.StackTrace)
-			Return New With {
-				.Resultado = "ERROR",
-				.Mensaje = "Error al guardar movimiento: " & ex.Message
-			}
+			ModGlobal.EscribirLog("Error en GuardarLote: " & ex.Message & " | " & ex.StackTrace)
+			Return New With { .Resultado = "ERROR", .Mensaje = "Error al guardar lote: " & ex.Message, .Detalles = New Object() {} }
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GenerarComprobanteLote(idTrans As Integer) As Object
+		Try
+			ModGlobal.EscribirLog("GenerarComprobanteLote iniciado. IDTrans: " & idTrans)
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			objSql.Parametros.Clear()
+			objSql.Parametros.Add("@IDTrans", idTrans)
+			ModGlobal.EscribirLog("Ejecutando: Exec dbo.spMovimientos_ObtenerDatosComprobanteLote " & objSql.getParamList())
+			Dim dt As DataTable = objSql.GetDataTableSql("Exec dbo.spMovimientos_ObtenerDatosComprobanteLote")
+			If objSql.MensajeError <> "" Then
+				ModGlobal.EscribirLog("BD ERROR: GenerarComprobanteLote - " & objSql.MensajeError)
+				Return New With { .Resultado = "ERROR", .Mensaje = "Error al obtener datos del comprobante: " & objSql.MensajeError }
+			End If
+			ModGlobal.EscribirLog("BD OK: GenerarComprobanteLote")
+			If dt Is Nothing OrElse dt.Rows.Count = 0 Then
+				Return New With { .Resultado = "ERROR", .Mensaje = "No se encontraron datos para este lote." }
+			End If
+			Dim row0 As DataRow = dt.Rows(0)
+			Dim idTransFormateado As String = Right("000000000000" & idTrans.ToString(), 12)
+			' Fecha de hoy: el comprobante se imprime desde la misma ventana donde se creó el movimiento
+			Dim fechaHora As String = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+			Dim usuario As String = If(dt.Columns.Contains("UsuarioNombre"), row0("UsuarioNombre").ToString(), If(dt.Columns.Contains("Usuario"), row0("Usuario").ToString(), ""))
+			Dim numeroAsociado As String = If(dt.Columns.Contains("NumeroAsociado"), row0("NumeroAsociado").ToString(), "")
+			Dim nombreAsociado As String = If(dt.Columns.Contains("NombreAsociado"), row0("NombreAsociado").ToString(), "")
+			Dim tipoIdentificacion As String = If(dt.Columns.Contains("TipoIdentificacion") AndAlso Not IsDBNull(row0("TipoIdentificacion")), row0("TipoIdentificacion").ToString(), "")
+			Dim numeroIdentificacion As String = If(dt.Columns.Contains("NumeroIdentificacion") AndAlso Not IsDBNull(row0("NumeroIdentificacion")), row0("NumeroIdentificacion").ToString(), "")
+			Dim sb As New System.Text.StringBuilder()
+			Dim numeroLinea As Integer = 1
+			Dim fmt As System.Globalization.CultureInfo = System.Globalization.CultureInfo.InvariantCulture
+			For Each row As DataRow In dt.Rows
+				Dim idRaw As String = If(dt.Columns.Contains("ID") AndAlso Not IsDBNull(row("ID")), row("ID").ToString().Trim(), "")
+				Dim idVal As String = If(idRaw.Length > 5, idRaw.Substring(idRaw.Length - 5), idRaw.PadLeft(5, "0"c))
+				Dim rubro As String = If(dt.Columns.Contains("DescripcionRubro"), row("DescripcionRubro").ToString(), "")
+				Dim auxiliar As String = If(dt.Columns.Contains("DescripcionTipoAuxiliar"), row("DescripcionTipoAuxiliar").ToString(), "")
+				Dim cuenta As String = If(dt.Columns.Contains("Cuenta"), row("Cuenta").ToString(), "")
+				Dim tipoTrans As String = If(dt.Columns.Contains("DescripcionTransaccion"), row("DescripcionTransaccion").ToString(), "")
+				Dim montoVal As Decimal = 0
+				If dt.Columns.Contains("Monto") AndAlso Not IsDBNull(row("Monto")) Then montoVal = Convert.ToDecimal(row("Monto"))
+				Dim montoStr As String = "$" & montoVal.ToString("###,###,##0.00", fmt)
+				Dim saldoVal As Decimal = 0
+				If dt.Columns.Contains("Saldo") AndAlso Not IsDBNull(row("Saldo")) Then saldoVal = Convert.ToDecimal(row("Saldo"))
+				Dim saldoStr As String = "$" & saldoVal.ToString("###,###,##0.00", fmt)
+				Dim obs As String = If(dt.Columns.Contains("Observaciones") AndAlso Not IsDBNull(row("Observaciones")), row("Observaciones").ToString(), "")
+				obs = System.Net.WebUtility.HtmlEncode(obs)
+				sb.Append("<tr><td class=""col-num"">").Append(numeroLinea).Append("</td><td class=""col-id"">").Append(System.Net.WebUtility.HtmlEncode(idVal)).Append("</td><td class=""col-rubro"">").Append(System.Net.WebUtility.HtmlEncode(rubro)).Append("</td><td>").Append(System.Net.WebUtility.HtmlEncode(auxiliar)).Append("</td><td class=""col-cuenta"">").Append(System.Net.WebUtility.HtmlEncode(cuenta)).Append("</td><td>").Append(System.Net.WebUtility.HtmlEncode(tipoTrans)).Append("</td><td class=""col-monto"">").Append(montoStr).Append("</td><td class=""col-saldo"">").Append(saldoStr).Append("</td><td class=""col-obs"">").Append(obs).Append("</td></tr>")
+				numeroLinea += 1
+			Next
+			Dim tablaDetalle As String = sb.ToString()
+			Dim templatePath As String = HttpContext.Current.Server.MapPath("~/Forms/Transacciones/comprobanteLote.html")
+			Dim htmlTemplate As String = System.IO.File.ReadAllText(templatePath)
+			htmlTemplate = htmlTemplate.Replace("@IDTransaccion", idTransFormateado)
+			htmlTemplate = htmlTemplate.Replace("@FechaHora", fechaHora)
+			htmlTemplate = htmlTemplate.Replace("@Usuario", System.Net.WebUtility.HtmlEncode(usuario))
+			htmlTemplate = htmlTemplate.Replace("@NumeroAsociado", System.Net.WebUtility.HtmlEncode(numeroAsociado))
+			htmlTemplate = htmlTemplate.Replace("@NombreAsociado", System.Net.WebUtility.HtmlEncode(nombreAsociado))
+			htmlTemplate = htmlTemplate.Replace("@TipoIdentificacion", System.Net.WebUtility.HtmlEncode(tipoIdentificacion))
+			htmlTemplate = htmlTemplate.Replace("@NumeroIdentificacion", System.Net.WebUtility.HtmlEncode(numeroIdentificacion))
+			htmlTemplate = htmlTemplate.Replace("@TablaDetalle", tablaDetalle)
+			ModGlobal.EscribirLog("GenerarComprobanteLote OK. IDTrans: " & idTrans)
+			Return New With { .Resultado = "SUCCESS", .Html = htmlTemplate, .IDTransaccion = idTrans }
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GenerarComprobanteLote: " & ex.Message & " | " & ex.StackTrace)
+			Return New With { .Resultado = "ERROR", .Mensaje = "Error al generar comprobante: " & ex.Message }
 		End Try
 	End Function
 

@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Transacciones.aspx.vb" Inherits="SemgaWapp.Transacciones" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Transacciones.aspx.vb" Inherits="SemgaWapp.Transacciones" %>
 
 <!DOCTYPE html>
 
@@ -15,6 +15,8 @@
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet"/>
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
+    <!-- Toasts: posición con clase global .toast-container + modificador --top-end o --center -->
+    <link href="../../Scripts/toast-global.css" rel="stylesheet" />
     
     <style>
         body {
@@ -83,13 +85,47 @@
             border-radius: 4px;
         }
         
+        /* Campo monto: prefijo $ con fondo gris y separador (estilo tipo @ username) */
+        .input-group-monto {
+            border-radius: 4px;
+        }
+        .input-group-monto .input-group-text-monto {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+            border-right: 1px solid #dee2e6;
+            border-radius: 4px 0 0 4px;
+            padding-left: 0.75rem;
+            padding-right: 0.5rem;
+        }
+        .input-group-monto .form-control {
+            border-radius: 0 4px 4px 0;
+            border-left: none;
+        }
+        .input-group-monto .form-control:focus {
+            outline: none;
+            box-shadow: none;
+        }
+        .input-group-monto:focus-within .input-group-text-monto {
+            border-color: #86b7fe;
+            box-shadow: none;
+        }
+        .input-group-monto:focus-within .form-control {
+            border-color: #86b7fe;
+            box-shadow: none;
+        }
+        .input-group-monto:focus-within {
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
         .form-label {
             font-size: 12px;
             font-weight: 500;
             margin-bottom: 4px;
         }
         
-        .toast-container {
+        /* Solo el contenedor de toasts informativos (top-end). No aplicar al de confirms (--center). */
+        .toast-container.toast-container--top-end {
             position: fixed;
             top: 20px;
             right: 20px;
@@ -262,6 +298,74 @@
             align-items: center !important;
             justify-content: space-between !important;
         }
+        
+        /* Fila doble: mismo ancho 50% / 50% para asociado y para formulario+lista */
+        .row-fila-doble {
+            display: flex !important;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            gap: 0 1%;
+        }
+        
+        .row-fila-doble .columna-izq,
+        .row-fila-doble .columna-der {
+            flex: 0 0 49.5%;
+            max-width: 50%;
+            min-width: 0;
+        }
+        
+        .row-fila-doble .columna-izq .card {
+            width: 100%;
+        }
+        
+        /* Dos columnas 50% para formulario y lista de lote (solo cuando está visible, sin .d-none) */
+        #divFormularioTransaccion:not(.d-none) {
+            display: flex !important;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+        }
+        
+        #divFormularioTransaccion.d-none {
+            display: none !important;
+        }
+        
+        #divFormularioTransaccion .card {
+            min-width: 0;
+        }
+        
+        #tblTransaccionesLote td, #tblTransaccionesLote th {
+            font-size: 12px;
+            padding: 6px 8px;
+        }
+        
+        /* Botones Añadir y Cancelar del formulario: mismo tamaño y alto */
+        #btnAnadirTransaccion, #btnCancelarTransaccion {
+            height: 38px !important;
+            min-height: 38px !important;
+            width: 135px;
+            min-width: 135px;
+            max-width: 135px;
+            padding: 0.375rem 12px !important;
+            line-height: 1.5 !important;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Ocultar barra global cuando no hay asociado */
+        #divBotonesGlobales.d-none {
+            display: none !important;
+        }
+        
+        /* Barra de botones globales: mismo ancho que las columnas de arriba */
+        .barra-botones-globales {
+            background: rgba(13, 110, 253, 0.08);
+            border-radius: 8px;
+            padding: 14px 20px;
+            margin: 0 0 15px 0;
+            border: 1px solid rgba(13, 110, 253, 0.15);
+        }
     </style>
 </head>
 <body>
@@ -281,10 +385,10 @@
                 </div>
             </div>
 
-            <!-- Selección de Asociado -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card border-primary">
+            <!-- Selección de Asociado: misma anchura y alineación que el div izquierdo (50%) -->
+            <div id="rowAsociado" class="row-fila-doble mb-4">
+                <div class="columna-izq">
+                    <div class="card border-primary h-100">
                         <div class="card-header bg-light">
                             <h6 class="mb-0 text-primary">
                                 <i class="fas fa-user me-2"></i>Asociado Seleccionado
@@ -322,8 +426,8 @@
                 </div>
                 
                 <!-- Div de Error de Validación -->
-                <div class="col-md-8">
-                    <div id="divErrorValidacion" class="alert alert-danger d-none" style="margin-bottom: 0;">
+                <div class="columna-der">
+                    <div id="divErrorValidacion" class="alert alert-danger d-none h-100" style="margin-bottom: 0;">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-exclamation-triangle fa-lg text-danger me-3"></i>
@@ -340,107 +444,139 @@
                 </div>
             </div>
 
-            <!-- Formulario de Transacción -->
-            <div id="divFormularioTransaccion" class="row mb-4 d-none">
-                <div class="col-12">
-                    <div class="card border-success">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0 text-success">
-                                <i class="fas fa-plus-circle me-2"></i>Nueva Transacción
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <form id="formTransaccion">
-                                <div class="row">
-                                    <!-- Rubro -->
-                                    <div class="col-md-2">
-                                        <div class="mb-3">
-                                            <label for="ddlRubro" class="form-label fw-bold">Rubro <span class="text-danger">*</span></label>
-                                            <select id="ddlRubro" class="form-select" required>
-                                                <option value="">Seleccionar rubro...</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Auxiliar -->
-                                    <div class="col-md-2">
-                                        <div class="mb-3">
-                                            <label for="ddlAuxiliar" class="form-label fw-bold">Auxiliar <span class="text-danger">*</span></label>
-                                            <select id="ddlAuxiliar" class="form-select" required>
-                                                <option value="">Seleccionar auxiliar...</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Cuenta -->
-                                    <div class="col-md-2">
-                                        <div class="mb-3">
-                                            <label for="ddlCuenta" class="form-label fw-bold">Cuenta <span class="text-danger">*</span></label>
-                                            <select id="ddlCuenta" class="form-select" required>
-                                                <option value="">Seleccionar cuenta...</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Código de Transacción -->
-                                    <div class="col-md-3">
-                                        <div class="mb-3">
-                                            <label for="ddlCodigoTransaccion" class="form-label fw-bold">Transacción <span class="text-danger">*</span></label>
-                                            <select id="ddlCodigoTransaccion" class="form-select" required>
-                                                <option value="">Seleccionar código...</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Monto -->
-                                    <div class="col-md-3">
-                                        <div class="mb-3">
-                                            <label for="txtMonto" class="form-label fw-bold">Monto <span class="text-danger">*</span></label>
-                                            <input type="number" id="txtMonto" class="form-control" step="0.01" min="0" placeholder="0.00" required>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <!-- Observaciones -->
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="txtObservaciones" class="form-label fw-bold">Observaciones</label>
-                                            <input type="text" id="txtObservaciones" class="form-control" placeholder="">
-                                        </div>
-                                    </div>
-
-                                    <!-- Botones -->
-                                    <div class="col-md-6">
-                                        <div class="mb-3 d-flex gap-2 align-items-center h-100">
-                                            <!-- Botones originales -->
-                                            <button type="button" id="btnGuardarTransaccion" class="btn btn-success">
-                                                <i class="fas fa-save me-1"></i>Guardar
-                                            </button>
-                                            <button type="button" id="btnCancelarTransaccion" class="btn btn-secondary">
-                                                <i class="fas fa-times me-1"></i>Cancelar
-                                            </button>
-                                            
-                                            <!-- Botones post-guardado (inicialmente ocultos) -->
-                                            <button type="button" id="btnImprimirComprobante" class="btn btn-primary" style="display: none;">
-                                                <i class="fas fa-print me-1"></i>Imprimir Comprobante
-                                            </button>
-                                            <button type="button" id="btnNuevaTransaccion" class="btn btn-success" style="display: none;">
-                                                <i class="fas fa-plus me-1"></i>Nueva Transacción
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+            <!-- Dos columnas: solo visibles cuando hay asociado seleccionado -->
+            <div id="divFormularioTransaccion" class="mb-3 d-none" style="gap: 0 1%; display: none !important;">
+                <!-- Izquierda: formulario de datos de la transacción -->
+                <div class="card border-success" style="flex: 0 0 49.5%; max-width: 50%;">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0 text-success">
+                            <i class="fas fa-plus-circle me-2"></i>Datos de la transacción
+                        </h6>
                     </div>
+                    <div class="card-body">
+                        <form id="formTransaccion">
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <label for="ddlRubro" class="form-label fw-bold">Rubro <span class="text-danger">*</span></label>
+                                    <select id="ddlRubro" class="form-select form-select-sm">
+                                        <option value="">Seleccionar rubro...</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="ddlAuxiliar" class="form-label fw-bold">Auxiliar <span class="text-danger">*</span></label>
+                                    <select id="ddlAuxiliar" class="form-select form-select-sm">
+                                        <option value="">Seleccionar auxiliar...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <label for="ddlCuenta" class="form-label fw-bold">Cuenta <span class="text-danger">*</span></label>
+                                    <select id="ddlCuenta" class="form-select form-select-sm">
+                                        <option value="">Seleccionar cuenta...</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="ddlCodigoTransaccion" class="form-label fw-bold">Transacción <span class="text-danger">*</span></label>
+                                    <select id="ddlCodigoTransaccion" class="form-select form-select-sm">
+                                        <option value="">Seleccionar código...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    <label for="txtMonto" class="form-label fw-bold">Monto <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm input-group-monto">
+                                        <span class="input-group-text input-group-text-monto">$</span>
+                                        <input type="text" id="txtMonto" class="form-control form-control-sm" inputmode="decimal" placeholder="0.00" autocomplete="off" maxlength="14">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    <label for="txtObservaciones" class="form-label fw-bold">Observaciones</label>
+                                    <input type="text" id="txtObservaciones" class="form-control form-control-sm" placeholder="">
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12 d-flex gap-2 align-items-center">
+                                    <button type="button" id="btnAnadirTransaccion" class="btn btn-primary">
+                                        <i class="fas fa-plus me-1"></i>Añadir
+                                    </button>
+                                    <button type="button" id="btnCancelarTransaccion" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Derecha: lista de transacciones del lote -->
+                <div class="card border-primary" style="flex: 0 0 49.5%; max-width: 50%;">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0 text-primary" id="tituloTransaccionesLote">
+                            <i class="fas fa-list me-2"></i>Transacciones del lote (máx. <%= CantTransLoteMax %>)
+                        </h6>
+                    </div>
+                    <div class="card-body p-2">
+                        <input type="hidden" id="cantTransLoteMax" value="<%= CantTransLoteMax %>" />
+                        <input type="hidden" id="jsonTransaccionesLote" value="[]" />
+                        <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-0" id="tblTransaccionesLote" style="display: none;">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width: 50px;">Línea</th>
+                                        <th>Auxiliar</th>
+                                        <th>Cuenta</th>
+                                        <th>Transacción</th>
+                                        <th class="text-end">Monto</th>
+                                        <th>Mensaje</th>
+                                        <th style="width: 70px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyTransaccionesLote">
+                                    <!-- Filas generadas por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="divListaVacia" class="text-center text-muted py-3 small">No hay transacciones añadidas. Use "Añadir" para agregar.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones globales: solo visibles cuando hay asociado seleccionado -->
+            <div id="divBotonesGlobales" class="d-none" style="display: none !important;">
+                <div class="barra-botones-globales">
+                    <div class="d-flex justify-content-center gap-3 align-items-center">
+                        <button type="button" id="btnGuardarLote" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i>Guardar
+                        </button>
+                        <button type="button" id="btnImprimirLote" class="btn btn-primary" style="display: none;">
+                            <i class="fas fa-print me-1"></i>Imprimir
+                        </button>
+                        <button type="button" id="btnCancelarGlobal" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prueba comprobante lote: solo para probar formato sin hacer transacción (oculto) -->
+            <div class="mt-3 p-2 border rounded bg-light d-none" id="divPruebaComprobanteLote" style="max-width: 320px;">
+                <label class="form-label small text-muted mb-1">Prueba comprobante lote</label>
+                <div class="d-flex gap-2 align-items-center">
+                    <input type="number" id="txtPruebaIDTransaccion" class="form-control form-control-sm" placeholder="ID Transacción" min="1" style="width: 100px;" />
+                    <button type="button" id="btnPruebaImprimirLote" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-print me-1"></i>Imprimir
+                    </button>
                 </div>
             </div>
 
         </div>
 
-        <!-- Toast Container -->
-        <div id="toastContainer" class="toast-container"></div>
+        <!-- Toast: informativos (top-end) y confirms (centro) -->
+        <div id="toastContainer" class="toast-container toast-container--top-end"></div>
+        <div id="confirmToastContainer" class="toast-container toast-container--center" aria-hidden="true"></div>
         
         <!-- Global Modals Container -->
         <div id="globalModalsContainer"></div>
@@ -460,6 +596,9 @@
 
     <script>
         $(document).ready(function() {
+            // Ocultar sección de transacción y botones globales hasta que se elija un asociado
+            $('#divFormularioTransaccion, #divBotonesGlobales').addClass('d-none').css('display', 'none');
+
             // Inicializar monitoreo de inactividad
             if (typeof initializeInactivityMonitoring === 'function') {
                 initializeInactivityMonitoring();
@@ -484,7 +623,10 @@
             });
 
             $('#btnEliminarAsociado').on('click', function() {
-                // Verificar si el formulario tiene datos capturados
+                if (listaTransaccionesPendientes.length > 0) {
+                    mostrarErrorValidacion('Vacíe el lote de transacciones (elimine todas las filas) antes de cambiar de asociado.');
+                    return;
+                }
                 if (tieneDatosCapturados()) {
                     mostrarConfirmEliminarAsociado();
                 } else {
@@ -512,38 +654,99 @@
                 }
             });
 
-            $('#btnGuardarTransaccion').on('click', function() {
-                guardarTransaccion();
+            $('#btnAnadirTransaccion').on('click', function() {
+                añadirTransaccionALista();
             });
 
             $('#btnCancelarTransaccion').on('click', function() {
                 limpiarFormularioTransaccion();
             });
 
-            // Event listeners para botones post-guardado
-            $('#btnImprimirComprobante').on('click', function() {
-                imprimirComprobante();
+            $('#btnGuardarLote').on('click', function() {
+                guardarLote();
             });
 
-            $('#btnNuevaTransaccion').on('click', function() {
-                nuevaTransaccion();
+            $('#btnCancelarGlobal').on('click', function() {
+                cancelarGlobal();
             });
+
+            $('#btnImprimirLote').on('click', function() {
+                if (ultimoIDTransaccion == null || ultimoIDTransaccion === undefined) {
+                    showToast('info', 'Imprimir', 'No hay comprobante de lote para imprimir.');
+                    return;
+                }
+                imprimirComprobanteLotePorId(ultimoIDTransaccion);
+            });
+
+            $('#btnPruebaImprimirLote').on('click', function() {
+                var idTrans = parseInt($('#txtPruebaIDTransaccion').val(), 10);
+                if (isNaN(idTrans) || idTrans < 1) {
+                    showToast('warning', 'Prueba', 'Ingrese un ID Transacción válido (número mayor a 0).');
+                    return;
+                }
+                imprimirComprobanteLotePorId(idTrans);
+            });
+
+            function imprimirComprobanteLotePorId(idTrans) {
+                $.ajax({
+                    type: 'POST',
+                    url: 'Transacciones.aspx/GenerarComprobanteLote',
+                    data: JSON.stringify({ idTrans: idTrans }),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.d && response.d.Resultado === 'SUCCESS') {
+                            mostrarModalComprobante(response.d.Html, '', '');
+                        } else {
+                            showToast('error', 'Error', (response.d && response.d.Mensaje) || 'Error al generar comprobante.');
+                        }
+                    },
+                    error: function(xhr, status, err) {
+                        showToast('error', 'Error', 'Error al generar comprobante: ' + (err || xhr.statusText));
+                    }
+                });
+            }
             
             // Evento para cerrar el div de error
             $('#btnCerrarError').on('click', function() {
                 ocultarErrorValidacion();
             });
             
-            // Evento para presionar Enter en el campo monto
+            // Campo monto: solo dos decimales y formato con $
+            (function() {
+                var $monto = $('#txtMonto');
+                $monto.on('input', function() {
+                    var v = $(this).val();
+                    var dot = v.indexOf('.');
+                    if (dot >= 0) {
+                        var before = v.substring(0, dot).replace(/[^0-9]/g, '');
+                        var after = v.substring(dot + 1).replace(/[^0-9]/g, '').substring(0, 2);
+                        v = (before || '') + '.' + after;
+                    } else {
+                        v = v.replace(/[^0-9.]/g, '');
+                        if (v.split('.').length > 2) v = v.replace(/\.+$/, '');
+                    }
+                    $(this).val(v);
+                });
+                $monto.on('blur', function() {
+                    var v = $(this).val().replace(',', '.').trim();
+                    if (v === '' || v === '.') {
+                        $(this).val('');
+                        return;
+                    }
+                    var n = parseFloat(v);
+                    if (!isNaN(n) && n >= 0) {
+                        $(this).val(n.toFixed(2));
+                    }
+                });
+            })();
+            
+            // Evento para presionar Enter en el campo monto -> Añadir a la lista
             $('#txtMonto').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key
+                if (e.which === 13) {
                     e.preventDefault();
-                    // Quitar el foco del campo para evitar múltiples activaciones
                     $(this).blur();
-                    // Pequeño delay para asegurar que el blur se procese
-                    setTimeout(function() {
-                        guardarTransaccion();
-                    }, 50);
+                    setTimeout(function() { añadirTransaccionALista(); }, 50);
                 }
             });
             
@@ -557,9 +760,8 @@
         var asociadoSeleccionado = null;
         var globalSearchConfig = null;
         var jsonAuxiliares = null; // Almacenar el JSON de auxiliares del asociado
-        var ultimoCapitalMovimientoId = null; // Almacenar el ID del último movimiento de capital guardado
-        var ultimoInteresesMovimientoId = null; // Almacenar el ID del último movimiento de intereses guardado
-        var guardandoTransaccion = false; // Prevenir múltiples ejecuciones simultáneas
+        var listaTransaccionesPendientes = []; // Lote de transacciones (mismo asociado). Cada ítem: { CodigoRubro, AuxiliarKey, IDAuxiliar, CodigoTransaccion, Monto, Observaciones, textoAuxiliar, textoCuenta, textoTransaccion }
+        var guardandoTransaccion = false; // Usado por flujo legacy (guardar una sola transacción)
 
         // Función para inicializar el componente global de búsqueda
         function inicializarBusquedaAsociadosGlobal() {
@@ -614,8 +816,14 @@
             $('#divSinAsociado').addClass('d-none');
             $('#divAsociadoSeleccionado').removeClass('d-none');
             
-            // Mostrar formulario de Transacción
-            $('#divFormularioTransaccion').removeClass('d-none');
+            // Mostrar formulario y botones globales (solo cuando hay asociado)
+            $('#divFormularioTransaccion').removeClass('d-none').css('display', 'flex');
+            $('#divBotonesGlobales').removeClass('d-none').css('display', 'block');
+            
+            // Reiniciar lote para el nuevo asociado
+            listaTransaccionesPendientes = [];
+            actualizarJsonYTablaLote();
+            actualizarEstadoBotonAsociado();
             
             // Ocultar cualquier error de validación previo
             ocultarErrorValidacion();
@@ -656,14 +864,17 @@
 
         function eliminarAsociadoSeleccionado() {
             asociadoSeleccionado = null;
+            jsonAuxiliares = null;
+            listaTransaccionesPendientes = [];
             $('#lblAsociadoInfo').text('');
             $('#lblAsociadoDetalle').text('');
             
             $('#divAsociadoSeleccionado').addClass('d-none');
             $('#divSinAsociado').removeClass('d-none');
             
-            // Ocultar formulario de Transacción
-            $('#divFormularioTransaccion').addClass('d-none');
+            $('#divFormularioTransaccion').addClass('d-none').css('display', 'none');
+            $('#divBotonesGlobales').addClass('d-none').css('display', 'none');
+            $('#jsonTransaccionesLote').val('[]');
         }
 
         // Funciones para el formulario de Transacción basadas en JsonAuxiliares
@@ -699,6 +910,17 @@
             }
         }
 
+        /** Obtiene el value para el option del auxiliar: "Cuenta-IdTipoAuxiliar". El servidor envía Cuentas[] y no Cuenta, por eso se usa la primera cuenta. */
+        function auxiliarOptionValue(auxiliar) {
+            var idTipo = auxiliar.IdTipoAuxiliar || '';
+            if (auxiliar.Cuentas && auxiliar.Cuentas.length > 0) {
+                var prim = auxiliar.Cuentas[0];
+                var cuenta = (typeof prim === 'object' && prim.Cuenta != null) ? prim.Cuenta : String(prim);
+                return cuenta + '-' + idTipo;
+            }
+            return idTipo;
+        }
+
         function cargarAuxiliaresPorRubro(codigoRubro) {
             if (!jsonAuxiliares || !jsonAuxiliares.AuxiliaresPorRubro || !jsonAuxiliares.AuxiliaresPorRubro[codigoRubro]) {
                 return;
@@ -710,13 +932,14 @@
             
             // Si solo hay un auxiliar, no mostrar opción "Seleccionar..."
             if (auxiliaresDelRubro.length === 1) {
-                $('#ddlAuxiliar').append(`<option value="${auxiliaresDelRubro[0].Cuenta}-${auxiliaresDelRubro[0].IdTipoAuxiliar}">${auxiliaresDelRubro[0].DescripcionAuxiliar}</option>`);
-                // Cargar cuentas automáticamente
-                cargarCuentasPorAuxiliar(`${auxiliaresDelRubro[0].Cuenta}-${auxiliaresDelRubro[0].IdTipoAuxiliar}`);
+                var val1 = auxiliarOptionValue(auxiliaresDelRubro[0]);
+                $('#ddlAuxiliar').append(`<option value="${val1}">${auxiliaresDelRubro[0].DescripcionAuxiliar}</option>`);
+                cargarCuentasPorAuxiliar(val1);
             } else {
                 $('#ddlAuxiliar').append('<option value="">Seleccionar auxiliar...</option>');
                 $.each(auxiliaresDelRubro, function(index, auxiliar) {
-                    $('#ddlAuxiliar').append(`<option value="${auxiliar.Cuenta}-${auxiliar.IdTipoAuxiliar}">${auxiliar.DescripcionAuxiliar}</option>`);
+                    var val = auxiliarOptionValue(auxiliar);
+                    $('#ddlAuxiliar').append(`<option value="${val}">${auxiliar.DescripcionAuxiliar}</option>`);
                 });
             }
         }
@@ -823,6 +1046,329 @@
 
         function crearChipIdentificacion(codTipoDoc, numeroIdentificacion) {
             return crearChipTipoDocumento(codTipoDoc, numeroIdentificacion);
+        }
+
+        // --- Lote de transacciones (mismo asociado) ---
+        function actualizarEstadoBotonAsociado() {
+            var hayItems = listaTransaccionesPendientes.length > 0;
+            $('#btnEliminarAsociado').prop('disabled', hayItems);
+            $('#btnBuscarAsociado').prop('disabled', hayItems);
+            if (hayItems) {
+                $('#btnEliminarAsociado').attr('title', 'Vacíe el lote de transacciones antes de cambiar de asociado');
+            } else {
+                $('#btnEliminarAsociado').removeAttr('title');
+            }
+        }
+
+        /** Devuelve el índice (0-based) de la primera transacción duplicada, o -1 si no hay duplicado. No se considera el monto (rubro+auxiliar+cuenta+transacción). */
+        function indiceDuplicadoEnLote(codigoRubro, auxiliarKey, idAuxiliar, codigoTransaccion) {
+            for (var i = 0; i < listaTransaccionesPendientes.length; i++) {
+                var it = listaTransaccionesPendientes[i];
+                if (it.CodigoRubro === codigoRubro &&
+                    it.AuxiliarKey === auxiliarKey &&
+                    String(it.IDAuxiliar) === String(idAuxiliar) &&
+                    it.CodigoTransaccion === codigoTransaccion) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function añadirTransaccionALista() {
+            if (!validarFormularioTransaccion()) return;
+            if (!asociadoSeleccionado || !asociadoSeleccionado.numeroAsociado) {
+                mostrarErrorValidacion('No hay un asociado seleccionado');
+                return;
+            }
+            var cantMax = parseInt($('#cantTransLoteMax').val(), 10) || 10;
+            if (listaTransaccionesPendientes.length >= cantMax) {
+                showToast('warning', 'Lote lleno', 'El lote admite como máximo ' + cantMax + ' transacciones. Debe guardar o eliminar líneas para añadir más.');
+                return;
+            }
+            var codigoRubro = $('#ddlRubro').val();
+            var auxiliarKey = $('#ddlAuxiliar').val();
+            var idAuxiliar = $('#ddlCuenta').val();
+            var codigoTransaccion = $('#ddlCodigoTransaccion').val();
+            var montoInput = $('#txtMonto').val().replace(',', '.');
+            var monto = parseFloat(montoInput);
+            if (!isNaN(monto)) monto = Math.round(monto * 100) / 100;
+            var item = {
+                CodigoRubro: codigoRubro,
+                AuxiliarKey: auxiliarKey,
+                IDAuxiliar: idAuxiliar,
+                CodigoTransaccion: codigoTransaccion,
+                Monto: monto,
+                Observaciones: $('#txtObservaciones').val() || '',
+                textoAuxiliar: $('#ddlAuxiliar option:selected').text(),
+                textoCuenta: $('#ddlCuenta option:selected').text(),
+                textoTransaccion: $('#ddlCodigoTransaccion option:selected').text()
+            };
+            var idxDup = indiceDuplicadoEnLote(codigoRubro, auxiliarKey, idAuxiliar, codigoTransaccion);
+            if (idxDup >= 0) {
+                var numLinea = idxDup + 1;
+                var cantMaxDup = parseInt($('#cantTransLoteMax').val(), 10) || 10;
+                if (listaTransaccionesPendientes.length >= cantMaxDup) {
+                    showToast('warning', 'Lote lleno', 'El lote admite como máximo ' + cantMaxDup + ' transacciones.');
+                    return;
+                }
+                showConfirmToast(
+                    'warning',
+                    'Posible duplicado',
+                    'Ya hay en la lista una transacción idéntica en la línea ' + numLinea + '.<br><strong>¿Seguro desea duplicarla?</strong>',
+                    function() {
+                        if (listaTransaccionesPendientes.length >= cantMaxDup) {
+                            showToast('warning', 'Lote lleno', 'No se puede añadir: el lote ya tiene el máximo de ' + cantMaxDup + ' transacciones.');
+                            return;
+                        }
+                        listaTransaccionesPendientes.push(item);
+                        actualizarJsonYTablaLote();
+                        actualizarEstadoBotonAsociado();
+                        limpiarFormularioTransaccion();
+                        ocultarErrorValidacion();
+                    },
+                    function() {
+                        showToast('info', 'Operación cancelada', 'No se añadió la transacción.');
+                    }
+                );
+                return;
+            }
+            listaTransaccionesPendientes.push(item);
+            actualizarJsonYTablaLote();
+            actualizarEstadoBotonAsociado();
+            limpiarFormularioTransaccion();
+            ocultarErrorValidacion();
+        }
+
+        function actualizarJsonYTablaLote() {
+            $('#jsonTransaccionesLote').val(JSON.stringify(listaTransaccionesPendientes));
+            var tbody = $('#tbodyTransaccionesLote');
+            tbody.empty();
+            if (listaTransaccionesPendientes.length === 0) {
+                $('#divListaVacia').show();
+                $('#tblTransaccionesLote').hide();
+            } else {
+                $('#divListaVacia').hide();
+                $('#tblTransaccionesLote').show();
+                $.each(listaTransaccionesPendientes, function(i, it) {
+                    var montoFmt = it.Monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    var tr = $('<tr></tr>').attr('data-numero-linea', i + 1);
+                    tr.append($('<td class="text-center"></td>').text(i + 1));
+                    tr.append($('<td></td>').text(it.textoAuxiliar || ''));
+                    tr.append($('<td></td>').text(it.textoCuenta || ''));
+                    tr.append($('<td></td>').text(it.textoTransaccion || ''));
+                    tr.append($('<td class="text-end"></td>').text(montoFmt));
+                    tr.append($('<td class="td-mensaje-lote small"></td>').text(it.Mensaje || ''));
+                    var acc = $('<td class="text-nowrap"></td>');
+                    acc.append($('<button type="button" class="btn btn-outline-primary btn-sm py-0 px-1" title="Editar"><i class="fas fa-edit"></i></button>').on('click', function() { editarEnLista(i); }));
+                    acc.append(' ');
+                    acc.append($('<button type="button" class="btn btn-outline-danger btn-sm py-0 px-1" title="Eliminar"><i class="fas fa-trash-alt"></i></button>').on('click', function() {
+                        var idx = i;
+                        showConfirmToast('warning', 'Eliminar línea', '¿Eliminar esta transacción del lote?', function() {
+                            eliminarDeLista(idx);
+                            showToast('success', 'Línea eliminada', 'Se quitó la transacción del lote.');
+                        }, function() {
+                            showToast('info', 'Operación cancelada', 'No se eliminó la línea.');
+                        });
+                    }));
+                    tr.append(acc);
+                    tbody.append(tr);
+                });
+            }
+        }
+
+        function eliminarDeLista(index) {
+            listaTransaccionesPendientes.splice(index, 1);
+            actualizarJsonYTablaLote();
+            actualizarEstadoBotonAsociado();
+        }
+
+        function editarEnLista(index) {
+            if (tieneDatosCapturados()) {
+                showConfirmToast(
+                    'warning',
+                    'Advertencia',
+                    'Hay datos capturados en el formulario de la transacción. Al editar esta fila se perderán.<br><strong>¿Desea continuar?</strong>',
+                    function() {
+                        procederConEditarEnLista(index);
+                    },
+                    function() {
+                        showToast('info', 'Operación cancelada', 'No se cargaron los datos de la fila.');
+                    }
+                );
+                return;
+            }
+            procederConEditarEnLista(index);
+        }
+
+        function procederConEditarEnLista(index) {
+            var it = listaTransaccionesPendientes[index];
+            $('#ddlRubro').val(it.CodigoRubro).trigger('change');
+            setTimeout(function() {
+                $('#ddlAuxiliar').val(it.AuxiliarKey || '').trigger('change');
+                setTimeout(function() {
+                    $('#ddlCuenta').val(it.IDAuxiliar);
+                    $('#ddlCodigoTransaccion').val(it.CodigoTransaccion);
+                    $('#txtMonto').val(typeof it.Monto === 'number' && !isNaN(it.Monto) ? it.Monto.toFixed(2) : it.Monto);
+                    $('#txtObservaciones').val(it.Observaciones || '');
+                    eliminarDeLista(index);
+                }, 150);
+            }, 150);
+        }
+
+        function cancelarGlobal() {
+            showConfirmToast('warning', 'Cancelar todo', 'Se borrará el asociado y todas las transacciones del lote.<br><strong>¿Continuar?</strong>',
+                function() {
+                    eliminarAsociadoSeleccionado();
+                    window.location.href = 'Transacciones.aspx';
+                },
+                function() { showToast('info', 'Operación cancelada', ''); }
+            );
+        }
+
+        /** Construye un ítem de transacción desde el formulario actual (misma estructura que el lote). */
+        function construirItemDesdeFormulario() {
+            var codigoRubro = $('#ddlRubro').val();
+            var auxiliarKey = $('#ddlAuxiliar').val();
+            var idAuxiliar = $('#ddlCuenta').val();
+            var codigoTransaccion = $('#ddlCodigoTransaccion').val();
+            var montoInput = $('#txtMonto').val().replace(',', '.');
+            var monto = parseFloat(montoInput);
+            if (!isNaN(monto)) monto = Math.round(monto * 100) / 100;
+            return {
+                CodigoRubro: codigoRubro,
+                AuxiliarKey: auxiliarKey,
+                IDAuxiliar: idAuxiliar,
+                CodigoTransaccion: codigoTransaccion,
+                Monto: monto,
+                Observaciones: $('#txtObservaciones').val() || '',
+                textoAuxiliar: $('#ddlAuxiliar option:selected').text(),
+                textoCuenta: $('#ddlCuenta option:selected').text(),
+                textoTransaccion: $('#ddlCodigoTransaccion option:selected').text()
+            };
+        }
+
+        /** Arma el arreglo de transacciones a guardar: lista del lote o, si está vacía, una transacción desde el formulario si está completo. */
+        function obtenerTransaccionesParaGuardar() {
+            if (listaTransaccionesPendientes.length > 0) {
+                return listaTransaccionesPendientes.slice();
+            }
+            if (validarFormularioTransaccion() && asociadoSeleccionado && asociadoSeleccionado.numeroAsociado) {
+                return [construirItemDesdeFormulario()];
+            }
+            return null;
+        }
+
+        /** Convierte un ítem interno a payload para el SP: NumeroLinea, NumeroAsociado, CodigoRubro, IDAuxiliar, CodigoTransaccion, Monto, Observaciones. NumeroLinea permite asociar el resultado del servidor con la fila de la tabla. */
+        function itemAPayload(it, index) {
+            return {
+                NumeroLinea: (index != null ? index + 1 : 1),
+                NumeroAsociado: asociadoSeleccionado ? asociadoSeleccionado.numeroAsociado : null,
+                CodigoRubro: it.CodigoRubro,
+                IDAuxiliar: it.IDAuxiliar,
+                CodigoTransaccion: it.CodigoTransaccion,
+                Monto: it.Monto,
+                Observaciones: it.Observaciones || ''
+            };
+        }
+
+        var loteGuardadoExito = false;
+        var ultimoLoteDetalles = [];
+        var ultimoIDTransaccion = null;
+
+        function guardarLote() {
+            if (loteGuardadoExito) return;
+            if (listaTransaccionesPendientes.length === 0 && validarFormularioTransaccion() && asociadoSeleccionado && asociadoSeleccionado.numeroAsociado) {
+                añadirTransaccionALista();
+            }
+            var transacciones = obtenerTransaccionesParaGuardar();
+            if (!transacciones || transacciones.length === 0) {
+                mostrarErrorValidacion('Añada al menos una transacción al lote o complete el formulario de datos de la transacción antes de guardar.');
+                return;
+            }
+            var numeroAsociado = asociadoSeleccionado ? parseInt(asociadoSeleccionado.numeroAsociado, 10) : 0;
+            if (!numeroAsociado) {
+                mostrarErrorValidacion('No hay asociado seleccionado.');
+                return;
+            }
+            var n = transacciones.length;
+            var textoCantidad = n === 1 ? '1 transacción' : n + ' transacciones';
+            showConfirmToast('warning', 'Confirmar guardado', '¿Seguro desea guardar estas ' + textoCantidad + '?', function() {
+                enviarLoteAlServidor(transacciones, numeroAsociado);
+            }, function() {
+                showToast('info', 'Operación cancelada', 'No se guardó el lote.');
+            });
+        }
+
+        function enviarLoteAlServidor(transacciones, numeroAsociado) {
+            var payload = transacciones.map(function(it, i) { return itemAPayload(it, i); });
+            var jsonLote = JSON.stringify(payload);
+            $('#btnGuardarLote').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando...');
+            $.ajax({
+                type: 'POST',
+                url: 'Transacciones.aspx/GuardarLote',
+                data: JSON.stringify({ numeroAsociado: numeroAsociado, jsonLote: jsonLote }),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function(response) {
+                    var d = response.d;
+                    if (!d) {
+                        showToast('error', 'Error', 'No se recibió respuesta del servidor.');
+                        $('#btnGuardarLote').prop('disabled', false).html('<i class="fas fa-save me-1"></i>Guardar');
+                        return;
+                    }
+                    var detalles = d.Detalles || [];
+                    ultimoLoteDetalles = detalles;
+                    if (d.IDTransaccion != null && d.IDTransaccion !== undefined) ultimoIDTransaccion = d.IDTransaccion;
+                    actualizarMensajesEnTablaLote(detalles);
+                    if (d.Resultado === 'SUCCESS') {
+                        showToast('success', 'Guardado', d.Mensaje || 'Lote procesado correctamente.');
+                        congelarLoteExitoso();
+                        loteGuardadoExito = true;
+                    } else {
+                        showToast('error', 'Error', d.Mensaje || 'Hubo errores en el lote.');
+                    }
+                    $('#btnGuardarLote').prop('disabled', false).html('<i class="fas fa-save me-1"></i>Guardar');
+                },
+                error: function(xhr, status, err) {
+                    showToast('error', 'Error', 'Error al guardar el lote: ' + (err || xhr.statusText));
+                    $('#btnGuardarLote').prop('disabled', false).html('<i class="fas fa-save me-1"></i>Guardar');
+                }
+            });
+        }
+
+        /** Rellena la columna Mensaje de la tabla del lote con los Detalles devueltos por el SP (por NumeroLinea). */
+        function actualizarMensajesEnTablaLote(detalles) {
+            if (!detalles || !detalles.length) return;
+            var map = {};
+            for (var i = 0; i < detalles.length; i++) {
+                var num = detalles[i].NumeroLinea;
+                if (num != null) map[num] = detalles[i];
+            }
+            $('#tbodyTransaccionesLote tr').each(function() {
+                var num = parseInt($(this).attr('data-numero-linea'), 10);
+                var det = map[num];
+                var $td = $(this).find('.td-mensaje-lote');
+                if ($td.length && det) {
+                    $td.text(det.Mensaje || '').removeClass('text-success text-danger');
+                    if ((det.Mensaje || '').toUpperCase() === 'OK') $td.addClass('text-success');
+                    else if (det.Mensaje) $td.addClass('text-danger');
+                }
+            });
+        }
+
+        /** Deshabilita formulario y tabla de lote, oculta Guardar y muestra Imprimir. */
+        function congelarLoteExitoso() {
+            $('#divFormularioTransaccion input, #divFormularioTransaccion select').prop('disabled', true);
+            $('#btnAnadirTransaccion, #btnCancelarTransaccion').prop('disabled', true);
+            $('#tbodyTransaccionesLote .btn').prop('disabled', true).addClass('disabled');
+            $('#btnGuardarLote').hide();
+            $('#btnImprimirLote').show();
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function guardarTransaccion() {
@@ -1123,72 +1669,13 @@
         }
 
         function procederConGuardado() {
-            // Establecer la variable de control AHORA que realmente se procede con el guardado
-            guardandoTransaccion = true;
-            
-            // Validar que haya un asociado seleccionado
-            if (!asociadoSeleccionado || !asociadoSeleccionado.numeroAsociado) {
-                mostrarErrorValidacion('No hay un asociado seleccionado');
-                guardandoTransaccion = false;
-                return;
+            cerrarConfirmModal();
+            guardandoTransaccion = false;
+            // Redirigir al flujo de lote: añadir la transacción actual al lote (si no está) y guardar lote
+            if (listaTransaccionesPendientes.length === 0 && validarFormularioTransaccion() && asociadoSeleccionado && asociadoSeleccionado.numeroAsociado) {
+                añadirTransaccionALista();
             }
-            
-            const idAuxiliarSeleccionado = $('#ddlCuenta').val();
-            
-            // Normalizar el monto para usar punto decimal
-            const montoInput = $('#txtMonto').val().replace(',', '.');
-            const montoNormalizado = parseFloat(montoInput);
-            
-            const transaccionData = {
-                NumeroAsociado: asociadoSeleccionado.numeroAsociado,
-                CodigoRubro: $('#ddlRubro').val(),
-                IDAuxiliar: idAuxiliarSeleccionado, // Usar IdAuxiliar del dropdown de cuentas
-                CodigoTransaccion: $('#ddlCodigoTransaccion').val(),
-                FechaMovimiento: new Date().toISOString().split('T')[0], // Fecha actual
-                Monto: montoNormalizado,
-                DebCred: 'D', // Por defecto Débito
-                Saldo: 0,
-                Observaciones: $('#txtObservaciones').val()
-            };
-
-            $.ajax({
-                type: "POST",
-                url: "Transacciones.aspx/GuardarMovimiento",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({ movimientoData: JSON.stringify(transaccionData) }),
-                dataType: "json",
-                success: function(response) {
-                    if (response.d && response.d.Resultado === 'SUCCESS') {
-                        // Almacenar los IDs de los movimientos para el comprobante
-                        ultimoCapitalMovimientoId = response.d.CapitalMovimientoID || null;
-                        ultimoInteresesMovimientoId = response.d.InteresesMovimientoID || null;
-                        
-                        // Construir mensaje de éxito con los IDs formateados
-                        let mensajeExito = 'Movimiento guardado correctamente.';
-                        if (ultimoCapitalMovimientoId) {
-                            const idCapitalFormateado = ultimoCapitalMovimientoId.toString().padStart(12, '0');
-                            mensajeExito += ` Capital: ${idCapitalFormateado}`;
-                        }
-                        if (ultimoInteresesMovimientoId) {
-                            const idInteresesFormateado = ultimoInteresesMovimientoId.toString().padStart(12, '0');
-                            mensajeExito += ` Intereses: ${idInteresesFormateado}`;
-                        }
-                        
-                        mostrarExitoValidacion(mensajeExito);
-                        bloquearFormularioPostGuardado();
-                    } else {
-                        // Mostrar error en el div de validación en lugar del toast
-                        mostrarErrorValidacion(response.d.Mensaje || 'Error al guardar movimiento');
-                    }
-                    // Resetear la variable de control
-                    guardandoTransaccion = false;
-                },
-                error: function() {
-                    mostrarErrorValidacion('Error al guardar movimiento');
-                    // Resetear la variable de control
-                    guardandoTransaccion = false;
-                }
-            });
+            guardarLote();
         }
 
         function validarFormularioTransaccion() {
@@ -1219,40 +1706,25 @@
         }
 
         function limpiarFormularioTransaccion() {
-            // Resetear la variable de control
-            guardandoTransaccion = false;
-            
-            // Limpiar todas las variables globales
-            asociadoSeleccionado = null;
-            jsonAuxiliares = null;
-            ultimoCapitalMovimientoId = null;
-            ultimoInteresesMovimientoId = null;
-            
-            // Limpiar el formulario
-            $('#formTransaccion')[0].reset();
-            $('#ddlRubro, #ddlAuxiliar, #ddlCuenta, #ddlCodigoTransaccion').empty().append('<option value="">Seleccionar...</option>');
+            // Solo limpia los campos del formulario de datos (no toca asociado ni lista del lote)
+            $('#txtMonto').val('');
+            $('#txtObservaciones').val('');
             $('.form-control, .form-select').removeClass('is-invalid');
-            
-            // Habilitar todos los campos (por si estaban bloqueados)
-            $('#ddlRubro, #ddlAuxiliar, #ddlCuenta, #ddlCodigoTransaccion, #txtMonto, #txtObservaciones').prop('disabled', false);
-            
-            // Limpiar la UI del asociado
-            $('#lblAsociadoInfo').text('');
-            $('#lblAsociadoDetalle').text('');
-            $('#divAsociadoSeleccionado').addClass('d-none');
-            $('#divSinAsociado').removeClass('d-none');
-            $('#btnBuscarAsociado').prop('disabled', false).html('<i class="fas fa-search me-1"></i>Buscar Asociado');
-            $('#btnEliminarAsociado').show();
-            $('#divAsociadoSeleccionado').removeClass('asociado-bloqueado');
-            
-            // Ocultar formulario de transacción
-            $('#divFormularioTransaccion').addClass('d-none');
-            
-            // Asegurar que los botones de guardar/cancelar estén visibles
-            $('#btnGuardarTransaccion, #btnCancelarTransaccion').show();
-            
-            // Ocultar botones post-guardado
-            $('#btnImprimirComprobante, #btnNuevaTransaccion').hide();
+            if (jsonAuxiliares && jsonAuxiliares.Rubros) {
+                $('#ddlRubro').empty();
+                if (jsonAuxiliares.Rubros.length === 1) {
+                    $('#ddlRubro').append('<option value="' + jsonAuxiliares.Rubros[0].CodigoRubro + '">' + jsonAuxiliares.Rubros[0].DescripcionRubro + '</option>');
+                } else {
+                    $('#ddlRubro').append('<option value="">Seleccionar rubro...</option>');
+                    $.each(jsonAuxiliares.Rubros, function(i, r) {
+                        $('#ddlRubro').append('<option value="' + r.CodigoRubro + '">' + r.DescripcionRubro + '</option>');
+                    });
+                }
+                $('#ddlAuxiliar').empty().append('<option value="">Seleccionar auxiliar...</option>');
+                $('#ddlCuenta').empty().append('<option value="">Seleccionar cuenta...</option>');
+                $('#ddlCodigoTransaccion').empty().append('<option value="">Seleccionar código...</option>');
+            }
+            ocultarErrorValidacion();
         }
 
         function bloquearFormularioPostGuardado() {
@@ -1439,10 +1911,6 @@
                             margin-bottom: 10px;
                         }
                         
-                        .comprobante-container .separator {
-                            display: none;
-                        }
-                        
                         /* Botones del modal */
                         .comprobante-modal-footer .btn {
                             padding: 10px 20px;
@@ -1483,9 +1951,6 @@
         }
 
         function imprimirDesdeModal(capitalMovimientoId, interesesMovimientoId) {
-            // Marcar como impreso
-            marcarComprobanteComoImpreso(capitalMovimientoId || '', interesesMovimientoId || '');
-            
             // Crear una ventana temporal para imprimir
             const ventanaImpresion = window.open('', '_blank', 'width=800,height=600');
             
@@ -1501,7 +1966,6 @@
                     <style>
                         body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
                         .comprobante { height: auto !important; }
-                        .separator { display: block !important; }
                         .no-print { display: none !important; }
                     </style>
                 </head>
@@ -1588,6 +2052,45 @@
                 case 'info': return 'fas fa-info-circle text-info';
                 default: return 'fas fa-info-circle text-info';
             }
+        }
+
+        /** Confirm centrado en pantalla (overlay propio, no depende de notifications.js ni caché). */
+        function showConfirmToast(type, title, message, onConfirm, onCancel) {
+            var overlay = document.createElement('div');
+            overlay.setAttribute('role', 'dialog');
+            overlay.setAttribute('aria-modal', 'true');
+            overlay.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;z-index:99999;background:rgba(0,0,0,0.3);padding:1rem;box-sizing:border-box;';
+            var iconClass = getToastIcon(type);
+            var toastClass = 'toast-' + type;
+            var boxId = 'confirmBox-' + Date.now();
+            var boxHtml = '<div id="' + boxId + '" class="toast show ' + toastClass + ' shadow" style="min-width:320px;max-width:90vw;opacity:1;">' +
+                '<div class="toast-header"><i class="' + iconClass + ' me-2"></i><strong class="me-auto">' + (title || '') + '</strong></div>' +
+                '<div class="toast-body">' +
+                '<div class="mb-3">' + (message || '') + '</div>' +
+                '<div class="d-flex gap-2 justify-content-end">' +
+                '<button type="button" class="btn btn-sm btn-outline-secondary btn-cancel-confirm"><i class="fas fa-times me-1"></i>Cancelar</button>' +
+                '<button type="button" class="btn btn-sm btn-primary btn-ok-confirm"><i class="fas fa-check me-1"></i>Confirmar</button>' +
+                '</div></div></div>';
+            overlay.innerHTML = boxHtml;
+            document.body.appendChild(overlay);
+            var box = document.getElementById(boxId);
+            function closeConfirm() {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }
+            overlay.querySelector('.btn-ok-confirm').addEventListener('click', function() {
+                if (typeof onConfirm === 'function') onConfirm();
+                closeConfirm();
+            });
+            overlay.querySelector('.btn-cancel-confirm').addEventListener('click', function() {
+                if (typeof onCancel === 'function') onCancel();
+                closeConfirm();
+            });
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    if (typeof onCancel === 'function') onCancel();
+                    closeConfirm();
+                }
+            });
         }
 
         // Función para marcar el comprobante como impreso

@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="GestionUsuarios.aspx.vb" Inherits="SemgaWapp.GestionUsuarios" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="GestionUsuarios.aspx.vb" Inherits="SemgaWapp.GestionUsuarios" %>
 
 <!DOCTYPE html>
 
@@ -363,6 +363,74 @@
 
         .btn-delete:hover {
             background: #c82333;
+        }
+
+        .btn-menu-permisos {
+            background: #6f42c1;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background-color 0.2s ease;
+            min-width: 32px;
+        }
+
+        .btn-menu-permisos:hover {
+            background: #5a32a3;
+        }
+
+        /* Modal Permisos Menú: 90% alto, 60% ancho */
+        .modal-permisos { align-items: center; justify-content: center; z-index: 2000; }
+        .modal-permisos-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2001;
+        }
+        .modal-permisos-content {
+            position: fixed;
+            width: 60vw;
+            height: 90vh;
+            max-width: 100%;
+            max-height: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            z-index: 2002;
+        }
+        .modal-permisos-header {
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px 12px 0 0;
+        }
+        .modal-permisos-title { font-size: 16px; font-weight: 600; }
+        .modal-permisos-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-permisos-close:hover { background: rgba(255,255,255,0.3); }
+        .modal-permisos-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            border-radius: 0 0 12px 12px;
         }
 
         .user-info {
@@ -971,6 +1039,7 @@
                                 <th>Departamento</th>
                                 <th>Estado</th>
                                 <th>ÚltimoAcceso</th>
+                                <th>Men&#250;</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -1080,6 +1149,18 @@
                         Guardar
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Modal Permisos de Menú (90% alto, 60% ancho) -->
+        <div id="modalPermisosMenu" class="modal modal-permisos" style="display: none;">
+            <div class="modal-permisos-backdrop" onclick="cerrarModalPermisos()"></div>
+            <div class="modal-permisos-content">
+                <div class="modal-permisos-header">
+                    <span class="modal-permisos-title"><i class="fas fa-key"></i> Permisos de men&#250;</span>
+                    <button type="button" class="modal-permisos-close" onclick="cerrarModalPermisos()" title="Cerrar"><i class="fas fa-times"></i></button>
+                </div>
+                <iframe id="iframePermisosMenu" class="modal-permisos-iframe" src="about:blank"></iframe>
             </div>
         </div>
 
@@ -1396,6 +1477,13 @@
                     </td>
                     <td>
                         <div class="action-buttons">
+                            <button type="button" class="btn-menu-permisos" onclick="abrirPermisosMenu(${user.Id}, ${user.NivelAcceso != null ? user.NivelAcceso : 999})" title="Permisos de men&#250;">
+                                <i class="fas fa-key"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
                             <button type="button" class="btn-edit" onclick="editarUsuario(${user.Id})" title="Editar usuario">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -1410,6 +1498,28 @@
             });
             
             
+        }
+
+        // Permisos de menú: si es administrador (NivelAcceso 0) mostrar toast; si no, abrir modal con iframe
+        function abrirPermisosMenu(userId, nivelAcceso) {
+            var nivel = parseInt(nivelAcceso, 10);
+            if (nivel === 0) {
+                showToast('info', 'Administrador', 'Este usuario es administrador y tiene acceso a toda la aplicaci\u00f3n.');
+                return;
+            }
+            var modal = document.getElementById('modalPermisosMenu');
+            var iframe = document.getElementById('iframePermisosMenu');
+            if (modal && iframe) {
+                iframe.src = 'PermisosMenu.aspx?userId=' + userId;
+                modal.style.display = 'flex';
+            }
+        }
+
+        function cerrarModalPermisos() {
+            var modal = document.getElementById('modalPermisosMenu');
+            var iframe = document.getElementById('iframePermisosMenu');
+            if (modal) modal.style.display = 'none';
+            if (iframe) iframe.src = 'about:blank';
         }
 
         // Función para mostrar formulario de nuevo usuario

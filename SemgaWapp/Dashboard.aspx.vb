@@ -1,4 +1,4 @@
-﻿'Imports System
+'Imports System
 'Imports System.Web.Security
 'Imports System.Web.UI
 'Imports System.Configuration
@@ -11,7 +11,18 @@ Imports SBSqlClient
 'Imports System.Data
 
 Public Class Dashboard
-    Inherits System.Web.UI.Page
+    Inherits BasePage
+
+    ''' <summary>Mensaje de sin permiso a mostrar en toast (se limpia al cargar).</summary>
+    Protected MensajePermiso As String = ""
+
+    ''' <summary>True si el usuario es administrador (acceso a todos los mosaicos).</summary>
+    Public ReadOnly Property PermisosMenuAdmin As Boolean
+        Get
+            Dim v As Object = Session(VariablesSesion.MenuPermisosAdmin)
+            Return v IsNot Nothing AndAlso Convert.ToBoolean(v)
+        End Get
+    End Property
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         ' Verificar si el usuario está autenticado
@@ -44,7 +55,37 @@ Public Class Dashboard
 
         ' Actualizar última actividad en sesión
         Session("LastActivity") = DateTime.Now
+
+        ' Mensaje de sin permiso (redirección desde otra página) y limpiar sesión
+        Dim msgPermiso As Object = Session(VariablesSesion.MensajePermiso)
+        If msgPermiso IsNot Nothing AndAlso Not String.IsNullOrEmpty(msgPermiso.ToString()) Then
+            MensajePermiso = msgPermiso.ToString()
+            Session.Remove(VariablesSesion.MensajePermiso)
+        End If
     End Sub
+
+    ''' <summary>Devuelve JSON con array de URLs permitidas para el menú (para filtrar mosaicos en cliente).</summary>
+    Public Function ObtenerPermisosMenuUrlsJson() As String
+        Try
+            If Session(VariablesSesion.MenuPermisosAdmin) IsNot Nothing AndAlso Convert.ToBoolean(Session(VariablesSesion.MenuPermisosAdmin)) Then
+                Return "true"
+            End If
+            Dim json As String = TryCast(Session(VariablesSesion.MenuPermisosJson), String)
+            If String.IsNullOrWhiteSpace(json) OrElse json = "[]" Then Return "[]"
+            Dim serializer As New JavaScriptSerializer()
+            Dim lista As Object() = serializer.Deserialize(Of Object())(json)
+            Dim urls As New List(Of String)
+            For Each item As Object In lista
+                Dim d As Dictionary(Of String, Object) = TryCast(item, Dictionary(Of String, Object))
+                If d IsNot Nothing AndAlso d.ContainsKey("UrlDestino") AndAlso d("UrlDestino") IsNot Nothing Then
+                    urls.Add(ModGlobal.NormalizarRutaMenu(d("UrlDestino").ToString()))
+                End If
+            Next
+            Return serializer.Serialize(urls)
+        Catch
+            Return "[]"
+        End Try
+    End Function
 
     Protected Sub btnLogout_Click(sender As Object, e As EventArgs)
         Try
@@ -247,7 +288,11 @@ Public Class Dashboard
 
             Dim dtDashboard As DataTable = uDBA.GetDataTableSql(sSql)
 
-            ModGlobal.EscribirLog("Mensaje de error de uDBA: '" & uDBA.MensajeError & "'")
+            If uDBA.MensajeError <> "" Then
+                ModGlobal.EscribirLog("BD ERROR: spGetDashboard - " & uDBA.MensajeError)
+            Else
+                ModGlobal.EscribirLog("BD OK: spGetDashboard")
+            End If
 
             If uDBA.MensajeError = "" Then
                 If dtDashboard.Rows.Count > 0 Then
