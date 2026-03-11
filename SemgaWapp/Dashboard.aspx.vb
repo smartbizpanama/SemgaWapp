@@ -7,7 +7,7 @@ Imports System.Web.Script.Services
 Imports System.Web.Script.Serialization
 'Imports SemgaWapp
 Imports SBSqlClient
-'Imports SBUtility
+Imports SBUtility
 'Imports System.Data
 
 Public Class Dashboard
@@ -407,6 +407,43 @@ Public Class Dashboard
 
             Dim serializer As New JavaScriptSerializer()
             Return serializer.Serialize(resultado)
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' Cambia la contraseña del usuario en sesión. La clave se recibe en texto plano y se encripta antes de guardar.
+    ''' </summary>
+    <WebMethod(EnableSession:=True)>
+    <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+    Public Shared Function CambiarClave(nuevaClave As String) As String
+        Try
+            Dim ctx As HttpContext = HttpContext.Current
+            If ctx.Session(VariablesSesion.UsuarioId) Is Nothing Then
+                Return (New JavaScriptSerializer()).Serialize(New With { .Success = False, .Message = "Sesión no válida. Inicie sesión de nuevo." })
+            End If
+            If String.IsNullOrWhiteSpace(nuevaClave) Then
+                Return (New JavaScriptSerializer()).Serialize(New With { .Success = False, .Message = "Ingrese la nueva contraseña." })
+            End If
+            Dim usuarioId As Integer = Convert.ToInt32(ctx.Session(VariablesSesion.UsuarioId))
+            Dim cnn As String = TryCast(ctx.Session(VariablesSesion.ConnectionString), String)
+            If String.IsNullOrEmpty(cnn) Then
+                Return (New JavaScriptSerializer()).Serialize(New With { .Success = False, .Message = "Error de sesión. Vuelva a iniciar sesión." })
+            End If
+            Dim sbEncr As New SBEncryption
+            Dim claveEncriptada As String = sbEncr.Encrypt(nuevaClave.Trim())
+            Dim objSql As SBSqlClientInterface = ModGlobal.GetDbaObject(cnn)
+            objSql.Parametros.Add("@IdUsuario", usuarioId)
+            objSql.Parametros.Add("@Clave", claveEncriptada)
+            objSql.ExecuteNonQuerySql("EXEC spUsuarios_CambiarClave @IdUsuario, @Clave")
+            If objSql.MensajeError <> "" Then
+                ModGlobal.EscribirLog("Dashboard.CambiarClave: " & objSql.MensajeError)
+                Return (New JavaScriptSerializer()).Serialize(New With { .Success = False, .Message = "Error al cambiar la contraseña. Intente de nuevo." })
+            End If
+            ModGlobal.EscribirLog("Contraseña actualizada para UsuarioId: " & usuarioId)
+            Return (New JavaScriptSerializer()).Serialize(New With { .Success = True, .Message = "Contraseña actualizada correctamente." })
+        Catch ex As Exception
+            ModGlobal.EscribirLog("Dashboard.CambiarClave: " & ex.Message)
+            Return (New JavaScriptSerializer()).Serialize(New With { .Success = False, .Message = "Error al cambiar la contraseña: " & ex.Message })
         End Try
     End Function
 End Class

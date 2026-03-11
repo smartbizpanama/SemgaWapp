@@ -7,7 +7,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reportes y Estadísticas - Cooperativa Coopsemga</title>
+    <title>Reportes y Estadísticas</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <!-- Script de monitoreo de inactividad -->
@@ -188,6 +188,10 @@
             background: linear-gradient(135deg, #ffc107, #ff9800);
         }
 
+        .asientos-tile .tile-icon {
+            background: linear-gradient(135deg, #6f42c1, #e83e8c);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .header {
@@ -242,6 +246,7 @@
         .tile:nth-child(1) { animation-delay: 0.05s; }
         .tile:nth-child(2) { animation-delay: 0.1s; }
         .tile:nth-child(3) { animation-delay: 0.15s; }
+        .tile:nth-child(4) { animation-delay: 0.2s; }
     </style>
 </head>
 <body>
@@ -302,6 +307,17 @@
                     <div class="tile-title">Movimientos</div>
                     <div class="tile-description">
                         Consultar y reportar los movimientos y transacciones del sistema
+                    </div>
+                </div>
+
+                <!-- Asientos -->
+                <div class="tile asientos-tile" data-url="forms/reportes/asientos.aspx" onclick="window.location.href='Asientos.aspx'">
+                    <div class="tile-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="tile-title">Asientos</div>
+                    <div class="tile-description">
+                        Consultar asientos contables por rango de fechas
                     </div>
                 </div>
             </div>

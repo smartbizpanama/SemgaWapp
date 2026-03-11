@@ -1,11 +1,11 @@
-<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Mantenimientos.aspx.vb" Inherits="SemgaWapp.Mantenimientos" %>
+﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Mantenimientos.aspx.vb" Inherits="SemgaWapp.Mantenimientos" %>
 
 <!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Mantenimientos - Cooperativa Coopsemga</title>
+    <title>Mantenimientos</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
@@ -610,6 +610,29 @@
         .tipo-doc-chip.tipo-doc-RUC {
             background: linear-gradient(135deg, #17a2b8, #117a8b);
             color: white;
+        }
+        
+        /* Switch imputable cuentas más grande */
+        .form-switch-lg .form-check-input {
+            width: 2.5em;
+            height: 1.25em;
+            min-height: 1.25em;
+        }
+        .form-switch-lg .form-check-input:checked {
+            background-position: right center;
+        }
+        
+        /* Tabla cuentas: tamaño de letra más grande */
+        #tblCuentas,
+        #tblCuentas th,
+        #tblCuentas td {
+            font-size: 1.05rem;
+        }
+        
+        /* Badge código de cuenta más grande */
+        #tblCuentas .badge-codigo-cuenta {
+            font-size: 0.95rem;
+            padding: 0.4em 0.65em;
         }
         
     </style>
@@ -1858,7 +1881,8 @@
                                             <th>Cuenta</th>
                                             <th>Nombre</th>
                                             <th>Grupo</th>
-                                            <th>Saldo</th>
+                                            <th>Imputable</th>
+                                            <th class="text-end">Saldo</th>
                                             <th>Acciones</th>
                                         </tr>
                                     </thead>
@@ -1876,7 +1900,7 @@
         </div>
 
         <!-- Toast Container -->
-        <div id="toastContainer" class="toast-container position-fixed top-50 start-50 translate-middle" style="z-index: 1060;"></div>
+        <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1060;"></div>
         
         <!-- Modal Código Transacción -->
         <div class="modal fade" id="modalCodigoTransaccion" tabindex="-1" aria-labelledby="modalCodigoTransaccionLabel" aria-hidden="true">
@@ -2842,6 +2866,14 @@
                                     <div class="mb-3">
                                         <label for="txtNombreCuenta" class="form-label">Nombre <span class="text-danger">*</span></label>
                                         <input type="text" id="txtNombreCuenta" class="form-control" placeholder="Nombre de la cuenta" maxlength="255" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="chkSnImputableCuenta" checked>
+                                            <label class="form-check-label" for="chkSnImputableCuenta">Imputable</label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -9662,20 +9694,28 @@
 			tbody.empty();
 
 			if (cuentas.length === 0) {
-				tbody.append('<tr><td colspan="6" class="text-center">No se encontraron cuentas</td></tr>');
+				tbody.append('<tr><td colspan="7" class="text-center">No se encontraron cuentas</td></tr>');
 				return;
 			}
 
 			cuentas.forEach(function (cuenta) {
-				const saldo = parseFloat(cuenta.Saldo || 0).toFixed(2);
+				const saldoNum = parseFloat(cuenta.Saldo || 0);
+				const saldo = '$' + saldoNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 				const grupoChip = crearChipGrupoCuentaInteligente(cuenta.GrupoDescripcion);
+				const imputable = cuenta.snImputable === true || cuenta.snImputable === 1 || cuenta.snImputable === '1';
+				const checkedAttr = imputable ? ' checked' : '';
 				const row = `
                     <tr>
                         <td>${cuenta.ID}</td>
-                        <td><span class="badge bg-primary">${cuenta.Codigo}</span></td>
+                        <td><span class="badge bg-primary badge-codigo-cuenta">${cuenta.Codigo}</span></td>
                         <td>${cuenta.Nombre || ''}</td>
                         <td>${grupoChip}</td>
-                        <td>${saldo}</td>
+                        <td>
+                            <div class="form-check form-switch form-switch-lg mb-0">
+                                <input class="form-check-input switch-imputable-cuenta" type="checkbox" data-id="${cuenta.ID}"${checkedAttr} title="Imputable">
+                            </div>
+                        </td>
+                        <td class="text-end">${saldo}</td>
                         <td>
                             <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editarCuenta(${cuenta.ID}); return false;">
                                 <i class="fas fa-edit"></i>
@@ -9716,6 +9756,32 @@
 			$('#btnGuardarCuenta').on('click', function () {
 				guardarCuenta();
 			});
+
+			$(document).on('change', '.switch-imputable-cuenta', function () {
+				const id = parseInt($(this).data('id'), 10);
+				const snImputable = $(this).is(':checked');
+				$.ajax({
+					type: "POST",
+					url: "Mantenimientos.aspx/GuardarCuentaImputable",
+					contentType: "application/json; charset=utf-8",
+					data: JSON.stringify({ id: id, snImputable: snImputable }),
+					dataType: "json",
+					success: function (response) {
+						let responseData = response.d;
+						if (typeof responseData === 'string') responseData = JSON.parse(responseData);
+						if (responseData && responseData.Resultado === 'SUCCESS') {
+							showToast('success', 'Éxito', responseData.Mensaje || 'Imputable actualizado');
+						} else {
+							showToast('error', 'Error', responseData.Mensaje || 'Error al actualizar imputable');
+							$(document).find('.switch-imputable-cuenta[data-id="' + id + '"]').prop('checked', !snImputable);
+						}
+					},
+					error: function () {
+						showToast('error', 'Error', 'Error al actualizar imputable');
+						$(document).find('.switch-imputable-cuenta[data-id="' + id + '"]').prop('checked', !snImputable);
+					}
+				});
+			});
 		}
 
 		function limpiarFiltrosCuenta() {
@@ -9729,6 +9795,7 @@
 			$('#ddlGrupoCuenta').val('');
 			$('#txtCodigoCuenta').val('');
 			$('#txtNombreCuenta').val('');
+			$('#chkSnImputableCuenta').prop('checked', true);
 		}
 
 		function editarCuenta(id) {
@@ -9747,7 +9814,7 @@
 					}
 
 					if (responseData && responseData.Resultado === 'SUCCESS') {
-						const cuenta = JSON.parse(responseData.Datos);
+						const cuenta = typeof responseData.Datos === 'string' ? JSON.parse(responseData.Datos) : responseData.Datos;
 						llenarFormularioCuenta(cuenta);
 						$('#modalCuentaLabel').html('<i class="fas fa-wallet me-2"></i>Editar Cuenta');
 						$('#modalCuenta').modal('show');
@@ -9766,6 +9833,9 @@
 			$('#ddlGrupoCuenta').val(cuenta.IDGrupo);
 			$('#txtCodigoCuenta').val(cuenta.Codigo);
 			$('#txtNombreCuenta').val(cuenta.Nombre || '');
+			const raw = cuenta.snImputable !== undefined ? cuenta.snImputable : cuenta.SnImputable;
+			const imputable = raw === true || raw === 1 || raw === '1' || String(raw).toLowerCase() === 'true';
+			$('#chkSnImputableCuenta').prop('checked', !!imputable);
 		}
 
 		function eliminarCuenta(id) {
@@ -9815,11 +9885,13 @@
 
 			$('#btnGuardarCuenta').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando...');
 
+			const snImputable = $('#chkSnImputableCuenta').is(':checked');
 			const cuentaData = {
 				ID: id || null,
 				Codigo: codigo,
 				Nombre: nombre,
-				IDGrupo: parseInt(idGrupo)
+				IDGrupo: parseInt(idGrupo),
+				snImputable: snImputable
 			};
 
 			$.ajax({

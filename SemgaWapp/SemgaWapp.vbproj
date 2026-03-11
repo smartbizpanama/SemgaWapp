@@ -161,11 +161,13 @@
     <Content Include="Forms\Mantenimientos\GestionUsuarios.aspx" />
     <Content Include="Forms\Mantenimientos\PermisosMenu.aspx" />
     <Content Include="Forms\Mantenimientos\TestMantenimientos.aspx" />
+    <Content Include="Forms\Reportes\Asientos.aspx" />
     <Content Include="Forms\Reportes\dashboardReportes.aspx" />
     <Content Include="Forms\Reportes\Movimientos.aspx" />
     <Content Include="Forms\Reportes\ReporteMovimientos.html" />
     <Content Include="Forms\Reportes\Reportes.aspx" />
     <Content Include="Forms\Help\Documentacion.aspx" />
+    <Content Include="Forms\Sistemas\cambioPass.aspx" />
     <Content Include="Forms\Sistemas\Respaldos.aspx" />
     <Content Include="Forms\Socios\EstadoCuenta.html" />
     <Content Include="Forms\Socios\GestionSocios.aspx" />
@@ -293,6 +295,13 @@
       <DependentUpon>TestMantenimientos.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="Forms\Reportes\Asientos.aspx.designer.vb">
+      <DependentUpon>Asientos.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Reportes\Asientos.aspx.vb">
+      <DependentUpon>Asientos.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
     <Compile Include="Forms\Reportes\dashboardReportes.aspx.designer.vb">
       <DependentUpon>dashboardReportes.aspx</DependentUpon>
     </Compile>
@@ -319,6 +328,13 @@
     </Compile>
     <Compile Include="Forms\Help\Documentacion.aspx.vb">
       <DependentUpon>Documentacion.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
+    <Compile Include="Forms\Sistemas\cambioPass.aspx.designer.vb">
+      <DependentUpon>cambioPass.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Sistemas\cambioPass.aspx.vb">
+      <DependentUpon>cambioPass.aspx</DependentUpon>
       <SubType>ASPXCodebehind</SubType>
     </Compile>
     <Compile Include="Forms\Sistemas\Respaldos.aspx.designer.vb">

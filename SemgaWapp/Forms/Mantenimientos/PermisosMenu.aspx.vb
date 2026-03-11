@@ -13,10 +13,9 @@ Public Class PermisosMenu
             Response.Redirect("~/Login.aspx")
             Return
         End If
-        If ModGlobal.ValidarYRedirigirSiSinPermiso(HttpContext.Current) Then Return
-        ' Solo administrador (nivel 0) puede gestionar permisos de menú
-        Dim nivel As Object = Session("NivelAcceso")
-        If nivel Is Nothing OrElse Convert.ToInt32(nivel) <> 0 Then
+        ' Puede asignar permisos de menú: admin (acceso total) o quien tenga permiso a Gestión de usuarios
+        If Not ModGlobal.EsPermisosMenuAdmin(HttpContext.Current) AndAlso
+           Not ModGlobal.TienePermisoMenuParaUrl(HttpContext.Current, "Forms/Mantenimientos/GestionUsuarios.aspx") Then
             Response.Redirect("~/Forms/Mantenimientos/dashboardSistemas.aspx")
             Return
         End If
@@ -41,13 +40,13 @@ Public Class PermisosMenu
         End Try
     End Function
 
-    ''' <summary>Obtiene opciones de menú y si el usuario tiene permiso (spMenu_PermisosUsuarios).</summary>
+    ''' <summary>Obtiene ítems de tbMenuPrincipal y si el usuario tiene permiso (spMenuPrincipal_PermisosUsuario).</summary>
     <WebMethod()>
     <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
     Public Shared Function ObtenerPermisosMenuUsuario(idUsuario As Integer) As String
         Try
             Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
-            Dim sSql As String = "EXEC spMenu_PermisosUsuarios @IdUsuario"
+            Dim sSql As String = "EXEC spMenuPrincipal_PermisosUsuario @IdUsuario"
             With objSql.Parametros
                 .Add("@IdUsuario", idUsuario)
             End With
@@ -64,16 +63,16 @@ Public Class PermisosMenu
         End Try
     End Function
 
-    ''' <summary>Guarda permisos de menú del usuario en transacción (spMenu_PermisosGuardar).</summary>
+    ''' <summary>Guarda permisos en tbMenuUsuario (spMenuPrincipal_GuardarPermisos). idsMenuJson: array JSON de IdMenu, ej. [1,2,3,4].</summary>
     <WebMethod()>
     <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
-    Public Shared Function GuardarPermisos(idUsuario As Integer, permisosJson As String) As String
+    Public Shared Function GuardarPermisos(idUsuario As Integer, idsMenuJson As String) As String
         Try
             Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
-            Dim sSql As String = "EXEC spMenu_PermisosGuardar @IdUsuario, @PermisosJson"
+            Dim sSql As String = "EXEC spMenuPrincipal_GuardarPermisos @IdUsuario, @IdsMenuJson"
             With objSql.Parametros
                 .Add("@IdUsuario", idUsuario)
-                .Add("@PermisosJson", If(String.IsNullOrEmpty(permisosJson), "[]", permisosJson))
+                .Add("@IdsMenuJson", If(String.IsNullOrEmpty(idsMenuJson), "[]", idsMenuJson))
             End With
             ModGlobal.EscribirLog("Ejecutando: " & sSql & " " & objSql.getParamList())
             objSql.ExecuteNonQuerySql(sSql)

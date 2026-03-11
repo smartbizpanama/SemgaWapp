@@ -1,11 +1,11 @@
-<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="GestionSocios.aspx.vb" Inherits="SemgaWapp.GestionSocios" %>
+﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="GestionSocios.aspx.vb" Inherits="SemgaWapp.GestionSocios" %>
 
 <!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Gestión de Socios - Cooperativa Coopsemga</title>
+    <title>Gestión de Socios</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>

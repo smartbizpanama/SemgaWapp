@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
-    <title>Cooperativa Coopsemga - Panel de Control</title>
+    <title>Panel de Control</title>
     <meta charset="utf-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -207,9 +207,10 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 280px));
             gap: 12px;
             margin-top: 12px;
+            justify-content: start;
         }
 
         .card {
@@ -220,6 +221,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
             cursor: pointer;
+            max-width: 280px;
         }
 
         .card:hover {
@@ -291,6 +293,97 @@
         .help-card .card-icon {
             background: linear-gradient(135deg, #17a2b8, #138496);
         }
+
+        .cambio-pass-card .card-icon {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+        }
+
+        /* Modal Cambio de contraseña */
+        .modal-cambiopass-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+            backdrop-filter: blur(4px);
+        }
+        .modal-cambiopass-overlay.show { display: block; }
+        .modal-cambiopass-window {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            z-index: 9999;
+            overflow: hidden;
+        }
+        .modal-cambiopass-titlebar {
+            background: linear-gradient(180deg, #f0f0f0 0%, #e0e0e0 100%);
+            border-bottom: 1px solid #ccc;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+        .modal-cambiopass-titlebar .modal-cambiopass-close {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #999;
+            background: linear-gradient(180deg, #fff 0%, #e8e8e8 100%);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            line-height: 1;
+            color: #333;
+            padding: 0;
+        }
+        .modal-cambiopass-close:hover {
+            background: linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 100%);
+        }
+        .modal-cambiopass-body {
+            padding: 24px;
+        }
+        .modal-cambiopass-body .form-group { margin-bottom: 16px; }
+        .modal-cambiopass-body .form-label { display: block; margin-bottom: 6px; font-weight: 600; color: #333; font-size: 14px; }
+        .modal-cambiopass-body .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .modal-cambiopass-body .btn-cambiar-wrap {
+            text-align: center;
+            margin-top: 8px;
+        }
+        .modal-cambiopass-body .btn-cambiar {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .modal-cambiopass-body .btn-cambiar:hover { opacity: 0.9; }
+        .modal-cambiopass-msg { margin-top: 12px; padding: 10px 12px; border-radius: 6px; font-size: 13px; display: none; }
+        .modal-cambiopass-msg.ok { background: #d4edda; color: #155724; display: block; }
+        .modal-cambiopass-msg.error { background: #f8d7da; color: #721c24; display: block; }
 
         .welcome-banner {
             background: rgba(255, 255, 255, 0.95);
@@ -602,6 +695,21 @@
                     </div>
                 </div>
 
+                <!-- Cambio de contraseña (visible para todos) -->
+                <div class="card cambio-pass-card" onclick="abrirModalCambioPass(event)">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <div class="card-title">Cambio de contraseña</div>
+                    </div>
+                    <div class="card-content">
+                        <div style="color: #666; font-size: 13px;">
+                            Actualizar su contraseña de acceso.
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Help Card -->
                 <div class="card help-card" data-url="forms/help/helpdashboard.aspx" onclick="window.location.href='Forms/Help/helpDashboard.aspx'">
                     <div class="card-header">
@@ -618,6 +726,29 @@
                             </a>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Modal Cambio de contraseña (overlay + ventana) -->
+            <div id="modalCambioPassOverlay" class="modal-cambiopass-overlay"></div>
+            <div id="modalCambioPassWindow" class="modal-cambiopass-window" style="display: none;" onclick="event.stopPropagation()">
+                <div class="modal-cambiopass-titlebar">
+                    <span>Cambio de contraseña</span>
+                    <button type="button" class="modal-cambiopass-close" onclick="cerrarModalCambioPass()" title="Cerrar">&#215;</button>
+                </div>
+                <div class="modal-cambiopass-body">
+                    <div class="form-group">
+                        <label class="form-label" for="modalNuevaClave">Nueva contraseña</label>
+                        <input type="password" id="modalNuevaClave" class="form-control" placeholder="Nueva contraseña" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="modalRepetirClave">Repetir contraseña</label>
+                        <input type="password" id="modalRepetirClave" class="form-control" placeholder="Repetir contraseña" />
+                    </div>
+                    <div class="btn-cambiar-wrap">
+                        <button type="button" class="btn-cambiar" id="btnModalCambiarPass">Cambiar contraseña</button>
+                    </div>
+                    <div id="modalCambioPassMsg" class="modal-cambiopass-msg"></div>
                 </div>
             </div>
         </div>
@@ -1069,6 +1200,56 @@
         function accederLogs() {
             window.location.href = 'Forms/Logs/DetalleLogs.aspx';
         }
+
+        function abrirModalCambioPass(e) {
+            if (e) e.stopPropagation();
+            $('#modalCambioPassOverlay').addClass('show');
+            $('#modalCambioPassWindow').show();
+            $('#modalNuevaClave, #modalRepetirClave').val('');
+            $('#modalCambioPassMsg').removeClass('ok error').hide().text('');
+        }
+        function cerrarModalCambioPass() {
+            $('#modalCambioPassOverlay').removeClass('show');
+            $('#modalCambioPassWindow').hide();
+        }
+        $(document).ready(function() {
+            $('#btnModalCambiarPass').on('click', function() {
+                var nueva = ($('#modalNuevaClave').val() || '').trim();
+                var repetir = ($('#modalRepetirClave').val() || '').trim();
+                var $msg = $('#modalCambioPassMsg');
+                $msg.removeClass('ok error').hide();
+                if (!nueva) {
+                    $msg.addClass('error').text('Ingrese la nueva contraseña.').show();
+                    return;
+                }
+                if (nueva !== repetir) {
+                    $msg.addClass('error').text('Las contraseñas no coinciden.').show();
+                    return;
+                }
+                $(this).prop('disabled', true);
+                $.ajax({
+                    type: 'POST',
+                    url: 'Dashboard.aspx/CambiarClave',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ nuevaClave: nueva }),
+                    success: function(response) {
+                        var d = typeof response.d === 'string' ? JSON.parse(response.d) : response.d;
+                        $msg.removeClass('ok error').addClass(d.Success ? 'ok' : 'error').text(d.Message || (d.Success ? 'Contraseña actualizada correctamente.' : 'Error al cambiar la contraseña.')).show();
+                        if (d.Success) {
+                            $('#modalNuevaClave, #modalRepetirClave').val('');
+                            setTimeout(cerrarModalCambioPass, 1500);
+                        }
+                    },
+                    error: function(xhr, status, err) {
+                        $msg.addClass('error').text('Error de conexión. Intente de nuevo.').show();
+                    },
+                    complete: function() {
+                        $('#btnModalCambiarPass').prop('disabled', false);
+                    }
+                });
+            });
+        });
 
         // Funcionalidad del tooltip de ID de sesión
         $(document).ready(function() {

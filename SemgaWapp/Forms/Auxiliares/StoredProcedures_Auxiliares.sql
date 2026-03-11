@@ -278,7 +278,7 @@ BEGIN
                 0
             );
             
-            SELECT 'SUCCESS' AS Resultado, 'Auxiliar creado exitosamente' AS Mensaje;
+            SELECT 'SUCCESS' AS Resultado, 'Auxiliar creado exitosamente' AS Mensaje, @NuevoID AS ID, @NumeroAsociado AS NumeroAsociado;
         END
         ELSE
         BEGIN
@@ -303,7 +303,7 @@ BEGIN
                 RETURN;
             END
             
-            SELECT 'SUCCESS' AS Resultado, 'Auxiliar actualizado exitosamente' AS Mensaje;
+            SELECT 'SUCCESS' AS Resultado, 'Auxiliar actualizado exitosamente' AS Mensaje, @ID AS ID, @NumeroAsociado AS NumeroAsociado;
         END
         
         COMMIT TRANSACTION;

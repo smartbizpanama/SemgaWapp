@@ -5,6 +5,7 @@
 CREATE OR ALTER PROCEDURE [dbo].[spAuxiliares_ObtenerAuxiliares]
     @IDAuxiliar INT = NULL,
     @Busqueda NVARCHAR(255) = NULL,
+    @FiltroAsoc NVARCHAR(MAX) = NULL,
     @CodigoRubro VARCHAR(10) = NULL,
     @IdTipoAuxiliar INT = NULL,
     @PageSize INT = 25,
@@ -35,6 +36,13 @@ BEGIN
               OR ISNULL(r.Descripcion, '') LIKE '%' + @Busqueda + '%'
               OR ISNULL(ta.Descripcion, '') LIKE '%' + @Busqueda + '%'
           )
+          AND (
+              @FiltroAsoc IS NULL
+              OR s.Nombre LIKE '%' + @FiltroAsoc + '%'
+              OR s.Apellido LIKE '%' + @FiltroAsoc + '%'
+              OR cast(s.NumeroAsociado AS NVARCHAR(20)) LIKE '%' + @FiltroAsoc + '%'
+              OR ISNULL(s.NumeroIdentificacion, '') LIKE '%' + @FiltroAsoc + '%'
+          )
           AND (@CodigoRubro IS NULL OR a.CodigoRubro = @CodigoRubro)
           AND (@IdTipoAuxiliar IS NULL OR ta.ID = @IdTipoAuxiliar);
 
@@ -60,6 +68,8 @@ BEGIN
             a.snActivo,
             Format(cast(a.FechaOtorgado AS Date), 'dd/MM/yyyy') AS FechaOtorgado,
             Format(cast(a.FechaUltimoPago AS Date), 'dd/MM/yyyy') AS FechaUltimoPago,
+            Format(cast(a.FechaUltCalculoInteres AS Date), 'dd/MM/yyyy') AS FechaUltCalculoInteres,
+            Format(cast(a.FechaVencimiento AS Date), 'dd/MM/yyyy') AS FechaVencimiento,
             Format(cast(a.FechaCreacion AS Date), 'dd/MM/yyyy') AS FechaCreacion,
             usrCrea.Nombre AS UsuarioCrea,
             usrMod.Nombre AS UsuarioModifica,
@@ -86,6 +96,13 @@ BEGIN
               OR s.NumeroIdentificacion LIKE '%' + @Busqueda + '%'
               OR ISNULL(r.Descripcion, '') LIKE '%' + @Busqueda + '%'
               OR ISNULL(ta.Descripcion, '') LIKE '%' + @Busqueda + '%'
+          )
+          AND (
+              @FiltroAsoc IS NULL
+              OR s.Nombre LIKE '%' + @FiltroAsoc + '%'
+              OR s.Apellido LIKE '%' + @FiltroAsoc + '%'
+              OR cast(s.NumeroAsociado AS NVARCHAR(20)) LIKE '%' + @FiltroAsoc + '%'
+              OR ISNULL(s.NumeroIdentificacion, '') LIKE '%' + @FiltroAsoc + '%'
           )
           AND (@CodigoRubro IS NULL OR a.CodigoRubro = @CodigoRubro)
           AND (@IdTipoAuxiliar IS NULL OR ta.ID = @IdTipoAuxiliar)

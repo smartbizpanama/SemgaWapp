@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Gestión de Auxiliares Asociados - Cooperativa Coopsemga</title>
+    <title>Auxiliares</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
@@ -228,6 +228,27 @@
             border: 1px solid #ced4da !important;
             border-radius: 0.375rem !important;
             transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+        }
+
+        /* Año solo como dropdown en Flatpickr: ocultar input nativo y mostrar select */
+        .flatpickr-current-month .numInputWrapper {
+            display: none !important;
+        }
+        .flatpickr-year-dropdown {
+            margin-left: 4px;
+            padding: 2px 6px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 4px;
+            background: #fff;
+            color: #333;
+            cursor: pointer;
+            min-width: 72px;
+        }
+        .flatpickr-year-dropdown:focus {
+            outline: none;
+            border-color: #3949a0;
         }
         
         
@@ -486,7 +507,10 @@
             color: white;
             border-radius: 8px 8px 0 0;
             border: none;
-            padding: 20px;
+            padding: 8px 16px;
+        }
+        .modal-header .modal-title {
+            font-size: 1rem;
         }
         
         .btn-light {
@@ -601,6 +625,33 @@
             padding: 12px 16px;
         }
 
+        /* Toast de confirmación: centrado y fondo blanco */
+        .toast-confirm-wrapper {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1060;
+            pointer-events: none;
+        }
+        .toast-confirm-wrapper .toast {
+            pointer-events: auto;
+            background-color: #fff !important;
+            min-width: 320px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .toast-confirm-wrapper .toast-header {
+            background-color: #f8f9fa !important;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .toast-confirm-wrapper .toast-body {
+            background-color: #fff !important;
+        }
+
         /* Modal de búsqueda con sombra más prominente */
         #modalBuscarAsociado .modal-content {
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
@@ -697,33 +748,46 @@
             background-color: #e3f2fd !important;
         }
         
-        /* Estilos para divs de gastos adicionales con efecto glassmorphism */
+        /* Fila del auxiliar recién guardado (resaltado celeste para imprimir comprobante) */
+        .fila-auxiliar-recien-guardado,
+        .fila-auxiliar-recien-guardado td {
+            background-color: #e3f2fd !important;
+        }
+        .fila-auxiliar-recien-guardado {
+            border-left: 4px solid #2196f3 !important;
+        }
+        
+        /* Estilos para divs de gastos adicionales: mosaicos bajos, montos al lado del icono */
         .gasto-card {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border-radius: 12px;
+            border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 5px 8px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            min-height: 90px;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .gasto-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
         }
         
         .gasto-icon {
-            width: 40px;
-            height: 40px;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 10px;
-            font-size: 18px;
+            margin: 0;
+            font-size: 12px;
         }
         
         .gasto-icon.info {
@@ -741,32 +805,37 @@
             color: #212529;
         }
         
+        .gasto-body {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
         .gasto-title {
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 600;
             color: #495057;
-            margin-bottom: 8px;
+            margin: 0;
+            white-space: nowrap;
         }
         
         .gasto-value-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
+            display: inline-flex;
+            align-items: baseline;
+            gap: 6px;
+            margin-left: auto;
         }
         
         .gasto-percentage {
-            font-size: 18px;
+            font-size: 11px;
             font-weight: 700;
         }
         
-        .gasto-amount {
-            font-size: 35px;
-            font-weight: 700;
-        }
-        
-        .gasto-amount-desembolso {
-            font-size: 42px;
+        .gasto-amount, .gasto-amount-desembolso {
+            font-size: 14px;
             font-weight: 700;
         }
     </style>
@@ -782,7 +851,11 @@
                 <div class="top-bar-filtros">
                     <div class="top-bar-filtro-item">
                         <label class="form-label fw-bold">Buscar</label>
-                        <input type="text" id="txtBuscar" class="form-control form-control-sm" placeholder="Asociado, cuenta, identificación, rubro o tipo..."/>
+                        <input type="text" id="txtBuscar" class="form-control form-control-sm" placeholder="Cuenta, rubro o tipo..."/>
+                    </div>
+                    <div class="top-bar-filtro-item">
+                        <label class="form-label fw-bold">Asociado</label>
+                        <input type="text" id="txtFiltroAsociado" class="form-control form-control-sm" placeholder="Nombre, número o identificación..."/>
                     </div>
                     <div class="top-bar-filtro-item">
                         <label class="form-label fw-bold">Rubro</label>
@@ -951,6 +1024,7 @@
                                     </div>
                                 </div>
 
+                                <!-- Pago Mensual, Tasa de Interés, Saldo Actual y Monto Pignorado en la misma fila -->
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="mb-3">
@@ -961,16 +1035,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="mb-3">
-                                            <label for="txtFechaOtorgado" class="form-label fw-bold">Fecha Otorgado</label>
-                                            <input type="text" id="txtFechaOtorgado" class="form-control flatpickr-date" placeholder="dd/mm/yyyy"/>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Campos deshabilitados en la última fila -->
-                                <div class="row">
                                     <div class="col-md-3">
                                         <div class="mb-3">
                                             <label for="txtTasaInteres" class="form-label fw-bold">Tasa de Interés (%)</label>
@@ -1000,21 +1064,56 @@
                                     </div>
                                 </div>
 
+                                <!-- Fechas: compacto, labels a la izquierda -->
+                                <div id="divFechasAuxiliar" class="mt-2 pt-2 border rounded-3 px-2 pb-2" style="background-color: #f0f7ff; border-color: #bbdefb !important;">
+                                    <h6 class="mb-2 text-muted" style="font-size: 12px; font-weight: 500;">
+                                        <i class="fas fa-calendar-alt me-1"></i>Fechas
+                                    </h6>
+                                    <div class="row g-2">
+                                        <div class="col-md-3 col-6">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <label for="txtFechaOtorgado" class="form-label mb-0 fw-bold text-nowrap" style="font-size: 11px; min-width: 4.5em;">Otorgado</label>
+                                                <input type="text" id="txtFechaOtorgado" class="form-control form-control-sm flatpickr-date" placeholder="dd/mm/yyyy"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-6">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <label for="txtFechaUltimoPago" class="form-label mb-0 fw-bold text-nowrap" style="font-size: 11px; min-width: 4.5em;">Ult. Pago</label>
+                                                <input type="text" id="txtFechaUltimoPago" class="form-control form-control-sm flatpickr-date" placeholder="dd/mm/yyyy"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-6">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <label for="txtFechaUltCalculoInteres" class="form-label mb-0 fw-bold text-nowrap" style="font-size: 11px; min-width: 4.5em;">Ult. Calc. Int.</label>
+                                                <input type="text" id="txtFechaUltCalculoInteres" class="form-control form-control-sm flatpickr-date" placeholder="dd/mm/yyyy"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-6">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <label for="txtFechaVencimiento" class="form-label mb-0 fw-bold text-nowrap" style="font-size: 11px; min-width: 4.5em;">Venc.</label>
+                                                <input type="text" id="txtFechaVencimiento" class="form-control form-control-sm flatpickr-date" placeholder="dd/mm/yyyy"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Sección de Manejo, Capitalización y Desembolso -->
-                                <div id="divCalculosAdicionales" class="mt-3 pt-3 border-top" style="display: none;">
-                                    <h6 class="mb-3 text-muted" style="font-size: 13px; font-weight: 500;">
+                                <div id="divCalculosAdicionales" class="mt-2 pt-2 border-top" style="display: none;">
+                                    <h6 class="mb-2 text-muted" style="font-size: 12px; font-weight: 500;">
                                         Gastos Adicionales
                                     </h6>
-                                    <div class="row g-3">
+                                    <div class="row g-2">
                                         <div class="col-md-4">
                                             <div class="gasto-card">
                                                 <div class="gasto-icon info">
                                                     <i class="fas fa-hand-holding-usd"></i>
                                                 </div>
-                                                <div class="gasto-title">Manejo</div>
-                                                <div class="gasto-value-row">
-                                                    <span class="gasto-percentage text-info" id="lblPorManejo">0.00%</span>
-                                                    <span class="gasto-amount text-info" id="lblMontoManejo">$0.00</span>
+                                                <div class="gasto-body">
+                                                    <span class="gasto-title">Manejo</span>
+                                                    <div class="gasto-value-row">
+                                                        <span class="gasto-percentage text-info" id="lblPorManejo">0.00%</span>
+                                                        <span class="gasto-amount text-info" id="lblMontoManejo">$0.00</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1023,10 +1122,12 @@
                                                 <div class="gasto-icon success">
                                                     <i class="fas fa-chart-line"></i>
                                                 </div>
-                                                <div class="gasto-title">Capitalización</div>
-                                                <div class="gasto-value-row">
-                                                    <span class="gasto-percentage text-success" id="lblPorCapitalizacion">0.00%</span>
-                                                    <span class="gasto-amount text-success" id="lblMontoCapitalizacion">$0.00</span>
+                                                <div class="gasto-body">
+                                                    <span class="gasto-title">Capitalización</span>
+                                                    <div class="gasto-value-row">
+                                                        <span class="gasto-percentage text-success" id="lblPorCapitalizacion">0.00%</span>
+                                                        <span class="gasto-amount text-success" id="lblMontoCapitalizacion">$0.00</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1035,9 +1136,11 @@
                                                 <div class="gasto-icon warning">
                                                     <i class="fas fa-money-bill-wave"></i>
                                                 </div>
-                                                <div class="gasto-title">Monto Desembolso</div>
-                                                <div class="gasto-value-row">
-                                                    <span class="gasto-amount-desembolso text-warning" id="lblMontoDesembolso" style="width: 100%; text-align: right;">$0.00</span>
+                                                <div class="gasto-body">
+                                                    <span class="gasto-title">Monto Desembolso</span>
+                                                    <div class="gasto-value-row">
+                                                        <span class="gasto-amount-desembolso text-warning" id="lblMontoDesembolso">$0.00</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1117,6 +1220,7 @@
 
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-confirm-wrapper" id="toastConfirmContainer"></div>
     
     <!-- Contenedor para modales globales -->
     <div id="globalModalsContainer"></div>
@@ -1190,13 +1294,48 @@
                 initializeInactivityMonitoring();
             }
 
-            // Inicializar Flatpickr para fechas
-            flatpickr(".flatpickr-date", {
+            // Flatpickr: año solo como dropdown (select), sin edición directa
+            var flatpickrConfig = {
                 locale: "es",
                 dateFormat: "d/m/Y",
                 allowInput: true,
                 clickOpens: true,
-                placeholder: "dd/mm/yyyy"
+                placeholder: "dd/mm/yyyy",
+                onReady: function(selectedDates, dateStr, instance) {
+                    var monthNav = instance.calendarContainer.querySelector(".flatpickr-current-month");
+                    if (!monthNav) return;
+                    var yearWrapper = monthNav.querySelector(".numInputWrapper");
+                    if (yearWrapper) yearWrapper.style.display = "none";
+                    if (monthNav.querySelector(".flatpickr-year-dropdown")) return;
+                    var curYear = instance.currentYear;
+                    var minY = 1980, maxY = new Date().getFullYear() + 15;
+                    var yearSelect = document.createElement("select");
+                    yearSelect.className = "flatpickr-year-dropdown";
+                    for (var y = maxY; y >= minY; y--) {
+                        var opt = document.createElement("option");
+                        opt.value = y;
+                        opt.textContent = y;
+                        yearSelect.appendChild(opt);
+                    }
+                    yearSelect.value = curYear;
+                    yearSelect.addEventListener("change", function() {
+                        var y = parseInt(yearSelect.value, 10);
+                        if (typeof instance.changeYear === "function") {
+                            instance.changeYear(y);
+                        } else {
+                            instance.currentYear = y;
+                            if (instance.redraw) instance.redraw();
+                        }
+                    });
+                    monthNav.appendChild(yearSelect);
+                },
+                onMonthChange: function(selectedDates, dateStr, instance) {
+                    var yearSelect = instance.calendarContainer.querySelector(".flatpickr-year-dropdown");
+                    if (yearSelect) yearSelect.value = instance.currentYear;
+                }
+            };
+            document.querySelectorAll(".flatpickr-date").forEach(function(el) {
+                flatpickr(el, flatpickrConfig);
             });
 
             // Recalcular altura cuando se redimensione la ventana
@@ -1227,14 +1366,14 @@
             inicializarBusquedaAsociadosGlobal();
 
             // Eventos
-            $('#txtBuscar').on('keypress', function(e) {
+            $('#txtBuscar, #txtFiltroAsociado').on('keypress', function(e) {
                 if (e.which === 13) {
                     e.preventDefault();
                     if (tablaAuxiliaresDataTable) tablaAuxiliaresDataTable.ajax.reload();
                 }
             });
 
-            $('#ddlTipoAuxiliar, #ddlRubro').on('change', function() {
+            $('#ddlTipoAuxiliar, #ddlRubro, #txtFiltroAsociado').on('change keyup', function() {
                 if (tablaAuxiliaresDataTable) tablaAuxiliaresDataTable.ajax.reload();
             });
 
@@ -1593,17 +1732,18 @@
                 </div>
             `;
             
-            $('#toastContainer').append(toastHtml);
+            var $container = $('#toastConfirmContainer');
+            if ($container.length === 0) {
+                $container = $('<div class="toast-confirm-wrapper" id="toastConfirmContainer"></div>').appendTo('body');
+            }
+            $container.empty().append(toastHtml).show();
             
-            // Almacenar las funciones de callback en el elemento
-            document.getElementById(toastId).onConfirm = onConfirm;
-            document.getElementById(toastId).onCancel = onCancel;
+            var toastEl = document.getElementById(toastId);
+            if (!toastEl) return;
+            toastEl.onConfirm = onConfirm;
+            toastEl.onCancel = onCancel;
             
-            const toastElement = new bootstrap.Toast(document.getElementById(toastId), {
-                autohide: false,
-                delay: 0
-            });
-            
+            var toastElement = new bootstrap.Toast(toastEl, { autohide: false, delay: 0 });
             toastElement.show();
         }
 
@@ -2009,6 +2149,7 @@
                     var sortDirection = order ? order.dir : 'desc';
                     var filtros = {
                         FiltroBusqueda: ($('#txtBuscar').val() || '').trim(),
+                        FiltroAsoc: ($('#txtFiltroAsociado').val() || '').trim(),
                         CodigoRubro: ($('#ddlRubro').val() || '').trim(),
                         IdTipoAuxiliar: ($('#ddlTipoAuxiliar').val() || '').trim(),
                         PageSize: data.length,
@@ -2437,6 +2578,9 @@
                 MontoOriginal: montoOriginal,
                 MontoPignorado: montoPignoradoVal,
                 FechaOtorgado: convertirFechaParaBD($('#txtFechaOtorgado').val()),
+                FechaUltimoPago: convertirFechaParaBD($('#txtFechaUltimoPago').val()),
+                FechaUltCalculoInteres: convertirFechaParaBD($('#txtFechaUltCalculoInteres').val()),
+                FechaVencimiento: convertirFechaParaBD($('#txtFechaVencimiento').val()),
                 // Campos opcionales - normalizar valores numéricos
                 TasaInteres: normalizarValorNumerico($('#txtTasaInteres').val()),
                 PagoMes: normalizarValorNumerico($('#txtPagoMes').val()),
@@ -2454,12 +2598,25 @@
                 dataType: "json",
                 data: JSON.stringify({ auxiliar: auxiliar }),
                 success: function(response) {
-                    if (response.d && response.d.Resultado === 'SUCCESS') {
+                    var d = response.d;
+                    if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = {}; } }
+                    if (d && d.Resultado === 'SUCCESS') {
                         showToast('success', 'Éxito', 'Auxiliar guardado correctamente');
                         $('#modalAuxiliar').modal('hide');
+                        var idAux = d.IdAuxiliar != null ? d.IdAuxiliar : (d.idAuxiliar != null ? d.idAuxiliar : auxiliar.ID);
+                        var numAsoc = d.NumeroAsociado != null ? d.NumeroAsociado : (d.numeroAsociado != null ? d.numeroAsociado : auxiliar.NumeroAsociado);
+                        idAux = parseInt(idAux, 10) || parseInt(auxiliar.ID, 10) || 0;
+                        numAsoc = parseInt(numAsoc, 10) || parseInt(auxiliar.NumeroAsociado, 10) || 0;
                         if (tablaAuxiliaresDataTable) tablaAuxiliaresDataTable.ajax.reload();
+                        showConfirmToast(
+                            'success',
+                            'Comprobante',
+                            '¿Desea imprimir el comprobante del auxiliar?',
+                            function() { imprimirComprobanteAuxiliar(idAux, numAsoc); },
+                            function() {}
+                        );
                     } else {
-                        showToast('error', 'Error', response.d.Mensaje || 'Error al guardar auxiliar');
+                        showToast('error', 'Error', (d && d.Mensaje) ? d.Mensaje : 'Error al guardar auxiliar');
                     }
                 },
                 error: function() {
@@ -2529,6 +2686,9 @@
             $('#txtTasaInteres').val(auxiliar.TasaInteres).prop('readonly', true).addClass('bg-light');
             $('#txtPagoMes').val(auxiliar.PagoMes).prop('readonly', true).addClass('bg-light');
             $('#txtFechaOtorgado').val(formatearFecha(auxiliar.FechaOtorgado));
+            $('#txtFechaUltimoPago').val(formatearFecha(auxiliar.FechaUltimoPago));
+            $('#txtFechaUltCalculoInteres').val(formatearFecha(auxiliar.FechaUltCalculoInteres));
+            $('#txtFechaVencimiento').val(formatearFecha(auxiliar.FechaVencimiento));
 
             // En edición no llamar cargarTasaAutomatica: ya usamos la tasa guardada del auxiliar (evita mostrar 10000 cuando la tasa es 0)
             setTimeout(function() { calcularCamposAdicionales(); }, 200);
@@ -2721,6 +2881,7 @@
 
         function limpiarFiltros() {
             $('#txtBuscar').val('');
+            $('#txtFiltroAsociado').val('');
             $('#ddlTipoAuxiliar').val('');
             $('#ddlRubro').val('');
             if (tablaAuxiliaresDataTable) tablaAuxiliaresDataTable.ajax.reload();
@@ -2753,12 +2914,15 @@
             $('#txtCuota').val('');
             $('#txtTasaInteres').val('').prop('readonly', true).addClass('bg-light');
             $('#txtPagoMes').val('').prop('readonly', true).addClass('bg-light');
-            // Fecha otorgada: hoy por defecto al crear nuevo auxiliar
+            // Fechas: hoy por defecto solo en Fecha Otorgado al crear; el resto vacío
             var hoy = new Date();
             var fechaHoy = hoy.getDate().toString().padStart(2, '0') + '/' +
                 (hoy.getMonth() + 1).toString().padStart(2, '0') + '/' +
                 hoy.getFullYear();
             $('#txtFechaOtorgado').val(fechaHoy);
+            $('#txtFechaUltimoPago').val('');
+            $('#txtFechaUltCalculoInteres').val('');
+            $('#txtFechaVencimiento').val('');
             $('#txtSaldo').val('0').prop('readonly', true).addClass('bg-light');
             
             // Limpiar clases de Validación
@@ -2810,7 +2974,8 @@
         */
 
         function formatearFecha(fecha) {
-            if (!fecha) return '-';
+            if (!fecha || (typeof fecha === 'string' && fecha.trim() === '')) return '';
+            if (typeof fecha === 'string' && fecha.trim() === '-') return '';
             
             // Si ya está en formato dd/mm/yyyy, devolverlo tal como está
             if (typeof fecha === 'string' && fecha.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
@@ -2829,7 +2994,7 @@
             // Si es una fecha ISO o similar, convertirla
             try {
                 const date = new Date(fecha);
-                if (isNaN(date.getTime())) return '-';
+                if (isNaN(date.getTime())) return '';
                 
                 const day = date.getDate().toString().padStart(2, '0');
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -2837,25 +3002,31 @@
                 
                 return `${day}/${month}/${year}`;
             } catch (e) {
-                return '-';
+                return '';
             }
         }
 
+        /**
+         * Convierte el valor del campo fecha a yyyyMMdd para enviar al servidor.
+         * Si el valor no es una fecha válida (ej. caracteres no válidos), devuelve null.
+         */
         function convertirFechaParaBD(fecha) {
-            if (!fecha) return '';
-            
-            // Si ya está en formato dd/mm/yyyy, convertir a yyyy-mm-dd
-            if (typeof fecha === 'string' && fecha.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-                const parts = fecha.split('/');
-                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            if (!fecha || (typeof fecha === 'string' && fecha.trim() === '')) return null;
+            var d = null;
+            var s = typeof fecha === 'string' ? fecha.trim() : String(fecha);
+            // dd/mm/yyyy
+            if (s.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+                var parts = s.split('/');
+                var day = parseInt(parts[0], 10), month = parseInt(parts[1], 10) - 1, year = parseInt(parts[2], 10);
+                d = new Date(year, month, day);
+            } else if (s.match(/^\d{4}-\d{1,2}-\d{1,2}/)) {
+                d = new Date(s.split('T')[0]);
+            } else {
+                d = new Date(s);
             }
-            
-            // Si es una fecha ISO, devolverla tal como está
-            if (typeof fecha === 'string' && fecha.match(/^\d{4}-\d{2}-\d{2}/)) {
-                return fecha.split('T')[0]; // Tomar solo la parte de fecha
-            }
-            
-            return fecha;
+            if (isNaN(d.getTime())) return null;
+            var y = d.getFullYear(), m = (d.getMonth() + 1).toString().padStart(2, '0'), day = d.getDate().toString().padStart(2, '0');
+            return '' + y + m + day;
         }
 
         function volverDashboard() {

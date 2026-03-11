@@ -395,6 +395,35 @@ Module ModGlobal
     End Function
 
     ''' <summary>
+    ''' Indica si el usuario tiene permiso para una URL dada (admin o esa URL está en el menú permitido).
+    ''' Útil para permitir una acción si el usuario tiene acceso a otra página (ej. asignar permisos si tiene Gestión de usuarios).
+    ''' </summary>
+    Public Function TienePermisoMenuParaUrl(context As HttpContext, urlDestino As String) As Boolean
+        If context Is Nothing OrElse context.Session Is Nothing Then Return False
+        If String.IsNullOrWhiteSpace(urlDestino) Then Return False
+        If EsPermisosMenuAdmin(context) Then Return True
+        If context.Session("UsuarioId") Is Nothing Then Return False
+        Dim json As String = TryCast(context.Session(VariablesSesion.MenuPermisosJson), String)
+        If String.IsNullOrWhiteSpace(json) OrElse json = "[]" Then Return False
+        Dim rutaBuscada As String = NormalizarRutaMenu(urlDestino)
+        If String.IsNullOrEmpty(rutaBuscada) Then Return False
+        Try
+            Dim serializer As New JavaScriptSerializer()
+            Dim lista As Object() = serializer.Deserialize(Of Object())(json)
+            For Each item As Object In lista
+                Dim d As Dictionary(Of String, Object) = TryCast(item, Dictionary(Of String, Object))
+                If d IsNot Nothing AndAlso d.ContainsKey("UrlDestino") AndAlso d("UrlDestino") IsNot Nothing Then
+                    Dim urlPermitida As String = NormalizarRutaMenu(d("UrlDestino").ToString())
+                    If rutaBuscada = urlPermitida Then Return True
+                End If
+            Next
+        Catch ex As Exception
+            EscribirLog("TienePermisoMenuParaUrl: " & ex.Message)
+        End Try
+        Return False
+    End Function
+
+    ''' <summary>
     ''' Devuelve True si el usuario es administrador de menú (acceso a todos los mosaicos).
     ''' </summary>
     Public Function EsPermisosMenuAdmin(context As HttpContext) As Boolean

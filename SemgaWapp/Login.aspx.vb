@@ -204,8 +204,9 @@ Public Class Login
     End Sub
 
     ''' <summary>
-    ''' Ejecuta spMenu_PermisosUsuarios y guarda en sesión el JSON de opciones con permiso (Permitido=1).
-    ''' Si NivelAcceso=0 (administrador), marca MenuPermisosAdmin y no restringe por menú.
+    ''' Carga permisos de menú en sesión desde tbMenuPrincipal + tbMenuUsuario.
+    ''' Si NivelAcceso=0 (administrador), marca MenuPermisosAdmin = True (acceso a todos los menús).
+    ''' Para el resto, ejecuta spMenuPrincipal_PermisosUsuario y guarda solo ítems con Permitido=1.
     ''' </summary>
     Private Shared Sub CargarPermisosMenuEnSesion(context As HttpContext)
         Try
@@ -230,7 +231,7 @@ Public Class Login
             End If
             Dim uDBA As SBSqlClientInterface = ModGlobal.GetDbaObject(cnn)
             uDBA.Parametros.Add("@IdUsuario", usuarioId)
-            Dim sSqlPermisos As String = "EXEC spMenu_PermisosUsuarios @IdUsuario"
+            Dim sSqlPermisos As String = "EXEC spMenuPrincipal_PermisosUsuario @IdUsuario"
             ModGlobal.EscribirLog("Ejecutando: " & sSqlPermisos & " " & uDBA.getParamList())
             Dim dt As DataTable = uDBA.GetDataTableSql(sSqlPermisos)
             If uDBA.MensajeError <> "" Then
@@ -244,11 +245,11 @@ Public Class Login
                     Dim permitidoObj As Object = row("Permitido")
                     If permitidoObj IsNot Nothing AndAlso permitidoObj IsNot DBNull.Value AndAlso Convert.ToBoolean(permitidoObj) Then
                         Dim d As New Dictionary(Of String, Object) From {
-                            {"IdMenuOpcion", row("IdMenuOpcion")},
-                            {"Clave", If(row("Clave"), "").ToString()},
-                            {"Nombre", If(row("Nombre"), "").ToString()},
-                            {"UrlDestino", If(row("UrlDestino"), "").ToString()},
-                            {"IdPadre", row("IdPadre")},
+                            {"IdMenuOpcion", row("IdMenu")},
+                            {"IdMenu", row("IdMenu")},
+                            {"Nombre", If(row("TextoMenu"), "").ToString()},
+                            {"UrlDestino", If(row("Url"), "").ToString()},
+                            {"IdPadre", row("IdParent")},
                             {"Orden", row("Orden")}
                         }
                         lista.Add(d)

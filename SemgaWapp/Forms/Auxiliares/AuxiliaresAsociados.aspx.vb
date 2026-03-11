@@ -210,6 +210,8 @@ Public Class AuxiliaresAsociados
 			With objSql.Parametros
 				Dim busqueda As String = If(filtros("FiltroBusqueda") IsNot Nothing, filtros("FiltroBusqueda").ToString().Trim(), Nothing)
 				If Not String.IsNullOrEmpty(busqueda) Then .Add("@Busqueda", busqueda)
+				Dim filtroAsoc As String = If(filtros("FiltroAsoc") IsNot Nothing, filtros("FiltroAsoc").ToString().Trim(), Nothing)
+				If Not String.IsNullOrEmpty(filtroAsoc) Then .Add("@FiltroAsoc", filtroAsoc)
 				Dim codigoRubro As String = If(filtros("CodigoRubro") IsNot Nothing, filtros("CodigoRubro").ToString().Trim(), Nothing)
 				If Not String.IsNullOrEmpty(codigoRubro) Then .Add("@CodigoRubro", codigoRubro)
 				Dim idTipoAuxiliar As Integer = 0
@@ -527,7 +529,15 @@ Public Class AuxiliaresAsociados
 				If Not (String.IsNullOrEmpty(auxiliarDict("FechaOtorgado").ToString())) Then
 					.Add("@FechaOtorgado", auxiliarDict("FechaOtorgado").ToString())
 				End If
-
+				If auxiliarDict.ContainsKey("FechaUltimoPago") AndAlso Not String.IsNullOrEmpty(If(auxiliarDict("FechaUltimoPago"), "").ToString()) Then
+					.Add("@FechaUltimoPago", auxiliarDict("FechaUltimoPago").ToString())
+				End If
+				If auxiliarDict.ContainsKey("FechaUltCalculoInteres") AndAlso Not String.IsNullOrEmpty(If(auxiliarDict("FechaUltCalculoInteres"), "").ToString()) Then
+					.Add("@FechaUltCalculoInteres", auxiliarDict("FechaUltCalculoInteres").ToString())
+				End If
+				If auxiliarDict.ContainsKey("FechaVencimiento") AndAlso Not String.IsNullOrEmpty(If(auxiliarDict("FechaVencimiento"), "").ToString()) Then
+					.Add("@FechaVencimiento", auxiliarDict("FechaVencimiento").ToString())
+				End If
 
 				.Add("@TasaInteres", tasaInteresNormalizada)
 				.Add("@PagoMes", pagoMesNormalizado)
@@ -553,9 +563,19 @@ Public Class AuxiliaresAsociados
 
 			If dt.Rows.Count > 0 Then
 				Dim row As DataRow = dt.Rows(0)
+				Dim idAuxiliar As Object = Nothing
+				Dim numeroAsociado As Object = Nothing
+				' El SP devuelve NuevoID (o ID); usamos NuevoID para generar el comprobante
+				If dt.Columns.Contains("NuevoID") Then idAuxiliar = row("NuevoID")
+				If idAuxiliar Is Nothing AndAlso dt.Columns.Contains("ID") Then idAuxiliar = row("ID")
+				If idAuxiliar Is Nothing Then idAuxiliar = auxiliarDict("ID")
+				If dt.Columns.Contains("NumeroAsociado") Then numeroAsociado = row("NumeroAsociado")
+				If numeroAsociado Is Nothing Then numeroAsociado = auxiliarDict("NumeroAsociado")
 				Return New With {
 					.Resultado = row("Resultado").ToString(),
-					.Mensaje = row("Mensaje").ToString()
+					.Mensaje = row("Mensaje").ToString(),
+					.IdAuxiliar = idAuxiliar,
+					.NumeroAsociado = numeroAsociado
 				}
 			Else
 				Return New With {

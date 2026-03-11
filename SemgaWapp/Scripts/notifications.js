@@ -96,7 +96,7 @@ function showConfirmToast(type, title, message, onConfirm, onCancel) {
     var toastClass = 'toast-' + type;
     var boxId = 'confirmToastBox-' + Date.now();
 
-    var boxHtml = '<div id="' + boxId + '" class="toast ' + toastClass + ' toast-confirm shadow" style="min-width:320px;max-width:90vw;pointer-events:auto;">' +
+    var boxHtml = '<div id="' + boxId + '" class="toast show ' + toastClass + ' toast-confirm shadow" style="min-width:320px;max-width:90vw;pointer-events:auto;">' +
         '<div class="toast-header">' +
         '<i class="' + iconClass + ' me-2"></i>' +
         '<strong class="me-auto" id="' + overlay.id + '-title">' + (title || '') + '</strong>' +

@@ -4377,13 +4377,18 @@ Public Class Mantenimientos
 			ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Registros obtenidos: " & dt.Rows.Count.ToString())
 			Dim cuentas As New List(Of Object)
 			For Each row As DataRow In dt.Rows
+				Dim snImputable As Boolean = False
+				If row.Table.Columns.Contains("snImputable") AndAlso Not row.IsNull("snImputable") Then
+					snImputable = Convert.ToBoolean(row("snImputable"))
+				End If
 				Dim cuenta As New With {
 					.ID = row("ID").ToString(),
 					.Codigo = row("Cuenta").ToString(),
 					.Nombre = If(row.Table.Columns.Contains("Nombre") AndAlso Not row.IsNull("Nombre"), row("Nombre").ToString(), ""),
 					.IDGrupo = row("IDGrupo").ToString(),
 					.GrupoDescripcion = If(row.Table.Columns.Contains("GrupoDescripcion") AndAlso Not row.IsNull("GrupoDescripcion"), row("GrupoDescripcion").ToString(), ""),
-					.Saldo = If(row.Table.Columns.Contains("Saldo") AndAlso Not row.IsNull("Saldo"), Convert.ToDecimal(row("Saldo")), 0)
+					.Saldo = If(row.Table.Columns.Contains("Saldo") AndAlso Not row.IsNull("Saldo"), Convert.ToDecimal(row("Saldo")), 0),
+					.snImputable = snImputable
 				}
 				cuentas.Add(cuenta)
 			Next
@@ -4425,12 +4430,22 @@ Public Class Mantenimientos
 			End If
 			If dt.Rows.Count > 0 Then
 				Dim row As DataRow = dt.Rows(0)
+				Dim snImputable As Boolean = False
+				If row.Table.Columns.Contains("snImputable") AndAlso Not row.IsNull("snImputable") Then
+					Dim val As Object = row("snImputable")
+					If TypeOf val Is Boolean Then
+						snImputable = DirectCast(val, Boolean)
+					Else
+						snImputable = (Convert.ToInt32(val) <> 0)
+					End If
+				End If
 				Dim cuenta As New With {
 					.ID = row("ID").ToString(),
 					.Codigo = row("Cuenta").ToString(),
 					.Nombre = If(row.Table.Columns.Contains("Nombre") AndAlso Not row.IsNull("Nombre"), row("Nombre").ToString(), ""),
 					.IDGrupo = row("IDGrupo").ToString(),
-					.Saldo = If(row.Table.Columns.Contains("Saldo") AndAlso Not row.IsNull("Saldo"), Convert.ToDecimal(row("Saldo")), 0)
+					.Saldo = If(row.Table.Columns.Contains("Saldo") AndAlso Not row.IsNull("Saldo"), Convert.ToDecimal(row("Saldo")), 0),
+					.snImputable = snImputable
 				}
 				ModGlobal.EscribirLog("Ejecucion SQL completada sin errores. Cuenta obtenida exitosamente")
 				ModGlobal.EscribirLog("Metodo ObtenerCuenta completado exitosamente")
@@ -4477,8 +4492,10 @@ Public Class Mantenimientos
 			Dim cuenta As String = cuentaDict("Codigo").ToString()
 			Dim nombre As String = cuentaDict("Nombre").ToString()
 			Dim idGrupo As Integer = Convert.ToInt32(cuentaDict("IDGrupo"))
+			Dim snImputable As Boolean = If(cuentaDict.ContainsKey("snImputable") AndAlso cuentaDict("snImputable") IsNot Nothing, Convert.ToBoolean(cuentaDict("snImputable")), False)
 			Dim idSession As String = HttpContext.Current.Session(VariablesSesion.logID).ToString()
-			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, Cuenta: {cuenta}, Nombre: {nombre}, IDGrupo: {idGrupo}, IdSession: {idSession}")
+			Dim usuarioId As Integer = If(HttpContext.Current.Session(VariablesSesion.UsuarioId) IsNot Nothing, Convert.ToInt32(HttpContext.Current.Session(VariablesSesion.UsuarioId)), 0)
+			ModGlobal.EscribirLog($"Valores extraídos - ID: {id}, Cuenta: {cuenta}, Nombre: {nombre}, IDGrupo: {idGrupo}, snImputable: {snImputable}, UsuarioID: {usuarioId}, IdSession: {idSession}")
 			With objSql.Parametros
 				If id > 0 Then
 					.Add("@ID", id)
@@ -4486,6 +4503,8 @@ Public Class Mantenimientos
 				.Add("@Cuenta", cuenta)
 				.Add("@Nombre", nombre)
 				.Add("@IDGrupo", idGrupo)
+				.Add("@snImputable", snImputable)
+				.Add("@UsuarioID", usuarioId)
 				.Add("@IdSession", idSession)
 			End With
 			ModGlobal.EscribirLog($"Ejecutando SQL: {sSql} {objSql.getParamList()}")
@@ -4518,6 +4537,51 @@ Public Class Mantenimientos
 			Return serializer.Serialize(New With {
 				.Resultado = "ERROR",
 				.Mensaje = "Error al guardar cuenta: " & ex.Message
+			})
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function GuardarCuentaImputable(id As Integer, snImputable As Boolean) As String
+		Dim serializer As New JavaScriptSerializer()
+		Try
+			ModGlobal.EscribirLog("ESTA EJECUTANDO EL METODO GuardarCuentaImputable")
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			Dim sSql As String = "Exec spCuentas_GuardarImputable"
+			Dim usuarioId As Integer = If(HttpContext.Current.Session(VariablesSesion.UsuarioId) IsNot Nothing, Convert.ToInt32(HttpContext.Current.Session(VariablesSesion.UsuarioId)), 0)
+			Dim idSession As String = HttpContext.Current.Session(VariablesSesion.logID).ToString()
+			With objSql.Parametros
+				.Add("@ID", id)
+				.Add("@snImputable", snImputable)
+				.Add("@UsuarioID", usuarioId)
+				.Add("@IdSession", idSession)
+			End With
+			Dim dt As DataTable = objSql.GetDataTableSql(sSql)
+			If objSql.MensajeError <> "" Then
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "Error en la base de datos: " & objSql.MensajeError
+				})
+			End If
+			If dt.Rows.Count > 0 Then
+				Dim resultado As String = dt.Rows(0)("Resultado").ToString()
+				Dim mensaje As String = dt.Rows(0)("Mensaje").ToString()
+				Return serializer.Serialize(New With {
+					.Resultado = resultado,
+					.Mensaje = mensaje
+				})
+			Else
+				Return serializer.Serialize(New With {
+					.Resultado = "ERROR",
+					.Mensaje = "No se recibió respuesta del servidor"
+				})
+			End If
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en GuardarCuentaImputable: " & ex.Message)
+			Return serializer.Serialize(New With {
+				.Resultado = "ERROR",
+				.Mensaje = "Error al guardar: " & ex.Message
 			})
 		End Try
 	End Function

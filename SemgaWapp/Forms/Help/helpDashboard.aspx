@@ -1,11 +1,11 @@
-<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="helpDashboard.aspx.vb" Inherits="SemgaWapp.helpDashboard" %>
+﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="helpDashboard.aspx.vb" Inherits="SemgaWapp.helpDashboard" %>
 
 <!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Centro de Ayuda - Cooperativa Coopsemga</title>
+    <title>Centro de Ayuda</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <script src="../../Scripts/inactivity-monitor-final.js?v=2.6"></script>
