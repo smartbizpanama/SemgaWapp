@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Resumen Asociados</title>
+    <style>
+        @page {
+            size: 8.5in 11in;
+            margin: 0.45in 0.168in;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 6px 8px;
+            font-size: 11px;
+            line-height: 1.4;
+            background-color: white;
+            color: #333;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+        }
+        
+        .reporte-movimientos {
+            width: 100%;
+            max-width: 8.5in;
+            margin: 0 auto;
+            background-color: white;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 4px;
+        }
+        
+        .logo {
+            margin-bottom: 6px;
+        }
+        
+        .logo img {
+            max-width: 200px;
+            height: auto;
+        }
+        
+        .cooperativa-nombre {
+            font-size: 15px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .titulo-reporte {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .datos-filtro {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+        }
+        
+        .datos-filtro h3 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ced4da;
+            padding-bottom: 4px;
+        }
+        
+        .datos-filtro .campos-filtro {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .datos-filtro .campo {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 0;
+        }
+
+        .datos-filtro .campo-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: auto;
+            margin-right: 6px;
+            white-space: nowrap;
+        }
+        
+        .datos-filtro .campo-label::after {
+            content: ":";
+            margin-right: 10px;
+        }
+        
+        .datos-filtro .campo-valor {
+            color: #212529;
+        }
+        
+        .tabla-datos {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin-bottom: 0;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+            background: #ffffff;
+        }
+        
+        /* Detalle bajo rubro / tipo auxiliar: Asociado, Cuenta, DR, CR */
+        .tabla-datos .col-asociado-res { width: 40%; }
+        .tabla-datos .col-cuenta-res { width: 22%; }
+        .tabla-datos .col-dr { width: 19%; }
+        .tabla-datos .col-cr { width: 19%; }
+        
+        .tabla-datos thead {
+            background: #94a3b8;
+            color: #ffffff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .tabla-datos thead th {
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 10px;
+            text-transform: uppercase;
+            border: 1px solid #7c8ea0;
+        }
+        
+        
+        .tabla-datos tbody td {
+            padding: 6px 4px;
+            text-align: center;
+            border: 1px solid #eef2f7;
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .tabla-datos tbody td.col-asociado-res {
+            white-space: normal;
+            word-break: break-word;
+            text-align: left !important;
+        }
+        
+        .tabla-datos thead th.col-dr,
+        .tabla-datos thead th.col-cr,
+        .tabla-datos tbody td.col-dr,
+        .tabla-datos tbody td.col-cr,
+        .tabla-datos tbody td.monto.col-dr,
+        .tabla-datos tbody td.monto.col-cr {
+            text-align: center !important;
+        }
+        
+        .tabla-datos tbody tr:nth-child(even) {
+            background-color: #f8fafc;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .grupo-rubro {
+            margin-bottom: 10px;
+        }
+        
+        /* Mismos pasteles que la vista web (ResumenAsociados.aspx) */
+        .grupo-rubro-header {
+            background: #dbeafe;
+            color: #1e3a5f;
+            padding: 10px 15px;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid #bfdbfe;
+            border-bottom: none;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .grupo-tipo-aux {
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+            background: #f8fafc;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .grupo-tipo-aux-header {
+            background: #d1fae5;
+            color: #14532d;
+            padding: 8px 12px;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            border-left: 3px solid #6ee7b7;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .grupo-tipo-aux-total {
+            background: #f1f5f9;
+            padding: 6px 10px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            border-top: 1px solid #e2e8f0;
+            text-align: right;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .grupo-rubro-total {
+            background: #eff6ff;
+            color: #1e3a5f;
+            padding: 8px 12px;
+            font-weight: 700;
+            font-size: 11px;
+            border: 1px solid #bfdbfe;
+            border-radius: 0 0 8px 8px;
+            margin-top: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            text-align: right;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Línea divisoria después del total de cada rubro */
+        .grupo-rubro-post-total {
+            height: 0;
+            margin: 10px 0 0 0;
+            padding: 0;
+            border: 0;
+            border-top: 2px solid #cbd5e1;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .grupo-rubro-total .total-label {
+            margin-right: auto;
+            text-align: left;
+            min-width: 0;
+        }
+        
+        .total-registros {
+            color: #64748b;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .totales-badges {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            gap: 8px;
+        }
+        
+        .badge-total {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-sizing: border-box;
+            width: 12rem;
+            min-height: 2rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: Consolas, 'Segoe UI Mono', monospace;
+            white-space: nowrap;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .badge-total .badge-nombre {
+            font-weight: 700;
+            opacity: 0.95;
+        }
+        
+        /* Mismos tonos que .resumen-pill en pantalla */
+        .badge-total-dr { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .badge-total-cr { background: #ffe4e6; color: #9f1239; border: 1px solid #fecdd3; }
+        .badge-total-bal-pos { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .badge-total-bal-neg { background: #ffe4e6; color: #9f1239; border: 1px solid #fecdd3; }
+        
+        .total-general {
+            background: #e0e7ff;
+            color: #312e81;
+            padding: 15px;
+            font-weight: 700;
+            font-size: 13px;
+            border-radius: 8px;
+            border: 1px solid #c7d2fe;
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            text-align: right;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .total-general .total-label {
+            margin-right: auto;
+            text-align: left;
+            min-width: 0;
+        }
+        
+        .total-general .total-registros {
+            color: #64748b;
+        }
+        
+        .monto {
+            font-family: 'monospace';
+        }
+        
+        .tabla-datos .monto.col-dr,
+        .tabla-datos .monto.col-cr {
+            text-align: center;
+        }
+        
+        .monto-cr {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #2c3e50;
+            text-align: center;
+            font-size: 10px;
+            color: #6c757d;
+        }
+        
+        .fecha-impresion {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="reporte-movimientos">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <img src="/logo.png" alt="Logo Coopsemga" />
+            </div>
+            <div class="cooperativa-nombre">
+                COOPERATIVA DE SERVICIOS MÚLTIPLES GUARARÉ ARRIBA R,L.
+            </div>
+            <div class="titulo-reporte">
+                RESUMEN ASOCIADOS (RUBRO / TIPO AUXILIAR)
+            </div>
+        </div>
+        
+        <!-- Datos del Filtro -->
+        <div class="datos-filtro">
+            <h3>Datos del Reporte</h3>
+            <div class="campos-filtro">
+                <div class="campo">
+                    <span class="campo-label">Usuario</span>
+                    <span class="campo-valor">@Usuario</span>
+                </div>
+                <div class="campo">
+                    <span class="campo-label">Fecha Desde</span>
+                    <span class="campo-valor">@FechaDesde</span>
+                </div>
+                <div class="campo">
+                    <span class="campo-label">Fecha Hasta</span>
+                    <span class="campo-valor">@FechaHasta</span>
+                </div>
+                <div class="campo">
+                    <span class="campo-label">Rubro</span>
+                    <span class="campo-valor">@RubroFiltro</span>
+                </div>
+                <div class="campo">
+                    <span class="campo-label">Tipo auxiliar</span>
+                    <span class="campo-valor">@TipoAuxFiltro</span>
+                </div>
+                <div class="campo">
+                    <span class="campo-label">Asociado</span>
+                    <span class="campo-valor">@AsociadoFiltro</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenido Agrupado por Rubro -->
+        @ContenidoRubros
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="fecha-impresion">
+                Fecha y Hora de Impresión: @FechaHoraImpresion
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

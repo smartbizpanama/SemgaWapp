@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Sistema Global de Búsqueda de Asociados
  * Componente reutilizable para buscar y seleccionar asociados en toda la aplicación
  */
@@ -202,11 +202,19 @@ function buscarAsociadosGlobal(config) {
     console.log('[global-associate-search.js] Href:', href);
     
     let webMethodUrl = 'AuxiliaresAsociados.aspx/BuscarAsociados';
-    
+
+    // Transacciones: preferir URL resuelta en servidor (virtual directory / rutas no estándar)
+    if (typeof window.SEMGA_TRANSACCIONES_PAGE_URL === 'string' && window.SEMGA_TRANSACCIONES_PAGE_URL &&
+        (pathname.includes('transacciones.aspx') || href.includes('transacciones.aspx'))) {
+        webMethodUrl = window.SEMGA_TRANSACCIONES_PAGE_URL.replace(/\/+$/, '') + '/BuscarAsociados';
+        console.log('[global-associate-search.js] Detectado: Transacciones (SEMGA_TRANSACCIONES_PAGE_URL)');
     // Verificar si estamos en Movimientos.aspx específicamente
-    if (pathname.includes('movimientos.aspx') || href.includes('movimientos.aspx')) {
+    } else if (pathname.includes('movimientos.aspx') || href.includes('movimientos.aspx')) {
         webMethodUrl = 'Movimientos.aspx/BuscarAsociados';
         console.log('[global-associate-search.js] Detectado: Movimientos.aspx directamente');
+    } else if (pathname.includes('resumenasociados.aspx') || href.includes('resumenasociados.aspx')) {
+        webMethodUrl = 'ResumenAsociados.aspx/BuscarAsociados';
+        console.log('[global-associate-search.js] Detectado: ResumenAsociados.aspx');
     } else if (pathname.includes('/forms/socios/')) {
         webMethodUrl = '../Auxiliares/AuxiliaresAsociados.aspx/BuscarAsociados';
         console.log('[global-associate-search.js] Detectado: Socios');
@@ -214,8 +222,10 @@ function buscarAsociadosGlobal(config) {
         webMethodUrl = 'AuxiliaresAsociados.aspx/BuscarAsociados';
         console.log('[global-associate-search.js] Detectado: Auxiliares');
     } else if (pathname.includes('/forms/transacciones/')) {
-        webMethodUrl = 'Transacciones.aspx/BuscarAsociados';
-        console.log('[global-associate-search.js] Detectado: Transacciones');
+        webMethodUrl = (typeof window.SEMGA_TRANSACCIONES_PAGE_URL === 'string' && window.SEMGA_TRANSACCIONES_PAGE_URL)
+            ? window.SEMGA_TRANSACCIONES_PAGE_URL.replace(/\/+$/, '') + '/BuscarAsociados'
+            : 'Transacciones.aspx/BuscarAsociados';
+        console.log('[global-associate-search.js] Detectado: Transacciones (ruta /forms/transacciones/)');
     } else if (pathname.includes('/forms/reportes/')) {
         webMethodUrl = 'Movimientos.aspx/BuscarAsociados';
         console.log('[global-associate-search.js] Detectado: Reportes -> Movimientos.aspx');

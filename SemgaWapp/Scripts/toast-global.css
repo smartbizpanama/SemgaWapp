@@ -1,44 +1,167 @@
 /**
- * Clases globales para toasts.
- * Contenedor base: .toast-container
- * Posición: usar un modificador .toast-container--top-end | .toast-container--center
+
+ * Toasts SemgaWapp — siempre respecto al viewport (no al contenedor con overflow).
+
+ * Incluir: <link href="~/Scripts/toast-global.css" rel="stylesheet" />
+
+ * O usar notifications.js (inyecta estos estilos automáticamente).
+
  */
 
-/* Posición: esquina superior derecha (por defecto para toasts informativos) */
-.toast-container.toast-container--top-end {
+
+
+.toast-container.toast-container--viewport-center,
+
+.toast-container.toast-container--center-screen {
+
     position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    left: auto !important;
+
+    top: 50% !important;
+
+    left: 50% !important;
+
+    right: auto !important;
+
     bottom: auto !important;
-    z-index: 1060;
-    display: block !important;
+
+    transform: translate(-50%, -50%) !important;
+
+    z-index: 10650 !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    align-items: center !important;
+
+    justify-content: center !important;
+
     width: auto !important;
+
+    max-width: min(92vw, 440px) !important;
+
     height: auto !important;
-    transform: none !important;
-    pointer-events: auto;
+
+    padding: 0 !important;
+
+    margin: 0 !important;
+
+    pointer-events: none;
+
+    box-sizing: border-box;
+
 }
 
-/* Posición: centro de la ventana (para confirms) */
-.toast-container.toast-container--center {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    z-index: 9999;
-    pointer-events: none;
-    padding: 1rem;
-    box-sizing: border-box;
+
+
+.toast-container.toast-container--viewport-center .toast,
+
+.toast-container.toast-container--center-screen .toast {
+
+    pointer-events: auto;
+
+    margin: 0 !important;
+
+    position: relative !important;
+
+    min-width: 280px;
+
+    max-width: min(92vw, 440px);
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+
 }
+
+
+
+/* Esquina superior derecha (opcional) */
+
+.toast-container.toast-container--top-end {
+
+    position: fixed !important;
+
+    top: 20px !important;
+
+    right: 20px !important;
+
+    left: auto !important;
+
+    bottom: auto !important;
+
+    transform: none !important;
+
+    z-index: 10650 !important;
+
+    display: block !important;
+
+    width: auto !important;
+
+    height: auto !important;
+
+    max-width: min(92vw, 420px) !important;
+
+    pointer-events: none;
+
+}
+
+
+
+.toast-container.toast-container--top-end .toast {
+
+    pointer-events: auto;
+
+    margin: 0 0 8px 0 !important;
+
+}
+
+
+
+/* Confirms / diálogos */
+
+.toast-container.toast-container--center {
+
+    position: fixed !important;
+
+    top: 0 !important;
+
+    left: 0 !important;
+
+    right: 0 !important;
+
+    bottom: 0 !important;
+
+    width: 100% !important;
+
+    height: 100% !important;
+
+    transform: none !important;
+
+    display: flex !important;
+
+    justify-content: center !important;
+
+    align-items: center !important;
+
+    z-index: 10660 !important;
+
+    pointer-events: none;
+
+    padding: 1rem;
+
+    box-sizing: border-box;
+
+}
+
+
 
 .toast-container.toast-container--center .toast {
+
     pointer-events: auto;
+
     margin: 0 !important;
+
     position: relative !important;
+
 }
+
+

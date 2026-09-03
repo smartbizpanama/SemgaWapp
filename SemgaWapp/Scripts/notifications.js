@@ -7,7 +7,43 @@
  *   - .toast-container--top-end  → esquina superior derecha (toasts informativos)
  *   - .toast-container--center   → centro de la ventana (confirms)
  * Incluir en la página: <link href="Scripts/toast-global.css" rel="stylesheet" />
+ * (notifications.js también inyecta estilos mínimos si falta el CSS.)
  */
+
+(function initSemgaToastGlobalStyles() {
+    if (document.getElementById('semga-toast-global-styles')) return;
+    if (document.querySelector('link[href*="toast-global.css"]')) return;
+    var style = document.createElement('style');
+    style.id = 'semga-toast-global-styles';
+    style.textContent = [
+        '.toast-container.toast-container--viewport-center{position:fixed!important;top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;z-index:10650!important;display:flex!important;flex-direction:column!important;align-items:center!important;max-width:min(92vw,440px)!important;pointer-events:none}',
+        '.toast-container.toast-container--viewport-center .toast{pointer-events:auto;margin:0!important;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.18)}',
+        '.toast-container.toast-container--top-end{position:fixed!important;top:20px!important;right:20px!important;left:auto!important;bottom:auto!important;transform:none!important;z-index:10650!important;pointer-events:none}',
+        '.toast-container.toast-container--top-end .toast{pointer-events:auto;margin:0 0 8px!important}'
+    ].join('');
+    document.head.appendChild(style);
+})();
+
+function ensureToastContainer(position) {
+    var pos = position || 'viewport-center';
+    var classMap = {
+        'viewport-center': 'toast-container toast-container--viewport-center',
+        'center': 'toast-container toast-container--viewport-center',
+        'top-end': 'toast-container toast-container--top-end'
+    };
+    var toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('di' + 'v');
+        toastContainer.id = 'toastContainer';
+        toastContainer.setAttribute('data-semga-toast-root', '1');
+        document.body.appendChild(toastContainer);
+    }
+    if (toastContainer.parentElement !== document.body) {
+        document.body.appendChild(toastContainer);
+    }
+    toastContainer.className = classMap[pos] || classMap['viewport-center'];
+    return toastContainer;
+}
 
 /**
  * Muestra una notificación toast
@@ -17,16 +53,7 @@
  * @param {number} duration - Duración en milisegundos (default: 4000)
  */
 function showToast(type, title, message, duration = 4000) {
-    // Obtener o crear el contenedor global de toasts (posición: top-end)
-    var toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toastContainer';
-        toastContainer.className = 'toast-container toast-container--top-end';
-        document.body.appendChild(toastContainer);
-    } else if (!toastContainer.classList.contains('toast-container--top-end')) {
-        toastContainer.classList.add('toast-container--top-end');
-    }
+    var toastContainer = ensureToastContainer('viewport-center');
 
     const toastId = 'toast-' + Date.now();
     const iconClass = getToastIcon(type);

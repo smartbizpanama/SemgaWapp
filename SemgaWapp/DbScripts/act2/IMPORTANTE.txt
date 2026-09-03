@@ -1,3 +1,0 @@
-- Crear rubro CXC.
-- Crear codigo de transaccion CXCSOS para imputar los montos de sostenibilidad.
-- Crear codigo de transaccion CXCPAG para los pagos de sostenibilidad.

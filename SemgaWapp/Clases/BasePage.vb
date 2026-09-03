@@ -1,5 +1,8 @@
 Imports System.Configuration
 Imports System.Data.SqlClient
+Imports System.Web
+Imports System.Web.Script.Services
+Imports System.Web.Services
 Imports System.Web.UI
 Imports System.Web.UI.HtmlControls
 Imports SBUtility
@@ -113,5 +116,26 @@ Public Class BasePage
             If Not (Char.IsDigit(c) OrElse (c >= "a"c AndAlso c <= "f"c) OrElse (c >= "A"c AndAlso c <= "F"c)) Then Return "#87CEEB"
         Next
         Return valor
+    End Function
+
+    ''' <summary>
+    ''' Fecha/hora de referencia (internet) y fecha/hora del servidor SQL (GETDATE), para encabezados de pantalla.
+    ''' </summary>
+    <WebMethod(EnableSession:=True)>
+    <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+    Public Shared Function ObtenerFechasReferenciaTitulo(timeZoneCliente As String) As Object
+        Dim ctx As HttpContext = HttpContext.Current
+        If ctx Is Nothing OrElse ctx.Session Is Nothing Then
+            Return New With {.Resultado = "ERROR", .Mensaje = "Sin contexto"}
+        End If
+        If ctx.Session(VariablesSesion.UsuarioId) Is Nothing Then
+            Return New With {.Resultado = "ERROR", .Mensaje = "Sesión expirada"}
+        End If
+        Dim cnnObj As Object = ctx.Session(VariablesSesion.ConnectionString)
+        If cnnObj Is Nothing OrElse String.IsNullOrWhiteSpace(cnnObj.ToString()) Then
+            Return New With {.Resultado = "ERROR", .Mensaje = "Sin cadena de conexión"}
+        End If
+        Dim tz As String = If(timeZoneCliente, "")
+        Return ModGlobal.ObtenerFechasReferenciaParaTitulo(cnnObj.ToString(), tz)
     End Function
 End Class

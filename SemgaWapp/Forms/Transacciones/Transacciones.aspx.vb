@@ -6,6 +6,7 @@ Imports SBUtility
 Imports System.Data
 Imports System.Web.Security
 Imports System.Text.RegularExpressions
+Imports System.Collections.Generic
 
 Public Class Transacciones
 	Inherits BasePage
@@ -89,12 +90,6 @@ Public Class Transacciones
 				For i As Integer = 0 To dt.Rows.Count - 1
 					Dim row As DataRow = dt.Rows(i)
 
-					' Log para verificar qué campos están disponibles
-					ModGlobal.EscribirLog("Campos disponibles en la fila:")
-					For Each col As DataColumn In dt.Columns
-						ModGlobal.EscribirLog($"  - {col.ColumnName}: {row(col.ColumnName)}")
-					Next
-
 					' Procesar JsonAuxiliares en el servidor
 					Dim rubrosUnicos As New List(Of Object)
 					Dim auxiliaresPorRubro As New Dictionary(Of String, List(Of Object))
@@ -103,7 +98,11 @@ Public Class Transacciones
 					If dt.Columns.Contains("JsonAuxiliares") AndAlso Not String.IsNullOrEmpty(row("JsonAuxiliares").ToString()) Then
 						Try
 							Dim jsonAuxiliaresValue As String = row("JsonAuxiliares").ToString()
-							ModGlobal.EscribirLog($"JsonAuxiliares encontrado: {jsonAuxiliaresValue}")
+							If jsonAuxiliaresValue.Length > 160 Then
+								ModGlobal.EscribirLog($"JsonAuxiliares len={jsonAuxiliaresValue.Length}, preview={jsonAuxiliaresValue.Substring(0, 120)}...")
+							Else
+								ModGlobal.EscribirLog($"JsonAuxiliares len={jsonAuxiliaresValue.Length}")
+							End If
 
 							' Deserializar el JSON en el servidor
 							Dim auxiliaresData As Object = New JavaScriptSerializer().Deserialize(Of Object)(jsonAuxiliaresValue)
@@ -173,10 +172,6 @@ Public Class Transacciones
 								End If
 							Next
 
-							ModGlobal.EscribirLog($"Rubros procesados: {rubrosUnicos.Count}")
-							ModGlobal.EscribirLog($"Auxiliares por rubro: {auxiliaresPorRubro.Count}")
-							ModGlobal.EscribirLog($"Transacciones por rubro: {transaccionesPorRubro.Count}")
-
 						Catch ex As Exception
 							ModGlobal.EscribirLog($"Error al procesar JsonAuxiliares: {ex.Message}")
 						End Try
@@ -197,8 +192,6 @@ Public Class Transacciones
 						.TransaccionesPorRubro = transaccionesPorRubro
 					}
 
-					' Log para verificar el objeto antes de serializar
-					ModGlobal.EscribirLog($"Objeto asociado antes de serializar: Rubros = {asociado.Rubros.Count}, Auxiliares = {asociado.AuxiliaresPorRubro.Count}, Transacciones = {asociado.TransaccionesPorRubro.Count}")
 					asociados.Add(asociado)
 
 
@@ -206,14 +199,7 @@ Public Class Transacciones
 			End If
 
 			Dim jsonData As String = New JavaScriptSerializer().Serialize(asociados)
-			ModGlobal.EscribirLog("JSON generado (primeros 200 chars): " & jsonData.Substring(0, Math.Min(200, jsonData.Length)))
-
-			' Log específico para verificar datos procesados en el JSON final
-			If jsonData.Contains("Rubros") AndAlso jsonData.Contains("AuxiliaresPorRubro") AndAlso jsonData.Contains("TransaccionesPorRubro") Then
-				ModGlobal.EscribirLog("Datos procesados (Rubros, AuxiliaresPorRubro, TransaccionesPorRubro) encontrados en JSON final")
-			Else
-				ModGlobal.EscribirLog("Datos procesados NO encontrados en JSON final")
-			End If
+			ModGlobal.EscribirLog($"BuscarAsociados OK: {asociados.Count} asociado(s), JSON length={jsonData.Length}")
 
 			Return New With {
 				.Resultado = "SUCCESS",
@@ -388,6 +374,80 @@ Public Class Transacciones
 				.Data = "",
 				.Mensaje = "Error al obtener códigos de transacción: " & ex.Message
 			}
+		End Try
+	End Function
+
+	<WebMethod()>
+	<ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+	Public Shared Function SimularMovimiento(numeroAsociado As Integer, codigoRubro As String, idAuxiliar As Integer, codigoTransaccion As String, monto As Decimal, snSoloCapital As Integer) As Object
+		Try
+			If numeroAsociado <= 0 OrElse idAuxiliar <= 0 Then
+				Return New With {.Resultado = "ERROR", .Mensaje = "Datos incompletos para simular el movimiento."}
+			End If
+
+			Dim objSql As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+			objSql.Parametros.Clear()
+			objSql.Parametros.Add("@NumeroAsociado", numeroAsociado)
+			objSql.Parametros.Add("@CodigoRubro", If(codigoRubro, ""))
+			objSql.Parametros.Add("@IDAuxiliar", idAuxiliar)
+			objSql.Parametros.Add("@CodigoTransaccion", If(codigoTransaccion, ""))
+			objSql.Parametros.Add("@Monto", monto)
+			objSql.Parametros.Add("@snSoloCapital", If(snSoloCapital <> 0, 1, 0))
+
+			ModGlobal.EscribirLog("SimularMovimiento: Exec dbo.spMovimientos_SimularMovimiento " & objSql.getParamList())
+			Dim dt As DataTable = objSql.GetDataTableSql("Exec dbo.spMovimientos_SimularMovimiento")
+			If objSql.MensajeError <> "" Then
+				Return New With {.Resultado = "ERROR", .Mensaje = "Error en la base de datos: " & objSql.MensajeError}
+			End If
+			If dt Is Nothing OrElse dt.Rows.Count = 0 Then
+				Return New With {.Resultado = "ERROR", .Mensaje = "La simulación no devolvió datos."}
+			End If
+
+			Dim r As DataRow = dt.Rows(0)
+			Dim res As String = ""
+			If dt.Columns.Contains("Resultado") AndAlso Not IsDBNull(r("Resultado")) Then
+				res = r("Resultado").ToString().Trim()
+			End If
+			If String.Equals(res, "ERROR", StringComparison.OrdinalIgnoreCase) Then
+				Dim msgErr As String = ""
+				If dt.Columns.Contains("Mensaje") AndAlso Not IsDBNull(r("Mensaje")) Then
+					msgErr = r("Mensaje").ToString()
+				End If
+				If String.IsNullOrWhiteSpace(msgErr) Then msgErr = "La simulación no es válida."
+				Return New With {.Resultado = "ERROR", .Mensaje = msgErr}
+			End If
+
+			Dim dict As New Dictionary(Of String, Object)
+			dict("Resultado") = "SUCCESS"
+			dict("Mensaje") = ""
+
+			For Each c As DataColumn In dt.Columns
+				Dim colName As String = c.ColumnName
+				If String.Equals(colName, "Resultado", StringComparison.OrdinalIgnoreCase) Then Continue For
+				If String.Equals(colName, "Mensaje", StringComparison.OrdinalIgnoreCase) Then Continue For
+
+				Dim raw As Object = r(colName)
+				If IsDBNull(raw) OrElse raw Is Nothing Then
+					dict(colName) = Nothing
+				ElseIf TypeOf raw Is DateTime Then
+					dict(colName) = CType(raw, DateTime).ToString("yyyy-MM-dd")
+				ElseIf TypeOf raw Is Decimal Then
+					dict(colName) = Convert.ToDecimal(raw)
+				ElseIf TypeOf raw Is Double OrElse TypeOf raw Is Single Then
+					dict(colName) = Convert.ToDecimal(raw)
+				ElseIf TypeOf raw Is Byte OrElse TypeOf raw Is SByte OrElse TypeOf raw Is Int16 OrElse TypeOf raw Is UInt16 OrElse TypeOf raw Is Int32 OrElse TypeOf raw Is UInt32 OrElse TypeOf raw Is Int64 OrElse TypeOf raw Is UInt64 Then
+					dict(colName) = Convert.ToInt64(raw)
+				ElseIf TypeOf raw Is Boolean Then
+					dict(colName) = Convert.ToBoolean(raw)
+				Else
+					dict(colName) = raw.ToString()
+				End If
+			Next
+
+			Return dict
+		Catch ex As Exception
+			ModGlobal.EscribirLog("Error en SimularMovimiento: " & ex.Message & " | " & ex.StackTrace)
+			Return New With {.Resultado = "ERROR", .Mensaje = "Error al simular: " & ex.Message}
 		End Try
 	End Function
 

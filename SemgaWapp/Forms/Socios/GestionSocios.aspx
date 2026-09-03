@@ -1,11 +1,11 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="GestionSocios.aspx.vb" Inherits="SemgaWapp.GestionSocios" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="GestionSocios.aspx.vb" Inherits="SemgaWapp.GestionSocios" %>
 
 <!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Gestión de Socios</title>
+    <title>Gesti?n de Socios</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
@@ -18,6 +18,7 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet"/>
+    <link href="../../Scripts/toast-global.css" rel="stylesheet"/>
     
     <style>
         html, body {
@@ -47,7 +48,7 @@
             box-sizing: border-box;
         }
         
-        /* Barra superior: título | filtros | botones en una fila */
+        /* Barra superior: t?tulo | filtros | botones en una fila */
         .top-bar-section {
             display: flex;
             align-items: stretch;
@@ -197,13 +198,13 @@
             background-color: #A2F4FD !important;
         }
         
-        /* Estilos específicos para DataTables */
+        /* Estilos espec?ficos para DataTables */
         #tablaSocios_wrapper .dataTables_scrollBody tbody tr:hover,
         #tablaSocios_wrapper .dataTables_scrollBody tbody tr:hover td {
             background-color: #A2F4FD !important;
         }
         
-        /* Forzar centrado en títulos y celdas de DataTables */
+        /* Forzar centrado en t?tulos y celdas de DataTables */
         #tablaSocios thead th {
             text-align: center !important;
         }
@@ -255,19 +256,19 @@
             font-weight: bold;
         }
         
-        /* Colores más oscuros para el porcentaje restante */
+        /* Colores m?s oscuros para el porcentaje restante */
         #porcentajeRestante.text-warning {
             color: #e67e22 !important; /* Naranja oscuro en lugar de amarillo */
             font-weight: bold;
         }
         
         #porcentajeRestante.text-success {
-            color: #27ae60 !important; /* Verde más oscuro */
+            color: #27ae60 !important; /* Verde m?s oscuro */
             font-weight: bold;
         }
         
         #porcentajeRestante.text-danger {
-            color: #e74c3c !important; /* Rojo más oscuro */
+            color: #e74c3c !important; /* Rojo m?s oscuro */
             font-weight: bold;
         }
         
@@ -289,7 +290,7 @@
             border-top: 1px solid #dee2e6;
         }
         
-        /* Reducir padding del contenido de las pestañas */
+        /* Reducir padding del contenido de las pesta?as */
         #modalSocio .tab-content {
             padding-top: 15px !important;
         }
@@ -359,17 +360,19 @@
             color: #2c3e50;
         }
         
-        .toast-container {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1055;
+        /* Toasts: contenedor se mueve a body v?a JS; estilos globales en toast-global.css / notifications.js */
+        .toast-container.toast-container--viewport-center {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            z-index: 10650 !important;
+            pointer-events: none;
         }
-        
-        .toast {
+        .toast-container.toast-container--viewport-center .toast {
+            pointer-events: auto;
             min-width: 300px;
-            max-width: 500px;
+            max-width: min(92vw, 500px);
         }
         
         /* Toast Confirm Personalizado */
@@ -494,7 +497,7 @@
             z-index: 1059;
         }
         
-        /* Estilo para botón deshabilitado */
+        /* Estilo para bot?n deshabilitado */
         .btn.disabled, .btn:disabled {
             background-color: #6c757d !important;
             border-color: #6c757d !important;
@@ -584,15 +587,240 @@
             font-size: 16px;
         }
         
-        /* Forzar alineación a la izquierda para la columna de identificación */
-        #tablaSocios td:nth-child(7) {
+        /* Forzar alineaci?n a la izquierda para la columna de identificaci?n */
+        #tablaSocios td:nth-child(9) {
             text-align: left !important;
         }
         
-        #tablaSocios td:nth-child(7) * {
+        #tablaSocios td:nth-child(9) * {
             text-align: left !important;
         }
-        
+
+        /* Modal par?metros EDCR */
+        .edcr-param-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10050;
+        }
+        .edcr-param-modal {
+            background: #fff;
+            border-radius: 10px;
+            width: 95%;
+            max-width: 720px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+        .edcr-param-modal-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .edcr-param-modal-header h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .edcr-param-box {
+            border: 2px solid #198754;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 18px;
+            background: #fafdfb;
+        }
+        .edcr-param-box-title {
+            color: #198754;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 14px;
+        }
+        .edcr-param-fields {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .edcr-param-field {
+            flex: 1 1 180px;
+            min-width: 160px;
+        }
+        .edcr-param-field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+        .edcr-param-modal-footer {
+            padding: 12px 18px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* Modal reporte EDCR ? estilos fijos (no dependen de abrir EDC antes) */
+        #modalEstadoCuentaRegular.edcr-reporte-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            padding: 12px !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 10100 !important;
+            overflow: auto !important;
+            background: rgba(0, 0, 0, 0.72) !important;
+            backdrop-filter: blur(2px);
+        }
+        #modalEstadoCuentaRegular .edcr-reporte-modal {
+            position: relative !important;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            width: min(96vw, 1100px) !important;
+            max-width: 96vw !important;
+            max-height: calc(100vh - 24px) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            margin: auto !important;
+        }
+        #modalEstadoCuentaRegular .edcr-reporte-modal .estado-cuenta-modal-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: auto;
+            padding: 16px;
+            background: #f8f9fa;
+        }
+        #modalEstadoCuentaRegular .edcr-reporte-modal .estado-cuenta-container {
+            background: #fff;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        #modalEstadoCuentaRegular .edcr-reporte-modal .estado-cuenta-modal-header,
+        #modalEstadoCuentaRegular .edcr-reporte-modal .estado-cuenta-modal-footer {
+            flex-shrink: 0;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-modal-header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: #fff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-modal-header h5 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+        #modalEstadoCuentaRegular .btn-close-custom {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        #modalEstadoCuentaRegular .btn-close-custom:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-modal-footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Contenido del reporte EDCR (respaldo si falla extracci?n del <style> del HTML) */
+        #modalEstadoCuentaRegular .estado-cuenta-container .reporte-edcr {
+            max-width: 100%;
+            margin: 0 auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 11px;
+            line-height: 1.35;
+            color: #333;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .header { text-align: center; margin-bottom: 12px; }
+        #modalEstadoCuentaRegular .estado-cuenta-container .cooperativa-nombre {
+            font-size: 14px; font-weight: 700; color: #2c3e50; text-transform: uppercase; margin: 6px 0;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .titulo-reporte {
+            font-size: 17px; font-weight: 700; color: #2c3e50; text-transform: uppercase;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .datos-asociado {
+            display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 12px; padding: 8px 10px;
+            background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .datos-asociado .campo { display: inline-flex; gap: 6px; }
+        #modalEstadoCuentaRegular .estado-cuenta-container .datos-asociado .campo-label { font-weight: 600; color: #495057; }
+        #modalEstadoCuentaRegular .estado-cuenta-container .grupo-cuenta { margin-bottom: 14px; }
+        #modalEstadoCuentaRegular .estado-cuenta-container .grupo-cuenta-header {
+            background: #b8d4e8; color: #1a3a52; font-weight: 700; padding: 6px 10px;
+            border: 1px solid #8fb8d6;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .grupo-cuenta-subheader {
+            background: #d4e8f4; padding: 4px 10px; font-weight: 600;
+            border-left: 1px solid #8fb8d6; border-right: 1px solid #8fb8d6;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .tabla-movimientos {
+            width: 100%; border-collapse: collapse; table-layout: fixed;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .tabla-movimientos thead {
+            background: #2c3e50; color: #fff;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .tabla-movimientos thead th {
+            padding: 6px 4px; font-size: 9px; text-transform: uppercase;
+            border: 1px solid #1a252f; text-align: center;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .tabla-movimientos tbody td {
+            padding: 5px 4px; border: 1px solid #dee2e6; font-size: 10px;
+            text-align: center; vertical-align: middle;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .tabla-movimientos .col-fecha,
+        #modalEstadoCuentaRegular .estado-cuenta-container .tabla-movimientos .col-codigo,
+        #modalEstadoCuentaRegular .estado-cuenta-container .tabla-movimientos .col-desc,
+        #modalEstadoCuentaRegular .estado-cuenta-container .tabla-movimientos .col-monto { text-align: center; }
+        #modalEstadoCuentaRegular .estado-cuenta-container .fila-subtotal td {
+            background: #e9ecef; font-weight: 700; border-top: 2px solid #adb5bd;
+            text-align: center;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .fila-subtotal .subtotal-label { text-align: center; }
+        #modalEstadoCuentaRegular .estado-cuenta-container .total-general {
+            background: #2c3e50; color: #fff; padding: 8px 12px;
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: center; margin-top: 8px;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .total-general .totales-montos {
+            margin-left: auto; display: flex; gap: 20px; justify-content: center; flex: 1;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .total-general .monto-col { text-align: center; }
+        #modalEstadoCuentaRegular .estado-cuenta-container .periodo-rango {
+            font-size: 10px; color: #495057; margin-bottom: 8px;
+        }
+        #modalEstadoCuentaRegular .estado-cuenta-container .footer {
+            margin-top: 10px; font-size: 10px; color: #6c757d; text-align: right;
+        }
+
         /* Estilos para tabla con scroll interno */
         .dataTables_wrapper {
             position: relative;
@@ -614,7 +842,7 @@
             border-bottom: none;
         }
         
-        /* Asegurar que los controles de paginación estén visibles y alineados */
+        /* Asegurar que los controles de paginaci?n est?n visibles y alineados */
         .dataTables_info,
         .dataTables_paginate {
             margin-top: 10px;
@@ -625,7 +853,7 @@
             align-items: center;
         }
         
-        /* Alinear información y paginación al mismo nivel */
+        /* Alinear informaci?n y paginaci?n al mismo nivel */
         .dataTables_wrapper .dataTables_info {
             float: left;
             margin-top: 0;
@@ -675,7 +903,7 @@
             max-height: 100%;
         }
         
-        /* Área de scroll de DataTables - ocupa todo el espacio disponible */
+        /* ?rea de scroll de DataTables - ocupa todo el espacio disponible */
         .dataTables_scroll {
             flex: 1 1 auto;
             min-height: 200px;
@@ -695,7 +923,7 @@
             overflow-x: auto !important;
         }
         
-        /* Asegurar que la fila con info y paginación sea visible y esté FUERA del scroll */
+        /* Asegurar que la fila con info y paginaci?n sea visible y est? FUERA del scroll */
         .dataTables_wrapper .row.mt-3 {
             display: flex !important;
             visibility: visible !important;
@@ -712,7 +940,7 @@
             height: auto !important;
             overflow: visible !important;
             flex-shrink: 0 !important; /* NO se reduce, siempre visible */
-            flex-grow: 0 !important; /* NO crece más allá de su contenido */
+            flex-grow: 0 !important; /* NO crece m?s all? de su contenido */
             flex-basis: auto !important;
         }
         
@@ -729,7 +957,7 @@
             flex-shrink: 0;
         }
 
-        /* Evitar que la flecha del dropdown cubra el número en "Mostrar X registros" */
+        /* Evitar que la flecha del dropdown cubra el n?mero en "Mostrar X registros" */
         #tablaSocios_wrapper .dataTables_length select {
             padding-right: 2rem !important;
             min-width: 70px;
@@ -845,7 +1073,7 @@
             display: none !important;
         }
         
-        /* Asegurar que el dropdown tenga búsqueda */
+        /* Asegurar que el dropdown tenga b?squeda */
         .select2-search--dropdown {
             display: block !important;
         }
@@ -873,7 +1101,7 @@
             z-index: 9999 !important;
         }
         
-        /* Asegurar que el campo de búsqueda sea visible y funcional */
+        /* Asegurar que el campo de b?squeda sea visible y funcional */
         .select2-search--dropdown {
             padding: 4px !important;
             display: block !important;
@@ -897,7 +1125,7 @@
             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
         }
         
-        /* Asegurar que el campo de búsqueda sea clickeable */
+        /* Asegurar que el campo de b?squeda sea clickeable */
         .select2-search--dropdown {
             pointer-events: auto !important;
         }
@@ -951,7 +1179,7 @@
             left: -9999px !important;
         }
         
-        /* Forzar tamaño de letra consistente en todos los elementos Select2 */
+        /* Forzar tama?o de letra consistente en todos los elementos Select2 */
         .select2-container * {
             font-size: 0.875rem !important;
         }
@@ -980,13 +1208,13 @@
             font-size: 0.875rem !important;
         }
         
-        /* Asegurar que el texto seleccionado tenga el mismo tamaño */
+        /* Asegurar que el texto seleccionado tenga el mismo tama?o */
         .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
             font-size: 0.875rem !important;
             line-height: 1.5 !important;
         }
         
-        /* Mejorar la visualización del dropdown de Select2 */
+        /* Mejorar la visualizaci?n del dropdown de Select2 */
         .select2-dropdown {
             max-height: none !important;
             overflow: visible !important;
@@ -1024,7 +1252,7 @@
             border-bottom: 1px solid #ced4da !important;
         }
         
-        /* Configuración simplificada de scroll */
+        /* Configuraci?n simplificada de scroll */
         .select2-dropdown .select2-results {
             overflow-y: auto !important;
             overflow-x: hidden !important;
@@ -1131,13 +1359,13 @@
             white-space: normal;
         }
 
-        #tablaSocios thead th:nth-child(6),
-        #tablaSocios tbody td:nth-child(6) {
+        #tablaSocios thead th:nth-child(8),
+        #tablaSocios tbody td:nth-child(8) {
             text-align: center !important;
         }
 
-        #tablaSocios thead th:nth-child(7),
-        #tablaSocios tbody td:nth-child(7) {
+        #tablaSocios thead th:nth-child(9),
+        #tablaSocios tbody td:nth-child(9) {
             text-align: left !important;
         }
 
@@ -1145,18 +1373,45 @@
             margin-top: 12px;
         }
     </style>
+    <script type="text/template" id="edcrPrintPageStyles">@page { size: 8.5in 11in; margin: 0.4in 0.3in; }
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; font-size: 11px; line-height: 1.35; color: #333; }
+        .reporte-edcr { width: 100%; max-width: none; margin: 0; }
+        .header { text-align: center; margin-bottom: 12px; }
+        .logo img { max-width: 160px; height: auto; }
+        .cooperativa-nombre { font-size: 14px; font-weight: 700; color: #2c3e50; text-transform: uppercase; margin: 6px 0; }
+        .titulo-reporte { font-size: 17px; font-weight: 700; color: #2c3e50; text-transform: uppercase; }
+        .datos-asociado { margin-bottom: 12px; padding: 8px 10px; background: #f8f9fa; border: 1px solid #dee2e6; }
+        .datos-asociado .campo { display: inline-block; width: 49%; margin-bottom: 4px; }
+        .datos-asociado .campo-label { font-weight: 600; }
+        .periodo-rango { font-size: 10px; margin-bottom: 8px; }
+        .grupo-cuenta { width: 100%; margin-bottom: 14px; page-break-inside: avoid; }
+        .grupo-cuenta-header { background: #b8d4e8; color: #1a3a52; font-weight: 700; padding: 6px 10px; border: 1px solid #8fb8d6; }
+        .grupo-cuenta-subheader { background: #d4e8f4; padding: 4px 10px; font-weight: 600; border-left: 1px solid #8fb8d6; border-right: 1px solid #8fb8d6; }
+        .tabla-movimientos { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .tabla-movimientos thead { background: #2c3e50; color: #fff; }
+        .tabla-movimientos thead th { padding: 6px 3px; font-size: 8px; text-transform: uppercase; border: 1px solid #1a252f; text-align: center; vertical-align: middle; }
+        .tabla-movimientos tbody td { padding: 4px 3px; border: 1px solid #dee2e6; font-size: 9px; text-align: center; vertical-align: middle; word-wrap: break-word; }
+        .tabla-movimientos .col-fecha, .tabla-movimientos .col-codigo, .tabla-movimientos .col-desc, .tabla-movimientos .col-monto { text-align: center; }
+        .fila-subtotal td { background: #e9ecef; font-weight: 700; text-align: center; border-top: 2px solid #adb5bd; }
+        .fila-subtotal .subtotal-label { text-align: center; }
+        .fila-subtotal .subtotal-cantidad { font-size: 9px; font-weight: 500; color: #6c757d; display: block; }
+        .total-general { background: #2c3e50; color: #fff; padding: 8px; width: 100%; font-weight: 700; margin-top: 8px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px 24px; text-align: center; }
+        .total-general .totales-montos { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-left: 0; }
+        .total-general .monto-col { text-align: center; min-width: 80px; }
+        .footer { margin-top: 10px; font-size: 10px; color: #6c757d; text-align: right; }</script>
 </head>
 <body>
     <form id="form1" runat="server">
         <div class="main-container">
-            <!-- Barra superior: título + filtros + botones en una sola fila -->
+            <!-- Barra superior: t?tulo + filtros + botones en una sola fila -->
             <div class="top-bar-section">
                 <div class="top-bar-titulo">
-                    <h6 class="mb-0"><i class="fas fa-users me-2"></i>Gestión de Socios</h6>
+                    <h6 class="mb-0"><i class="fas fa-users me-2"></i>Gesti?n de Socios</h6>
                 </div>
                 <div class="top-bar-filtros">
                     <div class="top-bar-filtro-item">
-                        <label class="form-label fw-bold">Nombre o N°</label>
+                        <label class="form-label fw-bold">Nombre o N?</label>
                         <input type="text" id="filtroNombre" class="form-control form-control-sm" placeholder="Buscar..."/>
                     </div>
                     <div class="top-bar-filtro-item">
@@ -1181,8 +1436,8 @@
                         </select>
                     </div>
                     <div class="top-bar-filtro-item">
-                        <label class="form-label fw-bold">Identificación</label>
-                        <input type="text" id="filtroIdentificacion" class="form-control form-control-sm" placeholder="número...">
+                        <label class="form-label fw-bold">Identificaci?n</label>
+                        <input type="text" id="filtroIdentificacion" class="form-control form-control-sm" placeholder="n?mero...">
                     </div>
                     <div class="top-bar-filtro-buscar">
                         <button type="button" class="btn btn-light w-100" onclick="aplicarFiltros()" title="Buscar">
@@ -1213,24 +1468,25 @@
                 <table id="tablaSocios" class="table table-striped table-hover">
                     <thead>
                         <tr>
+                            <th class="text-center" title="Estado de Cuenta">EDC</th>
+                            <th class="text-center" title="Estado de Cuenta Regular">EDCR</th>
                             <th class="text-center">Trans.</th>
                             <th class="text-center">Movs.</th>
                             <th>Num.</th>
                             <th>Tipo Asociado</th>
                             <th>Nombre Completo</th>
                             <th>Estatus</th>
-                            <th>identificación</th>
-                            <th>Fecha Creación</th>
-                            <th>Usuario Creó</th>
-                            <th>Fecha Modificación</th>
-                            <th>Usuario Modificó</th>
-                            <th>Estado de Cuenta</th>
+                            <th>identificaci?n</th>
+                            <th>Fecha Creaci?n</th>
+                            <th>Usuario Cre?</th>
+                            <th>Fecha Modificaci?n</th>
+                            <th>Usuario Modific?</th>
                             <th>Editar</th>
                             <th>Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Los datos se cargarán diN°micamente -->
+                        <!-- Los datos se cargar?n diN?micamente -->
                     </tbody>
                 </table>
             </div>
@@ -1262,7 +1518,7 @@
                             <table class="table table-hover align-middle" id="tablaMovimientosSocio">
                                 <thead>
                                     <tr>
-                                        <th>Transacción</th>
+                                        <th>Transacci?n</th>
                                         <th>Fecha</th>
                                         <th>Rubro</th>
                                         <th>Detalle</th>
@@ -1276,7 +1532,7 @@
                         </div>
                         <div class="d-flex justify-content-center" id="verMasMovimientosContainer" style="display: none;">
                             <button type="button" class="btn btn-outline-primary" id="btnVerMasMovimientos">
-                                Ver más movimientos
+                                Ver m?s movimientos
                             </button>
                         </div>
                     </div>
@@ -1372,7 +1628,7 @@
                             <div class="tab-pane fade show active" id="generales" role="tabpanel">
                                 <div class="row">
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">número de Asociado</label>
+                                        <label class="form-label fw-bold">n?mero de Asociado</label>
                                         <div id="numeroAsociado" class="numero-asociado-display" style="
                                             background: #f8f9fa;
                                             color: #495057;
@@ -1388,7 +1644,7 @@
                                             justify-content: center;
                                             letter-spacing: 0.5px;
                                         ">
-                                            <span id="numeroAsociadoText" style="color: #495057;">Generado automáticamente</span>
+                                            <span id="numeroAsociadoText" style="color: #495057;">Generado autom?ticamente</span>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -1434,17 +1690,17 @@
                                 </div>
                                 <div class="row mt-3">
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">Tipo de identificación *</label>
+                                        <label class="form-label fw-bold">Tipo de identificaci?n *</label>
                                         <select id="tipoIdentificacion" name="tipoIdentificacion" class="form-select">
                                             <option value="">Seleccionar</option>
-                                            <option value="CEDULA">cédula</option>
+                                            <option value="CEDULA">c?dula</option>
                                             <option value="PASAPORTE">Pasaporte</option>
                                             <option value="RUC">RUC</option>
                                             <option value="OTRO">Otro</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">número de identificación *</label>
+                                        <label class="form-label fw-bold">n?mero de identificaci?n *</label>
                                         <input type="text" id="numeroIdentificacion" name="numeroIdentificacion" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
@@ -1452,21 +1708,21 @@
                                         <input type="text" id="fechaNacimiento" class="form-control flatpickr-date" placeholder="dd/mm/yyyy"/>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">Correo Electrónico</label>
+                                        <label class="form-label fw-bold">Correo Electr?nico</label>
                                         <input type="email" id="correoElectronico" class="form-control"/>
                                     </div>
                                 </div>
                                 <div class="row mt-3">
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">Teléfono Residencia</label>
+                                        <label class="form-label fw-bold">Tel?fono Residencia</label>
                                         <input type="text" id="telefonoResidencia" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">Teléfono Celular</label>
+                                        <label class="form-label fw-bold">Tel?fono Celular</label>
                                         <input type="text" id="telefonoCelular" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">Teléfono de un Familiar</label>
+                                        <label class="form-label fw-bold">Tel?fono de un Familiar</label>
                                         <input type="text" id="telefonoFamiliar" class="form-control"/>
                                     </div>
                                     <div class="col-md-3">
@@ -1482,15 +1738,15 @@
                             <div class="tab-pane fade" id="trabajo" role="tabpanel">
                                 <div class="row g-3">
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">Profesión</label>
+                                        <label class="form-label fw-bold">Profesi?n</label>
                                         <select id="profesion" class="form-select">
-                                            <option value="">Seleccionar profesión...</option>
+                                            <option value="">Seleccionar profesi?n...</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">Ocupación</label>
+                                        <label class="form-label fw-bold">Ocupaci?n</label>
                                         <select id="ocupacion" class="form-select" style="display: block !important;">
-                                            <option value="">Seleccionar ocupación...</option>
+                                            <option value="">Seleccionar ocupaci?n...</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
@@ -1500,21 +1756,21 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label fw-bold">Teléfono de Trabajo</label>
+                                        <label class="form-label fw-bold">Tel?fono de Trabajo</label>
                                         <input type="text" id="telefonoTrabajo" class="form-control">
                                     </div>
                                 </div>
                                 
-                                <!-- Sección Dirección de Trabajo -->
+                                <!-- Secci?n Direcci?n de Trabajo -->
                                 <div class="mt-4">
                                     <h6 class="fw-bold text-primary mb-3">
-                                        <i class="fas fa-map-marker-alt me-2"></i>Dirección de Trabajo
+                                        <i class="fas fa-map-marker-alt me-2"></i>Direcci?n de Trabajo
                                     </h6>
                                     <div class="row g-3">
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold">País</label>
+                                            <label class="form-label fw-bold">Pa?s</label>
                                             <select id="paisTrabajo" class="form-select">
-                                                <option value="">Seleccionar país...</option>
+                                                <option value="">Seleccionar pa?s...</option>
                                             </select>
                                         </div>
                                         <div class="col-md-3">
@@ -1538,7 +1794,7 @@
                                     </div>
                                     <div class="row g-3 mt-2">
                                         <div class="col-md-12">
-                                            <label class="form-label fw-bold">Dirección de Trabajo</label>
+                                            <label class="form-label fw-bold">Direcci?n de Trabajo</label>
                                             <textarea id="direccionTrabajo" class="form-control" rows="3"></textarea>
                                         </div>
                                     </div>
@@ -1547,16 +1803,16 @@
 
                             <!-- Tab Residencia -->
                             <div class="tab-pane fade" id="residencia" role="tabpanel">
-                                <!-- Sección Dirección Residencial -->
+                                <!-- Secci?n Direcci?n Residencial -->
                                 <div class="mt-4">
                                     <h6 class="fw-bold text-primary mb-3">
-                                        <i class="fas fa-home me-2"></i>Dirección Residencial
+                                        <i class="fas fa-home me-2"></i>Direcci?n Residencial
                                     </h6>
                                     <div class="row g-3">
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold">País</label>
+                                            <label class="form-label fw-bold">Pa?s</label>
                                             <select id="paisResidencia" class="form-select">
-                                                <option value="">Seleccionar país...</option>
+                                                <option value="">Seleccionar pa?s...</option>
                                             </select>
                                         </div>
                                         <div class="col-md-3">
@@ -1580,7 +1836,7 @@
                                     </div>
                                     <div class="row g-3 mt-2">
                                         <div class="col-md-12">
-                                            <label class="form-label fw-bold">Dirección de Residencia</label>
+                                            <label class="form-label fw-bold">Direcci?n de Residencia</label>
                                             <textarea id="direccionResidencia" class="form-control" rows="3"></textarea>
                                         </div>
                                     </div>
@@ -1612,7 +1868,7 @@
                                             </div>
                                             <div class="alert alert-info alert-sm py-2 mb-0 text-center" style="border-radius: 0; border-left: none; border-right: none; background-color: #e3f2fd;">
                                                 <i class="fas fa-info-circle me-2" style="color: #1976d2;"></i>
-                                                <small style="color: #1565c0;"><strong>Nota:</strong> Los beneficiarios se guardan automáticamente sin necesidad de guardar los datos del asociado.</small>
+                                                <small style="color: #1565c0;"><strong>Nota:</strong> Los beneficiarios se guardan autom?ticamente sin necesidad de guardar los datos del asociado.</small>
                                             </div>
                                             <div class="card-body p-0">
                                                 <div class="table-responsive">
@@ -1620,14 +1876,14 @@
                                                         <thead class="table-dark">
                                                             <tr>
                                                                 <th>Nombre Completo</th>
-                                                                <th>identificación</th>
+                                                                <th>identificaci?n</th>
                                                                 <th>Parentesco</th>
                                                                 <th>Porcentaje</th>
                                                                 <th>Acciones</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            <!-- Los datos se cargarán diN°micamente -->
+                                                            <!-- Los datos se cargar?n diN?micamente -->
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -1643,7 +1899,7 @@
                                     <div class="col-md-6">
                                         <div class="info-card">
                                             <div class="info-label">
-                                                <i class="fas fa-calendar-plus info-icon"></i>Fecha de Creación
+                                                <i class="fas fa-calendar-plus info-icon"></i>Fecha de Creaci?n
                                             </div>
                                             <p class="info-value" id="fechaCreacionDisplay">-</p>
                                         </div>
@@ -1651,7 +1907,7 @@
                                     <div class="col-md-6">
                                         <div class="info-card">
                                             <div class="info-label">
-                                                <i class="fas fa-user-plus info-icon"></i>Usuario que Creó
+                                                <i class="fas fa-user-plus info-icon"></i>Usuario que Cre?
                                     </div>
                                             <p class="info-value" id="usuarioCreaDisplay">-</p>
                                 </div>
@@ -1661,7 +1917,7 @@
                                     <div class="col-md-6">
                                         <div class="info-card">
                                             <div class="info-label">
-                                                <i class="fas fa-calendar-edit info-icon"></i>Fecha de Modificación
+                                                <i class="fas fa-calendar-edit info-icon"></i>Fecha de Modificaci?n
                                             </div>
                                             <p class="info-value" id="fechaModificacionDisplay">-</p>
                                         </div>
@@ -1669,7 +1925,7 @@
                                     <div class="col-md-6">
                                         <div class="info-card">
                                             <div class="info-label">
-                                                <i class="fas fa-user-edit info-icon"></i>Usuario que Modificó
+                                                <i class="fas fa-user-edit info-icon"></i>Usuario que Modific?
                                             </div>
                                             <p class="info-value" id="usuarioModificaDisplay">-</p>
                                         </div>
@@ -1695,11 +1951,11 @@
             <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="toast-header">
                     <i class="fas fa-info-circle text-primary me-2"></i>
-                    <strong class="me-auto">Notificación</strong>
+                    <strong class="me-auto">Notificaci?n</strong>
                     <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
                 <div class="toast-body" id="toastMessage">
-                    <!-- Mensaje diN°mico -->
+                    <!-- Mensaje diN?mico -->
                 </div>
             </div>
         </div>
@@ -1733,8 +1989,8 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">número ID *</label>
-                                <input type="text" id="beneficiarioNumeroIdentificacion" class="form-control" placeholder="número de identificación"/>
+                                <label class="form-label fw-bold">n?mero ID *</label>
+                                <input type="text" id="beneficiarioNumeroIdentificacion" class="form-control" placeholder="n?mero de identificaci?n"/>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Parentesco *</label>
@@ -1793,8 +2049,8 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">número ID *</label>
-                                <input type="text" id="editarBeneficiarioNumeroIdentificacion" class="form-control" placeholder="número de identificación">
+                                <label class="form-label fw-bold">n?mero ID *</label>
+                                <input type="text" id="editarBeneficiarioNumeroIdentificacion" class="form-control" placeholder="n?mero de identificaci?n">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Parentesco *</label>
@@ -1846,9 +2102,9 @@
         const configuracionesChipRubros = {
             'AH': { color: 'bg-success', icono: 'fas fa-piggy-bank', nombre: 'Ahorro' },
             'AP': { color: 'bg-info', icono: 'fas fa-coins', nombre: 'Aporte' },
-            'PR': { color: 'bg-warning', icono: 'fas fa-hand-holding-usd', nombre: 'Préstamo' },
-            'CR': { color: 'bg-danger', icono: 'fas fa-credit-card', nombre: 'Crédito' },
-            'IN': { color: 'bg-primary', icono: 'fas fa-chart-line', nombre: 'Inversión' }
+            'PR': { color: 'bg-warning', icono: 'fas fa-hand-holding-usd', nombre: 'Pr?stamo' },
+            'CR': { color: 'bg-danger', icono: 'fas fa-credit-card', nombre: 'Cr?dito' },
+            'IN': { color: 'bg-primary', icono: 'fas fa-chart-line', nombre: 'Inversi?n' }
         };
         const movimientosSocioEstado = {
             start: 0,
@@ -1937,7 +2193,7 @@
                 setTimeout(function() {
                     clearInterval(intervalo);
                     ocultarLoadingModal();
-                    mostrarToast('Tiempo de espera agotado. Por favor, recargue la página.', 'error');
+                    mostrarToast('Tiempo de espera agotado. Por favor, recargue la p?gina.', 'error');
                 }, 10000);
             }
         }
@@ -1970,12 +2226,12 @@
             cargarDistritosResidencia();
             cargarCorregimientosResidencia();
             
-            // Configurar Select2 después de cargar todos los datos
+            // Configurar Select2 despu?s de cargar todos los datos
             setTimeout(function() {
                 configurarSelect2();
             }, 1000);
             
-            // Marcar todos los datos como cargados después de 2 segundos
+            // Marcar todos los datos como cargados despu?s de 2 segundos
             setTimeout(function() {
                 Object.keys(datosCargando).forEach(function(key) {
                     datosCargando[key] = true;
@@ -2005,12 +2261,12 @@
             configurarDropdownsRelacionados();
             configurarDropdownsResidencia();
             
-            // Verificar el campo ocupación después de cargar
+            // Verificar el campo ocupaci?n despu?s de cargar
             setTimeout(function() {
                 const ocupacionField = $('#ocupacion');
             }, 2000);
             
-            // Verificar mayúsculas automáticas y aplicar si está habilitado
+            // Verificar may?sculas autom?ticas y aplicar si est? habilitado
             verificarMayusculasAutomaticas();
         });
 
@@ -2022,7 +2278,7 @@
                 inicializarDataTable();
                 tablaSociosInicializada = true;
                 $('#tablaSocios').removeClass('tabla-socios-deshabilitada');
-                // Con serverSide, la tabla carga automáticamente en el primer draw
+                // Con serverSide, la tabla carga autom?ticamente en el primer draw
             }, 1500);
         }
 
@@ -2030,11 +2286,11 @@
             window.location.href = '/Dashboard.aspx';
         }
 
-        // Función para ajustar la altura del grid basándose en 10 filas fijas
+        // Funci?n para ajustar la altura del grid bas?ndose en 10 filas fijas
         function ajustarAlturaGrid() {
             if (!tablaSocios) return;
             
-            // Calcular altura máxima disponible restando todos los elementos fijos
+            // Calcular altura m?xima disponible restando todos los elementos fijos
             var viewportHeight = $(window).height();
             var mainContainer = $('.main-container');
             var mainContainerOffset = mainContainer.offset();
@@ -2042,16 +2298,16 @@
             var mainContainerPadding = parseFloat(mainContainer.css('padding-top')) + parseFloat(mainContainer.css('padding-bottom')) || 0;
             var topBarHeight = $('.top-bar-section').outerHeight(true) || 0;
             
-            // Obtener altura del footer ANTES de calcular, para asegurar que esté visible
+            // Obtener altura del footer ANTES de calcular, para asegurar que est? visible
             var footerRow = $('.dataTables_wrapper .row.mt-3');
             var footerHeight = footerRow.outerHeight(true) || 60;
             
             // Calcular altura disponible para el wrapper de DataTables
-            // Restar espacio adicional para márgenes y padding
+            // Restar espacio adicional para m?rgenes y padding
             var espacioAdicional = 30;
             var alturaDisponible = viewportHeight - mainContainerTop - mainContainerPadding - topBarHeight - espacioAdicional;
             
-            // Asegurar altura mínima
+            // Asegurar altura m?nima
             if (alturaDisponible < 300) {
                 alturaDisponible = 300;
             }
@@ -2059,11 +2315,11 @@
             // Asegurar que el wrapper de DataTables ocupe todo el espacio disponible
             var dataTablesWrapper = $('#tablaSocios_wrapper');
             if (dataTablesWrapper.length) {
-                // Calcular altura para el área de scroll (sin el footer)
-                // El footer debe estar siempre visible, así que restamos su altura
+                // Calcular altura para el ?rea de scroll (sin el footer)
+                // El footer debe estar siempre visible, as? que restamos su altura
                 var alturaScroll = alturaDisponible - footerHeight;
                 
-                // Asegurar altura mínima para el scroll
+                // Asegurar altura m?nima para el scroll
                 if (alturaScroll < 200) {
                     alturaScroll = 200;
                 }
@@ -2091,18 +2347,18 @@
                     });
                 }
                 
-                // Actualizar el scrollY de DataTables dinámicamente
+                // Actualizar el scrollY de DataTables din?micamente
                 if (tablaSocios && tablaSocios.settings()[0].oScroll) {
                     var settings = tablaSocios.settings()[0];
                     if (settings.oScroll && settings.oScroll.sY) {
-                        // Actualizar la altura del scroll en la configuración
+                        // Actualizar la altura del scroll en la configuraci?n
                         settings.oScroll.sY = alturaScroll + 'px';
-                        // Forzar recálculo
+                        // Forzar rec?lculo
                         tablaSocios.columns.adjust();
                     }
                 }
                 
-                // Asegurar que el footer esté siempre visible
+                // Asegurar que el footer est? siempre visible
                 footerRow.css({
                     'display': 'flex !important',
                     'visibility': 'visible !important',
@@ -2131,34 +2387,34 @@
                 processing: true,
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
-                    emptyTable: "Ningún asociado en la lista",
-                    zeroRecords: "Ningún asociado en la lista",
+                    emptyTable: "Ning?n asociado en la lista",
+                    zeroRecords: "Ning?n asociado en la lista",
                     processing: "Cargando socios..."
                 },
                 responsive: false,
                 pageLength: 25,
                 lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-                order: [[2, 'desc']], // N° Asociado
-                scrollY: '400px', // Altura inicial, se ajustará dinámicamente en ajustarAlturaGrid
+                order: [[4, 'desc']], // N? Asociado
+                scrollY: '400px', // Altura inicial, se ajustar? din?micamente en ajustarAlturaGrid
                 scrollCollapse: false,
                 scroller: false,
                 paging: true,
                 autoWidth: false,
                 columnDefs: [
-                    { targets: [0, 1], width: '48px' }, // Trans. y Movs. mismo ancho
-                    { targets: [2], width: '60px' }, // Num. columna reducida
-                    { targets: [9, 10], visible: false }, // Ocultar Fecha Modificación y Usuario Modificó
-                    { targets: [0, 1, 11, 12], orderable: false }, // Trans, Movs y columnas de acción no ordenables
-                    { targets: [0, 1, 11, 12], className: 'text-center' }, // Centrar botones
-                    { targets: [6], className: 'text-left', createdCell: function (td, cellData, rowData, row, col) {
+                    { targets: [0, 1, 2, 3], width: '48px' },
+                    { targets: [4], width: '60px' },
+                    { targets: [11, 12], visible: false },
+                    { targets: [0, 1, 2, 3, 13, 14], orderable: false },
+                    { targets: [0, 1, 2, 3, 13, 14], className: 'text-center' },
+                    { targets: [8], className: 'text-left', createdCell: function (td) {
                         $(td).css('text-align', 'left');
-                    }} // Columna de identificación alineada a la izquierda
+                    }}
                 ],
-                dom: 'rt<"row mt-3"<"col-sm-12 col-md-4"i><"col-sm-12 col-md-4 text-center"l><"col-sm-12 col-md-4"p>>', // tabla arriba, info izquierda, length centro, paginación derecha abajo
-                searching: false, // Desactivar búsqueda de DataTables ya que usamos filtros personalizados
+                dom: 'rt<"row mt-3"<"col-sm-12 col-md-4"i><"col-sm-12 col-md-4 text-center"l><"col-sm-12 col-md-4"p>>', // tabla arriba, info izquierda, length centro, paginaci?n derecha abajo
+                searching: false, // Desactivar b?squeda de DataTables ya que usamos filtros personalizados
                 ajax: function(data, callback, settings) {
                     const order = data.order && data.order[0];
-                    const sortColumn = (order && order.column >= 2 && order.column <= 8) ? order.column - 1 : 1;
+                    const sortColumn = (order && order.column >= 4 && order.column <= 10) ? order.column - 3 : 1;
                     const sortDirection = order ? order.dir : 'desc';
                     const filtros = {
                         FiltroNombre: $('#filtroNombre').val() || '',
@@ -2198,10 +2454,14 @@
                                 const estatusBadge = obtenerBadgeEstatus(socio.Estatus);
                                 const fechaCreacion = formatearFechaHora(socio.FechaCreacion);
                                 const fechaModificacion = formatearFecha(socio.FechaModificacion);
+                                const botonEdc = `<button type="button" class="btn btn-sm btn-outline-info" onclick="event.preventDefault(); event.stopPropagation(); generarEstadoCuenta(${socio.NumeroAsociado})" title="Estado de Cuenta (EDC)"><i class="fas fa-file-invoice"></i></button>`;
+                                const botonEdcr = `<button type="button" class="btn btn-sm btn-outline-primary" onclick="event.preventDefault(); event.stopPropagation(); abrirModalEstadoCuentaRegular(${socio.NumeroAsociado})" title="Estado de Cuenta Regular (EDCR)"><i class="fas fa-file-invoice"></i></button>`;
                                 const botonTrans = `<button type="button" class="btn btn-sm btn-outline-primary" onclick="event.preventDefault(); event.stopPropagation(); verTransaccionesSocio(${socio.NumeroAsociado})" title="Transacciones"><i class="fas fa-list-ul"></i></button>`;
                                 const botonMovimientos = `<button type="button" class="btn btn-sm btn-outline-info" onclick="event.preventDefault(); event.stopPropagation(); verMovimientosSocio(${socio.NumeroAsociado})" title="Ver movimientos"><i class="fas fa-list-ul"></i></button>`;
                                 agregarSocioACache(socio);
                                 return [
+                                    botonEdc,
+                                    botonEdcr,
                                     botonTrans,
                                     botonMovimientos,
                                     socio.NumeroAsociado,
@@ -2213,7 +2473,6 @@
                                     socio.UsuarioCrea || 'N/A',
                                     fechaModificacion,
                                     socio.UsuarioModifica || 'N/A',
-                                    `<button type="button" class="btn btn-sm btn-outline-info" onclick="event.preventDefault(); event.stopPropagation(); generarEstadoCuenta(${socio.NumeroAsociado})" title="Generar Estado de Cuenta"><i class="fas fa-file-invoice"></i></button>`,
                                     `<button type="button" class="btn btn-sm btn-outline-primary" onclick="event.preventDefault(); event.stopPropagation(); verSocio(${socio.NumeroAsociado})" title="Editar socio"><i class="fas fa-edit"></i></button>`,
                                     `<button type="button" class="btn btn-sm btn-outline-danger" onclick="event.preventDefault(); event.stopPropagation(); eliminarSocio(${socio.NumeroAsociado}, '${(socio.Nombre || '')} ${(socio.Apellido || '')}')" title="Eliminar socio"><i class="fas fa-trash"></i></button>`
                                 ];
@@ -2229,7 +2488,7 @@
                     });
                 },
                 drawCallback: function(settings) {
-                    // Ajustar altura del grid después de cada draw
+                    // Ajustar altura del grid despu?s de cada draw
                     setTimeout(function() {
                         ajustarAlturaGrid();
                     }, 50);
@@ -2239,7 +2498,7 @@
                         // Ajustar altura del grid
                         ajustarAlturaGrid();
                         
-                        // Forzar visibilidad de controles de paginación
+                        // Forzar visibilidad de controles de paginaci?n
                         var paginate = $('.dataTables_paginate');
                         var info = $('.dataTables_info');
                         var row = $('.dataTables_wrapper .row.mt-3');
@@ -2277,8 +2536,8 @@
                 e.preventDefault();
                 e.stopPropagation();
                 const data = tablaSocios.row(this).data();
-                if (data && data[2]) { // Verificar que hay datos y que el número de asociado existe (col 2 = N° Asociado)
-                    const numeroAsociado = parseInt(data[2]);
+                if (data && data[4]) {
+                    const numeroAsociado = parseInt(data[4]);
                     verSocio(numeroAsociado);
                 }
             });
@@ -2311,7 +2570,7 @@
                 }, 100);
             });
             
-            // Ajustar altura cuando cambie el número de filas por página
+            // Ajustar altura cuando cambie el n?mero de filas por p?gina
             $(document).on('change', '.dataTables_length select', function() {
                 setTimeout(function() {
                     if (tablaSocios) {
@@ -2496,7 +2755,7 @@
                             selectModal.append(`<option value="${tipo.CodTipoDoc}">${tipo.TipoDocumento}</option>`);
                             selectFiltro.append(`<option value="${tipo.CodTipoDoc}">${tipo.TipoDocumento}</option>`);
                             
-                            // Llenar también los dropdowns de beneficiarios
+                            // Llenar tambi?n los dropdowns de beneficiarios
                             $('#beneficiarioTipoIdentificacion').append(`<option value="${tipo.CodTipoDoc}">${tipo.TipoDocumento}</option>`);
                             $('#editarBeneficiarioTipoIdentificacion').append(`<option value="${tipo.CodTipoDoc}">${tipo.TipoDocumento}</option>`);
                         });
@@ -2515,7 +2774,7 @@
                 setTimeout(function() { cargarSocios(resetPage); }, 300);
                 return;
             }
-            tablaSocios.ajax.reload(null, !!resetPage); // resetPage=true → ir a página 1 (útil tras crear socio)
+            tablaSocios.ajax.reload(null, !!resetPage); // resetPage=true ? ir a p?gina 1 (?til tras crear socio)
         }
 
         function aplicarFiltros() {
@@ -2531,7 +2790,7 @@
             }
         }
 
-        // Función de compatibilidad - ahora usa la función global
+        // Funci?n de compatibilidad - ahora usa la funci?n global
         function formatearIdentificacion(tipoIdentificacion, numeroIdentificacion) {
             return crearChipTipoDocumento(tipoIdentificacion, numeroIdentificacion);
         }
@@ -2549,7 +2808,7 @@
                 date = new Date(fecha);
             }
             
-            // Verificar si la fecha es válida
+            // Verificar si la fecha es v?lida
             if (isNaN(date.getTime())) {
                 return 'N/A';
             }
@@ -2574,7 +2833,7 @@
                 date = new Date(fecha);
             }
             
-            // Verificar si la fecha es válida
+            // Verificar si la fecha es v?lida
             if (isNaN(date.getTime())) {
                 return 'N/A';
             }
@@ -2607,7 +2866,7 @@
                         esModoEdicion = true;
                         numeroAsociadoActual = numeroAsociado;
                         
-                        // Crear título con información del socio
+                        // Crear t?tulo con informaci?n del socio
                         const nombreCompleto = `${socio.Nombre} ${socio.Apellido}`.trim();
                         const chipDocumento = crearChipTipoDocumento(socio.TipoIdentificacion, '');
                         const numeroDoc = socio.NumeroIdentificacion || 'N/A';
@@ -2617,7 +2876,7 @@
                         `;
                         $('#modalSocioLabel').html(titulo);
                         
-                        // Mostrar tab Sistemas para edición
+                        // Mostrar tab Sistemas para edici?n
                         $('#sistemas-tab-item').show();
                         
                         // Activar tab Generales
@@ -2628,7 +2887,7 @@
                         
                         $('#modalSocio').modal('show');
                         
-                        // Aplicar mayúsculas automáticas cuando se abra el modal
+                        // Aplicar may?sculas autom?ticas cuando se abra el modal
                         setTimeout(function() {
                             if (mayusculasAutomaticasHabilitadas === true) {
                                 aplicarMayusculasAutomaticas();
@@ -2646,12 +2905,12 @@
         }
 
         function eliminarSocio(numeroAsociado, nombreCompleto) {
-            // Mostrar div de confirmación personalizado
+            // Mostrar div de confirmaci?n personalizado
             mostrarConfirmEliminarSocio(numeroAsociado, nombreCompleto);
         }
 
         function mostrarConfirmEliminarSocio(numeroAsociado, nombreCompleto) {
-            // Asegurar que los estilos de modales estén disponibles
+            // Asegurar que los estilos de modales est?n disponibles
             if (!$('#customModalStyles').length) {
                 $('head').append(`
                     <style id="customModalStyles">
@@ -2798,7 +3057,7 @@
                 <div id="modalConfirmEliminarSocio" class="custom-modal-overlay">
                     <div class="custom-modal">
                         <div class="custom-modal-header">
-                            <h5>Confirmar Eliminación</h5>
+                            <h5>Confirmar Eliminaci?n</h5>
                             <button type="button" class="btn-close-custom" onclick="cerrarConfirmEliminarSocio()">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -2806,10 +3065,10 @@
                         <div class="custom-modal-body">
                             <div class="pregunta-confirm">
                                 <i class="fas fa-exclamation-triangle"></i>
-                                ¿Está seguro de eliminar el socio ${numeroAsociado} - ${nombreCompleto}?
+                                ?Est? seguro de eliminar el socio ${numeroAsociado} - ${nombreCompleto}?
                             </div>
                             <div class="texto-adicional">
-                                Esta acción no se puede deshacer.
+                                Esta acci?n no se puede deshacer.
                             </div>
                         </div>
                         <div class="custom-modal-footer">
@@ -2836,7 +3095,7 @@
             // Cerrar el modal
             cerrarConfirmEliminarSocio();
             
-            // Proceder con la eliminación
+            // Proceder con la eliminaci?n
             $('#loadingSocios').show();
             
             const requestData = {
@@ -2852,9 +3111,9 @@
                 success: function(response) {
                     $('#loadingSocios').hide();
                     
-                    // Verificar si la respuesta es válida
+                    // Verificar si la respuesta es v?lida
                     if (!response || !response.d) {
-                        mostrarToast('Error: Respuesta inválida del servidor', 'error');
+                        mostrarToast('Error: Respuesta inv?lida del servidor', 'error');
                         return;
                     }
                     
@@ -2864,7 +3123,7 @@
                         try {
                             serverResponse = JSON.parse(response.d);
                         } catch (e) {
-                            mostrarToast('Error: Formato de respuesta inválido', 'error');
+                            mostrarToast('Error: Formato de respuesta inv?lido', 'error');
                             return;
                         }
                     } else {
@@ -2882,7 +3141,7 @@
                 error: function(xhr, status, error) {
                     $('#loadingSocios').hide();
                     
-                    // Mostrar error más detallado
+                    // Mostrar error m?s detallado
                     let errorMessage = 'Error al eliminar el socio: ' + error;
                     if (xhr.responseText) {
                         errorMessage += ' | Respuesta: ' + xhr.responseText.substring(0, 200);
@@ -2921,7 +3180,7 @@
                     if (response.d.Success && response.d.Data === 'dev') {
                         setTimeout(function() {
                             llenarDatosPrueba();
-                        }, 500); // Pequeño delay para asegurar que el modal está completamente cargado
+                        }, 500); // Peque?o delay para asegurar que el modal est? completamente cargado
                     }
                 },
                 error: function() {
@@ -2931,24 +3190,24 @@
             
             $('#modalSocio').modal('show');
             
-            // Verificar el estado del campo ocupación
+            // Verificar el estado del campo ocupaci?n
             setTimeout(function() {
                 const ocupacionField = $('#ocupacion');
             }, 500);
             
-            // Aplicar mayúsculas automáticas cuando se abra el modal
+            // Aplicar may?sculas autom?ticas cuando se abra el modal
             setTimeout(function() {
                 if (mayusculasAutomaticasHabilitadas === true) {
                     aplicarMayusculasAutomaticas();
                 }
             }, 100);
             
-            // Reinicializar Select2 después de abrir el modal
+            // Reinicializar Select2 despu?s de abrir el modal
             setTimeout(function() {
                 reinicializarSelect2();
             }, 500);
             
-            // Forzar reinicialización adicional después de que el modal esté completamente visible
+            // Forzar reinicializaci?n adicional despu?s de que el modal est? completamente visible
             setTimeout(function() {
                 forzarSelect2();
             }, 1000);
@@ -2970,7 +3229,7 @@
             $('#telefonoResidencia').val(socio.TelefonoResidencia);
             $('#telefonoCelular').val(socio.TelefonoCelular);
             $('#telefonoFamiliar').val(socio.TelefonoFamiliar);
-            // Llenar ocupación después de asegurar que el dropdown esté cargado
+            // Llenar ocupaci?n despu?s de asegurar que el dropdown est? cargado
             setTimeout(function() {
                 $('#ocupacion').val(socio.Ocupacion);
             }, 100);
@@ -2981,7 +3240,7 @@
             $('#lugarTrabajo').val(socio.LugarTrabajo);
             $('#telefonoTrabajo').val(socio.TelefonoTrabajo || '');
             
-            // Establecer valores de dirección de trabajo con delay para asegurar que los datos estén cargados
+            // Establecer valores de direcci?n de trabajo con delay para asegurar que los datos est?n cargados
             setTimeout(function() {
                 $('#paisTrabajo').val(socio.PaisTrabajo).trigger('change');
                 setTimeout(function() {
@@ -3022,7 +3281,7 @@
 
         function limpiarFormulario() {
             // Limpiar todos los campos del modal
-            $('#numeroAsociadoText').text('Generado automáticamente');
+            $('#numeroAsociadoText').text('Generado autom?ticamente');
             $('#tipoAsociado').val('');
             $('#estatus').val('A');
             $('#sexo').val('');
@@ -3044,17 +3303,17 @@
             // Tab Trabajo
             $('#lugarTrabajo').val('');
             $('#telefonoTrabajo').val('');
-            $('#paisTrabajo').val('PA'); // Solo Panamá seleccionado
-            $('#provinciaTrabajo').val(''); // Sin selección
-            $('#distritoTrabajo').val(''); // Sin selección
-            $('#corregimientoTrabajo').val(''); // Sin selección
+            $('#paisTrabajo').val('PA'); // Solo Panam? seleccionado
+            $('#provinciaTrabajo').val(''); // Sin selecci?n
+            $('#distritoTrabajo').val(''); // Sin selecci?n
+            $('#corregimientoTrabajo').val(''); // Sin selecci?n
             $('#direccionTrabajo').val('');
             
             // Tab Residencia
-            $('#paisResidencia').val('PA'); // Solo Panamá seleccionado
-            $('#provinciaResidencia').val(''); // Sin selección
-            $('#distritoResidencia').val(''); // Sin selección
-            $('#corregimientoResidencia').val(''); // Sin selección
+            $('#paisResidencia').val('PA'); // Solo Panam? seleccionado
+            $('#provinciaResidencia').val(''); // Sin selecci?n
+            $('#distritoResidencia').val(''); // Sin selecci?n
+            $('#corregimientoResidencia').val(''); // Sin selecci?n
             $('#direccionResidencia').val('');
             
             // Tab Sistemas - Limpiar divs elegantes
@@ -3077,7 +3336,7 @@
                 date = new Date(fecha);
             }
             
-            // Verificar si la fecha es válida
+            // Verificar si la fecha es v?lida
             if (isNaN(date.getTime())) {
                 return '';
             }
@@ -3144,12 +3403,12 @@
                         mostrarToast(mensajeExito, 'success');
                         
                         if (!esModoEdicion && response.d.Data && response.d.Data.NumeroAsociado) {
-                            // Actualizar el número de asociado en el div
+                            // Actualizar el n?mero de asociado en el div
                             $('#numeroAsociadoText').text(response.d.Data.NumeroAsociado);
                             numeroAsociadoActual = response.d.Data.NumeroAsociado;
                             esModoEdicion = true;
                             
-                            // Crear título con información del socio recién creado
+                            // Crear t?tulo con informaci?n del socio reci?n creado
                             const socioData = response.d.Data;
                             const nombreCompleto = `${socioData.Nombre} ${socioData.Apellido}`.trim();
                             const chipDocumento = crearChipTipoDocumento(socioData.TipoIdentificacion, '');
@@ -3160,14 +3419,14 @@
                             `;
                             $('#modalSocioLabel').html(titulo);
                             
-                            // Mostrar tab Sistemas para edición
+                            // Mostrar tab Sistemas para edici?n
                             $('#sistemas-tab-item').show();
                             
-                            // Cerrar modal y actualizar lista después de crear socio
+                            // Cerrar modal y actualizar lista despu?s de crear socio
                             $('#modalSocio').modal('hide');
-                            cargarSocios(true); // Ir a página 1 para ver el socio recién creado
+                            cargarSocios(true); // Ir a p?gina 1 para ver el socio reci?n creado
                         } else {
-                            // Cerrar modal si es edición
+                            // Cerrar modal si es edici?n
                             $('#modalSocio').modal('hide');
                             cargarSocios();
                         }
@@ -3186,8 +3445,8 @@
                 { id: 'nombre', nombre: 'Primer Nombre' },
                 { id: 'apellido', nombre: 'Primer Apellido' },
                 { id: 'tipoAsociado', nombre: 'Tipo de Asociado' },
-                { id: 'tipoIdentificacion', nombre: 'Tipo de identificación' },
-                { id: 'numeroIdentificacion', nombre: 'número de identificación' }
+                { id: 'tipoIdentificacion', nombre: 'Tipo de identificaci?n' },
+                { id: 'numeroIdentificacion', nombre: 'n?mero de identificaci?n' }
             ];
 
             for (let campo of camposObligatorios) {
@@ -3201,7 +3460,7 @@
             // Validar email si se proporciona
             const email = $('#correoElectronico').val();
             if (email && !validarEmail(email)) {
-                mostrarToast('El formato del correo electrúnico no es válido', 'error');
+                mostrarToast('El formato del correo electr?nico no es v?lido', 'error');
                 $('#correoElectronico').focus();
                 return false;
             }
@@ -3214,7 +3473,7 @@
             return regex.test(email);
         }
 
-        // Función para mostrar confirm personalizado
+        // Funci?n para mostrar confirm personalizado
         function mostrarConfirm(opciones) {
             return new Promise((resolve) => {
                 // Crear overlay
@@ -3274,7 +3533,7 @@
                 document.body.appendChild(overlay);
                 document.body.appendChild(modal);
                 
-                // Función para cerrar
+                // Funci?n para cerrar
                 window.cerrarConfirm = function(resultado) {
                     document.body.removeChild(overlay);
                     document.body.removeChild(modal);
@@ -3302,10 +3561,17 @@
             const toast = $('#toast');
             const toastMessage = $('#toastMessage');
             const toastHeader = toast.find('.toast-header i');
-            
+            let $container = toast.closest('.toast-container');
+            if ($container.length && $container.parent()[0] !== document.body) {
+                $container.addClass('toast-container--viewport-center');
+                $('body').append($container);
+            } else if ($container.length) {
+                $container.addClass('toast-container--viewport-center');
+            }
+
             toastMessage.text(mensaje);
             
-            // Cambiar icono según el tipo
+            // Cambiar icono seg?n el tipo
             toastHeader.removeClass().addClass('fas me-2');
             if (tipo === 'success') {
                 toastHeader.addClass('fa-check-circle text-success');
@@ -3315,16 +3581,16 @@
                 toastHeader.addClass('fa-info-circle text-primary');
             }
             
-            // Configurar opciones según el tipo
+            // Configurar opciones seg?n el tipo
             const options = {
-                autohide: true, // Todos los toasts se ocultan automáticamente
-                delay: tipo === 'error' ? 6000 : (tipo === 'success' ? 4000 : 3000) // Errores 6s, Éxito 4s, info 3s
+                autohide: true, // Todos los toasts se ocultan autom?ticamente
+                delay: tipo === 'error' ? 6000 : (tipo === 'success' ? 4000 : 3000) // Errores 6s, ?xito 4s, info 3s
             };
             
             const bsToast = new bootstrap.Toast(toast[0], options);
             bsToast.show();
             
-            // Pausar el toast cuando el mouse está encima
+            // Pausar el toast cuando el mouse est? encima
             toast.on('mouseenter', function() {
                 bsToast._config.autohide = false;
             });
@@ -3347,13 +3613,13 @@
             }
         });
 
-        // Variable global para almacenar si las mayúsculas automáticas están habilitadas
+        // Variable global para almacenar si las may?sculas autom?ticas est?n habilitadas
         let mayusculasAutomaticasHabilitadas = null;
 
-        // Función para verificar si las mayúsculas automáticas están habilitadas
+        // Funci?n para verificar si las may?sculas autom?ticas est?n habilitadas
         function verificarMayusculasAutomaticas() {
             if (mayusculasAutomaticasHabilitadas !== null) {
-                return; // Ya se verificó
+                return; // Ya se verific?
             }
             
             $.ajax({
@@ -3372,7 +3638,7 @@
                     mayusculasAutomaticasHabilitadas = (response.d.Success && response.d.Data === "1");
                     
                     
-                    // Aplicar mayúsculas automáticas si está habilitado
+                    // Aplicar may?sculas autom?ticas si est? habilitado
                     if (mayusculasAutomaticasHabilitadas) {
                         aplicarMayusculasAutomaticas();
                     }
@@ -3384,7 +3650,7 @@
             });
         }
 
-        // Función para aplicar mayúsculas automáticas en tiempo real
+        // Funci?n para aplicar may?sculas autom?ticas en tiempo real
         function aplicarMayusculasAutomaticas() {
             
             
@@ -3395,7 +3661,7 @@
             
             
             
-            // Aplicar mayúsculas automáticas a los campos de texto
+            // Aplicar may?sculas autom?ticas a los campos de texto
             const camposTexto = [
                 '#nombre', '#segundoNombre', '#apellido', '#segundoApellido',
                 '#provinciaTrabajo', '#distritoTrabajo',
@@ -3421,14 +3687,14 @@
                     if (originalValue !== upperValue) {
                         
                         $(this).val(upperValue);
-                        // Mantener la posición del cursor
+                        // Mantener la posici?n del cursor
                         this.setSelectionRange(cursorPos, cursorPos);
                     }
                 });
             });
         }
 
-        // Flatpickr maneja automáticamente el formateo y Validación de fechas
+        // Flatpickr maneja autom?ticamente el formateo y Validaci?n de fechas
 
         function validarFormatoFecha(fecha) {
             const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
@@ -3530,7 +3796,7 @@
                         if (registrosDisponibles.length === 0) {
                             mostrarToast('Todos los datos de prueba han sido utilizados. Reiniciando...', 'warning');
                             localStorage.removeItem('asociadosUsados');
-                            // Recargar la función para empezar de nuevo
+                            // Recargar la funci?n para empezar de nuevo
                             setTimeout(() => cargarDatosAleatorios(), 1000);
                             return;
                         }
@@ -3539,7 +3805,7 @@
                         const indiceAleatorio = Math.floor(Math.random() * registrosDisponibles.length);
                         const datosPrueba = registrosDisponibles[indiceAleatorio];
                         
-                        // Encontrar el índice original en el array completo
+                        // Encontrar el ?ndice original en el array completo
                         const indiceOriginal = data.asociados.findIndex(asociado => 
                             asociado.numeroIdentificacion === datosPrueba.numeroIdentificacion
                         );
@@ -3561,14 +3827,14 @@
                         $('#telefonoResidencia').val(datosPrueba.telefonoResidencia);
                         $('#telefonoCelular').val(datosPrueba.telefonoCelular);
                         $('#telefonoFamiliar').val(datosPrueba.telefonoFamiliar || '');
-                        // Convertir ocupación a Code si es necesario
+                        // Convertir ocupaci?n a Code si es necesario
                         let codigoOcupacion = 1; // Por defecto Ingeniero de Sistemas (Code: 1)
                         if (typeof datosPrueba.ocupacion === 'string') {
                             // Mapear nombres de ocupaciones a Codes
                             const ocupacionMapping = {
                                 'Ingeniero de Sistemas': 1,
-                                'Contador Público': 2,
-                                'Médico General': 3,
+                                'Contador P?blico': 2,
+                                'M?dico General': 3,
                                 'Abogado': 4,
                                 'Profesor': 5
                             };
@@ -3579,17 +3845,17 @@
                         $('#ocupacion').val(codigoOcupacion);
                         $('#nivelEstudio').val(datosPrueba.nivelEstudio);
                         $('#profesion').val(datosPrueba.profesion);
-                        // Convertir nombre de empresa a código si es necesario
+                        // Convertir nombre de empresa a c?digo si es necesario
                         let codigoEmpresa = 1; // Por defecto Cooperativa Coopsemga
                         if (typeof datosPrueba.lugarTrabajo === 'string') {
-                            // Mapear nombres de empresas a códigos
+                            // Mapear nombres de empresas a c?digos
                             const empresaMapping = {
-                                'Innovación Tecnológica S.A.': 2,
+                                'Innovaci?n Tecnol?gica S.A.': 2,
                                 'Consultores Asociados': 3,
-                                'Corporación XYZ': 4,
+                                'Corporaci?n XYZ': 4,
                                 'Empresa ABC S.A.': 5,
                                 'Cooperativa Coopsemga': 1,
-                                'Banco Nacional de Panamá': 2,
+                                'Banco Nacional de Panam?': 2,
                                 'Caja de Ahorros': 3,
                                 'Banco General': 4,
                                 'Banistmo': 5
@@ -3600,14 +3866,14 @@
                         }
                         $('#lugarTrabajo').val(codigoEmpresa);
                         $('#telefonoTrabajo').val(datosPrueba.telefonoTrabajo || '');
-                        $('#paisTrabajo').val('PA'); // Panamá por defecto
-                        $('#provinciaTrabajo').val('8'); // Panamá por defecto
-                        $('#distritoTrabajo').val('47'); // Panamá por defecto
+                        $('#paisTrabajo').val('PA'); // Panam? por defecto
+                        $('#provinciaTrabajo').val('8'); // Panam? por defecto
+                        $('#distritoTrabajo').val('47'); // Panam? por defecto
                         $('#corregimientoTrabajo').val('0'); // Temporal por defecto
                         $('#direccionTrabajo').val(datosPrueba.direccionTrabajo);
-                        $('#paisResidencia').val('PA'); // Panamá por defecto
-                        $('#provinciaResidencia').val('8'); // Panamá por defecto
-                        $('#distritoResidencia').val('47'); // Panamá por defecto
+                        $('#paisResidencia').val('PA'); // Panam? por defecto
+                        $('#provinciaResidencia').val('8'); // Panam? por defecto
+                        $('#distritoResidencia').val('47'); // Panam? por defecto
                         $('#corregimientoResidencia').val('0'); // Temporal por defecto
                         $('#direccionResidencia').val(datosPrueba.direccionResidencia);
                         
@@ -3673,7 +3939,7 @@
                         const profesiones = response.d.Data;
                         const selectProfesion = $('#profesion');
                         
-                        selectProfesion.empty().append('<option value="">Seleccionar profesión...</option>');
+                        selectProfesion.empty().append('<option value="">Seleccionar profesi?n...</option>');
                         
                         profesiones.forEach(function(profesion) {
                             selectProfesion.append(`<option value="${profesion.Code}">${profesion.Descripcion}</option>`);
@@ -3736,7 +4002,7 @@
                         const ocupaciones = response.d.Data;
                         const selectOcupacion = $('#ocupacion');
                         
-                        selectOcupacion.empty().append('<option value="">Seleccionar ocupación...</option>');
+                        selectOcupacion.empty().append('<option value="">Seleccionar ocupaci?n...</option>');
                         
                         ocupaciones.forEach(function(ocupacion) {
                             selectOcupacion.append(`<option value="${ocupacion.Code}">${ocupacion.Descripcion}</option>`);
@@ -3767,23 +4033,23 @@
                         
                         const selectPais = $('#paisTrabajo');
                         
-                        selectPais.empty().append('<option value="">Seleccionar país...</option>');
+                        selectPais.empty().append('<option value="">Seleccionar pa?s...</option>');
                         
                         paisesData.forEach(function(pais) {
                             const selected = pais.Code === 'PA' ? ' selected' : '';
                             selectPais.append(`<option value="${pais.Code}"${selected}>${pais.Descripcion}</option>`);
                         });
                         
-                        // Actualizar Select2 después de cargar datos
+                        // Actualizar Select2 despu?s de cargar datos
                         selectPais.trigger('change');
                         
                         cargarProvinciasPorPais('PA');
                     } else {
-                        mostrarToast(response.d.Message || 'Error al cargar países', 'error');
+                        mostrarToast(response.d.Message || 'Error al cargar pa?ses', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    mostrarToast('Error al cargar países', 'error');
+                    mostrarToast('Error al cargar pa?ses', 'error');
                 }
             });
         }
@@ -3835,10 +4101,10 @@
                 selectProvincia.append(`<option value="${provincia.Code}"${selected}>${provincia.Descripcion}</option>`);
             });
             
-            // Actualizar Select2 después de cargar datos
+            // Actualizar Select2 despu?s de cargar datos
             selectProvincia.trigger('change');
             
-            // Si es Panamá, cargar distritos de la provincia por defecto
+            // Si es Panam?, cargar distritos de la provincia por defecto
             if (codigoPais === 'PA') {
                 cargarDistritosPorProvincia(8);
             }
@@ -3890,10 +4156,10 @@
                 selectDistrito.append(`<option value="${distrito.Code}"${selected}>${distrito.Descripcion}</option>`);
             });
             
-            // Actualizar Select2 después de cargar datos
+            // Actualizar Select2 despu?s de cargar datos
             selectDistrito.trigger('change');
             
-            // Si es Panamá (8), cargar corregimientos del distrito por defecto
+            // Si es Panam? (8), cargar corregimientos del distrito por defecto
             if (codigoProvincia === 8) {
                 cargarCorregimientosPorDistrito(47);
             }
@@ -3942,12 +4208,12 @@
                 selectCorregimiento.append(`<option value="${corregimiento.Code}"${selected}>${corregimiento.Descripcion}</option>`);
             });
             
-            // Actualizar Select2 después de cargar datos
+            // Actualizar Select2 despu?s de cargar datos
             selectCorregimiento.trigger('change');
         }
 
         function configurarDropdownsRelacionados() {
-            // Event listener para cambio de país
+            // Event listener para cambio de pa?s
             $('#paisTrabajo').on('change', function() {
                 const codigoPais = $(this).val();
                 
@@ -3988,7 +4254,7 @@
         }
 
         function configurarDropdownsResidencia() {
-            // Event listener para cambio de país de residencia
+            // Event listener para cambio de pa?s de residencia
             $('#paisResidencia').on('change', function() {
                 const codigoPais = $(this).val();
                 
@@ -4028,14 +4294,14 @@
             });
         }
 
-        // ===== CONFIGURACIÓN DE SELECT2 PARA COMBOBOXES =====
+        // ===== CONFIGURACI?N DE SELECT2 PARA COMBOBOXES =====
 
-        // Función auxiliar para destruir Select2 de manera segura
+        // Funci?n auxiliar para destruir Select2 de manera segura
         function destruirSelect2Seguro(selector) {
             try {
                 const elemento = $(selector);
                 if (elemento.length > 0) {
-                    // Verificar si Select2 está inicializado
+                    // Verificar si Select2 est? inicializado
                     if (elemento.hasClass('select2-hidden-accessible') && typeof elemento.select2 === 'function') {
                         elemento.select2('destroy');
                     }
@@ -4046,7 +4312,7 @@
         }
 
         function configurarSelect2() {
-            // Verificar que jQuery y Select2 estén disponibles
+            // Verificar que jQuery y Select2 est?n disponibles
             if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
                 return;
             }
@@ -4102,7 +4368,7 @@
         }
 
         function reinicializarSelect2() {
-            // Verificar que jQuery y Select2 estén disponibles
+            // Verificar que jQuery y Select2 est?n disponibles
             if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
                 return;
             }
@@ -4169,7 +4435,7 @@
         }
 
         function forzarSelect2() {
-            // Verificar que jQuery y Select2 estén disponibles
+            // Verificar que jQuery y Select2 est?n disponibles
             if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
                 return;
             }
@@ -4189,7 +4455,7 @@
                     elemento.removeClass('select2-hidden-accessible');
                     elemento.next('.select2-container').remove();
                     
-                    // Forzar inicialización
+                    // Forzar inicializaci?n
                     try {
                         elemento.select2({
                             theme: 'bootstrap-5',
@@ -4226,7 +4492,7 @@
                     // Evento cuando se abre el dropdown
                     elemento.on('select2:open', function() {
                         setTimeout(function() {
-                            // Forzar foco en el campo de búsqueda
+                            // Forzar foco en el campo de b?squeda
                             $('.select2-search__field').focus();
                         }, 100);
                     });
@@ -4235,7 +4501,7 @@
         }
 
         function asegurarCampoBusqueda() {
-            // Verificar que el campo de búsqueda esté presente y funcional
+            // Verificar que el campo de b?squeda est? presente y funcional
             setTimeout(function() {
                 const campoBusqueda = $('.select2-search__field');
                 if (campoBusqueda.length > 0) {
@@ -4270,23 +4536,23 @@
                         
                         const selectPais = $('#paisResidencia');
                         
-                        selectPais.empty().append('<option value="">Seleccionar país...</option>');
+                        selectPais.empty().append('<option value="">Seleccionar pa?s...</option>');
                         
                         paisesResidenciaData.forEach(function(pais) {
                             const selected = pais.Code === 'PA' ? ' selected' : '';
                             selectPais.append(`<option value="${pais.Code}"${selected}>${pais.Descripcion}</option>`);
                         });
                         
-                        // Actualizar Select2 después de cargar datos
+                        // Actualizar Select2 despu?s de cargar datos
                         selectPais.trigger('change');
                         
                         cargarProvinciasResidenciaPorPais('PA');
                     } else {
-                        mostrarToast(response.d.Message || 'Error al cargar países de residencia', 'error');
+                        mostrarToast(response.d.Message || 'Error al cargar pa?ses de residencia', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    mostrarToast('Error al cargar países de residencia', 'error');
+                    mostrarToast('Error al cargar pa?ses de residencia', 'error');
                 }
             });
         }
@@ -4338,10 +4604,10 @@
                 selectProvincia.append(`<option value="${provincia.Code}"${selected}>${provincia.Descripcion}</option>`);
             });
             
-            // Actualizar Select2 después de cargar datos
+            // Actualizar Select2 despu?s de cargar datos
             selectProvincia.trigger('change');
             
-            // Si es Panamá, cargar distritos de la provincia por defecto
+            // Si es Panam?, cargar distritos de la provincia por defecto
             if (codigoPais === 'PA') {
                 cargarDistritosResidenciaPorProvincia(8);
             }
@@ -4393,10 +4659,10 @@
                 selectDistrito.append(`<option value="${distrito.Code}"${selected}>${distrito.Descripcion}</option>`);
             });
             
-            // Actualizar Select2 después de cargar datos
+            // Actualizar Select2 despu?s de cargar datos
             selectDistrito.trigger('change');
             
-            // Si es Panamá (8), cargar corregimientos del distrito por defecto
+            // Si es Panam? (8), cargar corregimientos del distrito por defecto
             if (codigoProvincia === 8) {
                 cargarCorregimientosResidenciaPorDistrito(47);
             }
@@ -4445,7 +4711,7 @@
                 selectCorregimiento.append(`<option value="${corregimiento.Code}"${selected}>${corregimiento.Descripcion}</option>`);
             });
             
-            // Actualizar Select2 después de cargar datos
+            // Actualizar Select2 despu?s de cargar datos
             selectCorregimiento.trigger('change');
         }
 
@@ -4562,7 +4828,7 @@
             
             elemento.text(porcentajeRestante.toFixed(2) + '%');
             
-            // Cambiar color según el porcentaje con colores más oscuros
+            // Cambiar color seg?n el porcentaje con colores m?s oscuros
             elemento.removeClass('text-success text-warning text-danger text-info');
             if (porcentajeRestante > 50) {
                 elemento.addClass('text-success'); // Verde oscuro
@@ -4572,10 +4838,10 @@
                 elemento.addClass('text-danger'); // Rojo oscuro
             }
             
-            // Habilitar/deshabilitar botón agregar según porcentaje restante
+            // Habilitar/deshabilitar bot?n agregar seg?n porcentaje restante
             if (porcentajeRestante <= 0) {
                 botonAgregar.prop('disabled', true).addClass('disabled');
-                botonAgregar.attr('title', 'No se puede agregar más beneficiarios - Porcentaje completo');
+                botonAgregar.attr('title', 'No se puede agregar m?s beneficiarios - Porcentaje completo');
             } else {
                 botonAgregar.prop('disabled', false).removeClass('disabled');
                 botonAgregar.attr('title', 'Agregar Beneficiario');
@@ -4587,8 +4853,8 @@
             const camposObligatorios = [
                 { id: 'beneficiarioNombre', nombre: 'Nombre' },
                 { id: 'beneficiarioApellido', nombre: 'Apellido' },
-                { id: 'beneficiarioTipoIdentificacion', nombre: 'Tipo de identificación' },
-                { id: 'beneficiarioNumeroIdentificacion', nombre: 'número de identificación' },
+                { id: 'beneficiarioTipoIdentificacion', nombre: 'Tipo de identificaci?n' },
+                { id: 'beneficiarioNumeroIdentificacion', nombre: 'n?mero de identificaci?n' },
                 { id: 'beneficiarioParentesco', nombre: 'Parentesco' },
                 { id: 'beneficiarioPorcentaje', nombre: 'Porcentaje' }
             ];
@@ -4630,8 +4896,8 @@
             mostrarConfirm({
                 tipo: 'success',
                 titulo: 'Agregar Beneficiario',
-                mensaje: `¿Está seguro de agregar a ${nombre} ${apellido} como beneficiario?\n\nParentesco: ${parentesco}\nPorcentaje: ${porcentaje}%`,
-                textoConfirmar: 'Sí, Agregar',
+                mensaje: `?Est? seguro de agregar a ${nombre} ${apellido} como beneficiario?\n\nParentesco: ${parentesco}\nPorcentaje: ${porcentaje}%`,
+                textoConfirmar: 'S?, Agregar',
                 textoCancelar: 'Cancelar'
             }).then((confirmado) => {
                 if (confirmado) {
@@ -4640,7 +4906,7 @@
                 }
             });
             
-            return; // Salir de la función aquí, el resto se ejecutará en el callback
+            return; // Salir de la funci?n aqu?, el resto se ejecutar? en el callback
         }
 
         function procesarAgregarBeneficiario() {
@@ -4689,8 +4955,8 @@
             mostrarConfirm({
                 tipo: 'danger',
                 titulo: 'Eliminar Beneficiario',
-                mensaje: '¿Está seguro de que desea eliminar este beneficiario? Esta acción no se puede deshacer.',
-                textoConfirmar: 'Sí, Eliminar',
+                mensaje: '?Est? seguro de que desea eliminar este beneficiario? Esta acci?n no se puede deshacer.',
+                textoConfirmar: 'S?, Eliminar',
                 textoCancelar: 'Cancelar',
                 tipoBoton: 'danger'
             }).then((confirmado) => {
@@ -4755,10 +5021,10 @@
                 mostrarToast('El porcentaje no puede ser menor a 0%', 'warning');
             }
             
-            // Si el valor no es un número válido, lo limpia
+            // Si el valor no es un n?mero v?lido, lo limpia
             if (isNaN(valor) && input.value !== '') {
                 input.value = '';
-                mostrarToast('Por favor ingrese un valor numérico válido', 'warning');
+                mostrarToast('Por favor ingrese un valor num?rico v?lido', 'warning');
             }
         }
 
@@ -4777,10 +5043,10 @@
                 mostrarToast('El porcentaje no puede ser menor a 0%', 'warning');
             }
             
-            // Si el valor no es un número válido, lo limpia
+            // Si el valor no es un n?mero v?lido, lo limpia
             if (isNaN(valor) && input.value !== '') {
                 input.value = '';
-                mostrarToast('Por favor ingrese un valor numérico válido', 'warning');
+                mostrarToast('Por favor ingrese un valor num?rico v?lido', 'warning');
             }
         }
 
@@ -4810,7 +5076,7 @@
             
             if (beneficiario) {
                 
-                // Llenar el formulario de edición
+                // Llenar el formulario de edici?n
                 
                 
                 $('#editarBeneficiarioId').val(beneficiario.IDBeneficiario);
@@ -4827,7 +5093,7 @@
                 const modal = new bootstrap.Modal(document.getElementById('modalEditarBeneficiario'));
                 modal.show();
             } else {
-                mostrarToast('No se pudo encontrar la información del beneficiario', 'error');
+                mostrarToast('No se pudo encontrar la informaci?n del beneficiario', 'error');
             }
         }
 
@@ -4876,8 +5142,8 @@
             const camposObligatorios = [
                 { id: 'editarBeneficiarioNombre', nombre: 'Nombre' },
                 { id: 'editarBeneficiarioApellido', nombre: 'Apellido' },
-                { id: 'editarBeneficiarioTipoIdentificacion', nombre: 'Tipo de identificación' },
-                { id: 'editarBeneficiarioNumeroIdentificacion', nombre: 'número de identificación' },
+                { id: 'editarBeneficiarioTipoIdentificacion', nombre: 'Tipo de identificaci?n' },
+                { id: 'editarBeneficiarioNumeroIdentificacion', nombre: 'n?mero de identificaci?n' },
                 { id: 'editarBeneficiarioParentesco', nombre: 'Parentesco' },
                 { id: 'editarBeneficiarioPorcentaje', nombre: 'Porcentaje' }
             ];
@@ -4906,8 +5172,8 @@
             mostrarConfirm({
                 tipo: 'info',
                 titulo: 'Confirmar Cambios',
-                mensaje: `¿Está seguro de actualizar a ${nombre} ${apellido}?\n\nParentesco: ${parentesco}\nPorcentaje: ${porcentaje}%`,
-                textoConfirmar: 'Sí, Guardar',
+                mensaje: `?Est? seguro de actualizar a ${nombre} ${apellido}?\n\nParentesco: ${parentesco}\nPorcentaje: ${porcentaje}%`,
+                textoConfirmar: 'S?, Guardar',
                 textoCancelar: 'Cancelar'
             }).then((confirmado) => {
                 if (confirmado) {
@@ -5030,7 +5296,7 @@
                 <div id="modalComprobante" class="comprobante-modal-overlay">
                     <div class="comprobante-modal">
                         <div class="comprobante-modal-header">
-                            <h5><i class="fas fa-receipt text-primary"></i> Comprobante de Transacción</h5>
+                            <h5><i class="fas fa-receipt text-primary"></i> Comprobante de Transacci?n</h5>
                             <button type="button" class="btn-close-custom" onclick="cerrarModalComprobante()"><i class="fas fa-times"></i></button>
                         </div>
                         <div class="comprobante-modal-body">
@@ -5065,7 +5331,7 @@
             const ventanaImpresion = window.open('', '_blank', 'width=800,height=600');
             const contenidoComprobante = $('#modalComprobante .comprobante-container').html();
             ventanaImpresion.document.write(`
-                <!DOCTYPE html><html><head><title>Comprobante de Transacción</title>
+                <!DOCTYPE html><html><head><title>Comprobante de Transacci?n</title>
                 <style>body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
                 .comprobante { height: auto !important; } .no-print { display: none !important; }</style></head>
                 <body>${contenidoComprobante}</body></html>`);
@@ -5099,7 +5365,7 @@
             $('#contenedorTablaMovimientosSocio').hide();
             $('#spinnerMovimientosSocio').removeClass('d-none');
             $('#verMasMovimientosContainer').hide();
-            $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
+            $('#btnVerMasMovimientos').prop('disabled', false).text('Ver m?s movimientos');
 
             const modal = new bootstrap.Modal(document.getElementById('modalMovimientosSocio'));
             modal.show();
@@ -5191,9 +5457,9 @@
                                 $('#spinnerMovimientosSocio').addClass('d-none');
                                 $('#contenedorTablaMovimientosSocio').hide();
                                 $('#estadoMovimientosSocio').removeClass('d-none');
-                                $('#estadoMovimientosSocio').find('p').text('Se recibió contenido inesperado del servidor.');
+                                $('#estadoMovimientosSocio').find('p').text('Se recibi? contenido inesperado del servidor.');
                             } else {
-                                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
+                                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver m?s movimientos');
                             }
                             mostrarToast('Respuesta inesperada al solicitar movimientos.', 'error');
                             return;
@@ -5208,7 +5474,7 @@
                                 $('#estadoMovimientosSocio').removeClass('d-none');
                                 $('#estadoMovimientosSocio').find('p').text('No se pudo interpretar la respuesta del servidor.');
                             } else {
-                                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
+                                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver m?s movimientos');
                             }
                             mostrarToast('No se pudo interpretar la respuesta del servidor.', 'error');
                             return;
@@ -5231,7 +5497,7 @@
                                 $('#estadoMovimientosSocio').removeClass('d-none');
                                 $('#estadoMovimientosSocio').find('p').text('No se pudo interpretar los datos de movimientos.');
                             } else {
-                                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
+                                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver m?s movimientos');
                             }
                             mostrarToast('No se pudo interpretar los datos de movimientos.', 'error');
                             return;
@@ -5247,9 +5513,9 @@
                         $('#spinnerMovimientosSocio').addClass('d-none');
                         $('#contenedorTablaMovimientosSocio').hide();
                         $('#estadoMovimientosSocio').removeClass('d-none');
-                        $('#estadoMovimientosSocio').find('p').text('Ocurrió un error al obtener los movimientos.');
+                        $('#estadoMovimientosSocio').find('p').text('Ocurri? un error al obtener los movimientos.');
                     } else {
-                        $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
+                        $('#btnVerMasMovimientos').prop('disabled', false).text('Ver m?s movimientos');
                     }
 
                     mostrarToast('Error al cargar movimientos: ' + error, 'error');
@@ -5272,7 +5538,7 @@
                 contenedorTabla.hide();
                 $('#verMasMovimientosContainer').hide();
                 movimientosSocioEstado.cargando = false;
-                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
+                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver m?s movimientos');
                 return;
             }
 
@@ -5294,7 +5560,7 @@
                 }
                 $('#verMasMovimientosContainer').hide();
                 movimientosSocioEstado.cargando = false;
-                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
+                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver m?s movimientos');
                 return;
             }
 
@@ -5323,14 +5589,14 @@
             const hayMas = movimientosSocioEstado.start < movimientosSocioEstado.total;
             if (hayMas) {
                 $('#verMasMovimientosContainer').show();
-                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
+                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver m?s movimientos');
             } else {
                 $('#verMasMovimientosContainer').hide();
             }
 
             movimientosSocioEstado.cargando = false;
             if (!esPrimerBloque) {
-                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver más movimientos');
+                $('#btnVerMasMovimientos').prop('disabled', false).text('Ver m?s movimientos');
             }
         }
 
@@ -5424,6 +5690,371 @@
         function escaparHtmlSocios(texto) {
             return $('<div>').text(texto ?? '').html();
         }
+
+        let edcrNumeroAsociadoActual = null;
+        let edcrFpDesde = null;
+        let edcrFpHasta = null;
+
+        function logEdcr(mensaje, datos) {
+            const prefijo = '[EDCR]';
+            if (datos !== undefined) {
+                console.log(prefijo, mensaje, datos);
+            } else {
+                console.log(prefijo, mensaje);
+            }
+        }
+
+        function extraerContenidoHtmlReporteEdcr(html) {
+            if (!html || typeof html !== 'string') {
+                logEdcr('extraerContenidoHtmlReporteEdcr: HTML vac?o');
+                return '';
+            }
+            const trimmed = html.trim();
+            if (trimmed.indexOf('<') !== 0) {
+                return trimmed;
+            }
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(trimmed, 'text/html');
+                const reporte = doc.querySelector('.reporte-edcr, .estado-cuenta-regular');
+                if (reporte) {
+                    logEdcr('Contenido extra?do del nodo .reporte-edcr', { chars: reporte.outerHTML.length });
+                    return reporte.outerHTML;
+                }
+                if (doc.body && doc.body.innerHTML) {
+                    logEdcr('Contenido extra?do de <body>', { chars: doc.body.innerHTML.length });
+                    return doc.body.innerHTML;
+                }
+            } catch (err) {
+                logEdcr('Error al parsear HTML del reporte', err);
+            }
+            logEdcr('Usando HTML sin parsear', { chars: trimmed.length });
+            return trimmed;
+        }
+
+        /** Extrae e inyecta los estilos del <head> del HTML devuelto por el servidor. */
+        function inyectarEstilosReporteEdcr(htmlFull) {
+            $('#edcrReporteContentStyles').remove();
+            if (!htmlFull || typeof htmlFull !== 'string') {
+                logEdcr('inyectarEstilosReporteEdcr: sin HTML');
+                return;
+            }
+            try {
+                const doc = new DOMParser().parseFromString(htmlFull.trim(), 'text/html');
+                let css = '';
+                doc.querySelectorAll('style').forEach(function (el) {
+                    css += (el.textContent || '') + '\n';
+                });
+                if (!css.trim()) {
+                    logEdcr('inyectarEstilosReporteEdcr: no hay <style> en la respuesta (se usan estilos embebidos en la p?gina)');
+                    return;
+                }
+                css = css.replace(/\bbody\s*\{/gi, '#modalEstadoCuentaRegular .estado-cuenta-container {');
+                css = css.replace(/(^|\})\s*([^{@][^{]*)\{/gm, function (m, before, sel) {
+                    sel = sel.trim();
+                    if (!sel || sel.indexOf('#modalEstadoCuentaRegular') >= 0) return m;
+                    if (sel.charAt(0) === '@') return m;
+                    const scoped = sel.split(',').map(function (part) {
+                        part = part.trim();
+                        if (!part) return part;
+                        return '#modalEstadoCuentaRegular .estado-cuenta-container ' + part;
+                    }).join(', ');
+                    return before + ' ' + scoped + ' {';
+                });
+                $('head').append('<style id="edcrReporteContentStyles">' + css + '</style>');
+                logEdcr('Estilos del reporte inyectados desde HTML del servidor', { cssLength: css.length });
+            } catch (err) {
+                logEdcr('Error al inyectar estilos del reporte', err);
+            }
+        }
+
+        function diagnosticarModalEdcrReporte() {
+            const $overlay = $('#modalEstadoCuentaRegular');
+            const $modal = $overlay.find('.edcr-reporte-modal');
+            if (!$overlay.length) {
+                logEdcr('Diagn?stico: overlay no encontrado en DOM');
+                return;
+            }
+            const rectOverlay = $overlay[0].getBoundingClientRect();
+            const rectModal = $modal.length ? $modal[0].getBoundingClientRect() : null;
+            const csOverlay = window.getComputedStyle($overlay[0]);
+            logEdcr('Diagn?stico modal reporte', {
+                viewport: { w: window.innerWidth, h: window.innerHeight, scrollY: window.scrollY },
+                overlay: {
+                    display: csOverlay.display,
+                    position: csOverlay.position,
+                    zIndex: csOverlay.zIndex,
+                    top: rectOverlay.top,
+                    left: rectOverlay.left,
+                    width: rectOverlay.width,
+                    height: rectOverlay.height,
+                    visibleEnViewport: rectOverlay.top >= 0 && rectOverlay.left >= 0 &&
+                        rectOverlay.bottom <= window.innerHeight && rectOverlay.right <= window.innerWidth
+                },
+                modal: rectModal ? {
+                    top: rectModal.top,
+                    left: rectModal.left,
+                    width: rectModal.width,
+                    height: rectModal.height,
+                    visibleEnViewport: rectModal.top >= 0 && rectModal.left >= 0 &&
+                        rectModal.bottom <= window.innerHeight && rectModal.right <= window.innerWidth
+                } : null,
+                parentTag: $overlay.parent().prop('tagName'),
+                tieneEstilosGlobales: $('#estadoCuentaModalStyles').length > 0
+            });
+        }
+
+        function asegurarEstilosModalEstadoCuenta() {
+            /* Marco y reporte: CSS en #modalEstadoCuentaRegular; contenido: inyectarEstilosReporteEdcr. */
+        }
+
+        function obtenerNombreCompletoSocio(numeroAsociado) {
+            const socio = obtenerSocioDeCache(numeroAsociado);
+            if (!socio) return String(numeroAsociado);
+            return `${socio.Nombre || ''} ${socio.SegundoNombre || ''} ${socio.Apellido || ''} ${socio.SegundoApellido || ''}`.trim() || String(numeroAsociado);
+        }
+
+        function abrirModalEstadoCuentaRegular(numeroAsociado) {
+            logEdcr('abrirModalEstadoCuentaRegular', { numeroAsociado: numeroAsociado });
+            if (!numeroAsociado) {
+                mostrarToast('No se pudo determinar el asociado.', 'warning');
+                return;
+            }
+            edcrNumeroAsociadoActual = numeroAsociado;
+            const nombre = obtenerNombreCompletoSocio(numeroAsociado);
+            const hoy = new Date();
+            const inicioAnio = new Date(hoy.getFullYear(), 0, 1);
+            const fechaHastaStr = ('0' + hoy.getDate()).slice(-2) + '/' + ('0' + (hoy.getMonth() + 1)).slice(-2) + '/' + hoy.getFullYear();
+            const fechaDesdeStr = ('0' + inicioAnio.getDate()).slice(-2) + '/' + ('0' + (inicioAnio.getMonth() + 1)).slice(-2) + '/' + inicioAnio.getFullYear();
+
+            $('#modalEdcrParametros').remove();
+
+            const modalHtml = `
+                <div id="modalEdcrParametros" class="edcr-param-overlay">
+                    <div class="edcr-param-modal">
+                        <div class="edcr-param-modal-header">
+                            <h5><i class="fas fa-file-invoice text-primary"></i> Estado de Cuenta Regular</h5>
+                        </div>
+                        <div class="edcr-param-box">
+                            <div class="edcr-param-box-title">Datos de entrada (par?metros)</div>
+                            <div class="edcr-param-fields">
+                                <div class="edcr-param-field" style="flex: 2 1 240px;">
+                                    <label>1. Asociado</label>
+                                    <input type="text" id="edcrAsociado" class="form-control" readonly />
+                                </div>
+                                <div class="edcr-param-field">
+                                    <label>2. Fecha desde</label>
+                                    <input type="text" id="edcrFechaDesde" class="form-control flatpickr-date-edcr" placeholder="dd/mm/yyyy" value="${fechaDesdeStr}" />
+                                </div>
+                                <div class="edcr-param-field">
+                                    <label>3. Fecha hasta</label>
+                                    <input type="text" id="edcrFechaHasta" class="form-control flatpickr-date-edcr" placeholder="dd/mm/yyyy" value="${fechaHastaStr}" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="edcr-param-modal-footer">
+                            <button type="button" class="btn btn-secondary" id="btnCerrarEdcr">
+                                <i class="fas fa-times"></i> Cerrar
+                            </button>
+                            <button type="button" class="btn btn-primary" id="btnEjecutarEdcr">
+                                <i class="fas fa-play"></i> Ejecutar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('body').append(modalHtml);
+
+            $('#edcrAsociado').val(numeroAsociado + ' - ' + nombre);
+            $('#edcrFechaDesde').val(fechaDesdeStr);
+            $('#edcrFechaHasta').val(fechaHastaStr);
+            $('#btnCerrarEdcr').on('click', cerrarModalEdcrParametros);
+            $('#btnEjecutarEdcr').on('click', ejecutarEstadoCuentaRegular);
+
+            if (edcrFpDesde) { try { edcrFpDesde.destroy(); } catch (e) {} }
+            if (edcrFpHasta) { try { edcrFpHasta.destroy(); } catch (e) {} }
+            const fpOpts = {
+                dateFormat: 'd/m/Y',
+                locale: 'es',
+                allowInput: true,
+                disableMobile: true,
+                appendTo: document.getElementById('modalEdcrParametros')
+            };
+            edcrFpDesde = flatpickr('#edcrFechaDesde', fpOpts);
+            edcrFpHasta = flatpickr('#edcrFechaHasta', fpOpts);
+        }
+
+        function cerrarModalEdcrParametros() {
+            if (edcrFpDesde) { try { edcrFpDesde.destroy(); } catch (e) {} edcrFpDesde = null; }
+            if (edcrFpHasta) { try { edcrFpHasta.destroy(); } catch (e) {} edcrFpHasta = null; }
+            $('#modalEdcrParametros').remove();
+            edcrNumeroAsociadoActual = null;
+        }
+
+        function obtenerFechaEdcrParaApi(inputId, fpInstance) {
+            if (fpInstance && fpInstance.selectedDates && fpInstance.selectedDates.length > 0) {
+                const d = fpInstance.selectedDates[0];
+                const yyyy = String(d.getFullYear());
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return yyyy + mm + dd;
+            }
+            const val = ($('#' + inputId).val() || '').trim();
+            if (!val) return null;
+            const partes = val.split('/');
+            if (partes.length !== 3) return null;
+            const dia = partes[0].padStart(2, '0');
+            const mes = partes[1].padStart(2, '0');
+            const anio = partes[2];
+            if (anio.length !== 4) return null;
+            return anio + mes + dia;
+        }
+
+        function ejecutarEstadoCuentaRegular() {
+            logEdcr('ejecutarEstadoCuentaRegular: inicio', { asociado: edcrNumeroAsociadoActual });
+            if (!edcrNumeroAsociadoActual) {
+                mostrarToast('No se pudo determinar el asociado.', 'warning');
+                return;
+            }
+            const fechaDesde = obtenerFechaEdcrParaApi('edcrFechaDesde', edcrFpDesde);
+            const fechaHasta = obtenerFechaEdcrParaApi('edcrFechaHasta', edcrFpHasta);
+            logEdcr('Fechas para API', { fechaDesde: fechaDesde, fechaHasta: fechaHasta });
+            if (!fechaDesde) {
+                mostrarToast('La fecha desde es obligatoria (dd/mm/yyyy).', 'warning');
+                return;
+            }
+            if (!fechaHasta) {
+                mostrarToast('La fecha hasta es obligatoria (dd/mm/yyyy).', 'warning');
+                return;
+            }
+
+            const $btn = $('#btnEjecutarEdcr');
+            if (!$btn.length) {
+                mostrarToast('Vuelva a abrir el reporte EDCR desde la tabla.', 'warning');
+                return;
+            }
+            const htmlBtn = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Ejecutando...');
+
+            $.ajax({
+                type: 'POST',
+                url: 'GestionSocios.aspx/GenerarEstadoCuentaRegular',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({
+                    numeroAsociado: edcrNumeroAsociadoActual.toString(),
+                    fechaDesde: fechaDesde,
+                    fechaHasta: fechaHasta
+                }),
+                dataType: 'json',
+                success: function(response) {
+                    try {
+                        if (typeof response.d === 'string') {
+                            response.d = JSON.parse(response.d);
+                        }
+                        if (response.d && response.d.Resultado === 'SUCCESS') {
+                            const htmlReporte = response.d.Html || '';
+                            logEdcr('Respuesta OK del servidor', { htmlLength: htmlReporte.length });
+                            cerrarModalEdcrParametros();
+                            mostrarModalEstadoCuentaRegular(htmlReporte);
+                        } else {
+                            const mensaje = response.d && response.d.Mensaje ? response.d.Mensaje : 'No fue posible generar el estado de cuenta regular.';
+                            mostrarToast(mensaje, 'error');
+                        }
+                    } catch (err) {
+                        console.error('EDCR:', err);
+                        mostrarToast('Error al mostrar el reporte. Revise la consola del navegador (F12).', 'error');
+                    }
+                },
+                error: function(xhr) {
+                    let msg = 'Error al generar el estado de cuenta regular.';
+                    if (xhr.status === 500) {
+                        msg += ' Verifique que exista el SP spAsociados_EstadoCuentaRegular en la base de datos.';
+                    }
+                    mostrarToast(msg, 'error');
+                },
+                complete: function() {
+                    const $b = $('#btnEjecutarEdcr');
+                    if ($b.length) {
+                        $b.prop('disabled', false).html(htmlBtn);
+                    }
+                }
+            });
+        }
+
+        function mostrarModalEstadoCuentaRegular(htmlContent) {
+            logEdcr('mostrarModalEstadoCuentaRegular: inicio', { htmlRecibidoChars: (htmlContent || '').length });
+            asegurarEstilosModalEstadoCuenta();
+            inyectarEstilosReporteEdcr(htmlContent);
+            $('#modalEstadoCuentaRegular').remove();
+            const contenidoReporte = extraerContenidoHtmlReporteEdcr(htmlContent);
+            const modalHtml = `
+                <div id="modalEstadoCuentaRegular" class="edcr-reporte-overlay estado-cuenta-modal-overlay" role="dialog" aria-modal="true">
+                    <div class="edcr-reporte-modal estado-cuenta-modal">
+                        <div class="estado-cuenta-modal-header">
+                            <h5><i class="fas fa-file-invoice text-primary"></i> Estado de Cuenta Regular</h5>
+                            <button type="button" class="btn-close-custom" id="btnCerrarEdcrReporte">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="estado-cuenta-modal-body">
+                            <div class="estado-cuenta-container"></div>
+                        </div>
+                        <div class="estado-cuenta-modal-footer">
+                            <button type="button" class="btn btn-secondary" id="btnCerrarEdcrReporte2">
+                                <i class="fas fa-times"></i> Cerrar
+                            </button>
+                            <button type="button" class="btn btn-primary" id="btnImprimirEdcrReporte">
+                                <i class="fas fa-print"></i> Imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            const $overlay = $(modalHtml);
+            $(document.body).append($overlay);
+            $overlay.find('.estado-cuenta-container').html(contenidoReporte || '<p class="text-muted p-3">Sin movimientos en el periodo.</p>');
+            $('#btnCerrarEdcrReporte, #btnCerrarEdcrReporte2').on('click', cerrarModalEstadoCuentaRegular);
+            $('#btnImprimirEdcrReporte').on('click', imprimirEstadoCuentaRegularDesdeModal);
+            window.scrollTo(0, 0);
+            requestAnimationFrame(function () { diagnosticarModalEdcrReporte(); });
+            logEdcr('Modal de reporte insertado en document.body');
+        }
+
+        function cerrarModalEstadoCuentaRegular() {
+            logEdcr('cerrarModalEstadoCuentaRegular');
+            $('#modalEstadoCuentaRegular').remove();
+        }
+
+        function obtenerEstilosImpresionEdcr() {
+            let css = $('#edcrPrintPageStyles').html() || '';
+            if (css.trim()) return css.trim();
+            css = $('#edcrReporteContentStyles').html() || '';
+            if (css.trim()) {
+                return css.replace(/#modalEstadoCuentaRegular\s+\.estado-cuenta-container\s+/g, '');
+            }
+            return '';
+        }
+
+        function imprimirEstadoCuentaRegularDesdeModal() {
+            const contenido = $('#modalEstadoCuentaRegular .estado-cuenta-container').html();
+            if (!contenido) return;
+            const estilos = obtenerEstilosImpresionEdcr();
+            const ventana = window.open('', '_blank');
+            ventana.document.write(
+                '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">' +
+                '<title>Estado de Cuenta Regular</title><style>' + estilos + '</style></head><body>' +
+                contenido + '</body></html>'
+            );
+            ventana.document.close();
+            ventana.focus();
+            setTimeout(function() { ventana.print(); }, 500);
+        }
+
+        window.abrirModalEstadoCuentaRegular = abrirModalEstadoCuentaRegular;
+        window.cerrarModalEdcrParametros = cerrarModalEdcrParametros;
+        window.ejecutarEstadoCuentaRegular = ejecutarEstadoCuentaRegular;
+        window.cerrarModalEstadoCuentaRegular = cerrarModalEstadoCuentaRegular;
+        window.imprimirEstadoCuentaRegularDesdeModal = imprimirEstadoCuentaRegularDesdeModal;
 
         function generarEstadoCuenta(numeroAsociado) {
             if (!numeroAsociado) {
@@ -5775,15 +6406,15 @@
             
             if (datos && datos.length > 0) {
                 
-                // Definir las columnas según el tipo de cuenta
+                // Definir las columnas seg?n el tipo de cuenta
                 let columnaInteresPagado = '';
                 let columnaSaldoGenerado = '';
                 
                 if (esPrestamo) {
-                    // Para préstamos: mostrar "Interés Pagado a Fecha"
-                    columnaInteresPagado = '<th>Interés Pagado a Fecha</th>';
+                    // Para pr?stamos: mostrar "Inter?s Pagado a Fecha"
+                    columnaInteresPagado = '<th>Inter?s Pagado a Fecha</th>';
                 } else {
-                    // Para otros rubros: mostrar "Nuevo Saldo" después de "Interés Calculado"
+                    // Para otros rubros: mostrar "Nuevo Saldo" despu?s de "Inter?s Calculado"
                     columnaSaldoGenerado = '<th>Nuevo Saldo</th>';
                 }
                 
@@ -5791,15 +6422,15 @@
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Fecha Cálculo</th>
+                                <th>Fecha C?lculo</th>
                                 <th>Hora</th>
-                                <th>Fecha Últ. Cálculo</th>
+                                <th>Fecha ?lt. C?lculo</th>
                                 <th>Saldo a Fecha</th>
-                                <th>Interés Calc. a Fecha</th>
+                                <th>Inter?s Calc. a Fecha</th>
                                 ${columnaInteresPagado}
-                                <th>Días Intereses</th>
+                                <th>D?as Intereses</th>
                                 <th>Tasa</th>
-                                <th>Interés Calculado</th>
+                                <th>Inter?s Calculado</th>
                                 ${columnaSaldoGenerado}
                                 <th>Usuario</th>
                             </tr>
@@ -5807,18 +6438,18 @@
                         <tbody>
                 `;
                 
-                // Función auxiliar para formatear montos
+                // Funci?n auxiliar para formatear montos
                 function formatearMontoHistorial(valor) {
                     if (!valor || valor === 'N/A' || valor === '') return formateadorMonedaSocios.format(0);
-                    // Si ya es un string con formato, convertir a número
+                    // Si ya es un string con formato, convertir a n?mero
                     const valorStr = valor.toString().trim();
-                    // Remover comas y convertir a número
+                    // Remover comas y convertir a n?mero
                     const numero = parseFloat(valorStr.replace(/,/g, '')) || 0;
                     return formateadorMonedaSocios.format(numero);
                 }
                 
                 datos.forEach(function(item) {
-                    // Construir las celdas según el tipo de cuenta
+                    // Construir las celdas seg?n el tipo de cuenta
                     let celdaInteresPagado = '';
                     let celdaSaldoGenerado = '';
                     
@@ -5877,13 +6508,13 @@
                 return;
             }
             
-            // Obtener referencia al botón
+            // Obtener referencia al bot?n
             const btnExportar = $('#btnExportarExcelHistorial');
             if (btnExportar.length === 0) {
                 return;
             }
             
-            // Deshabilitar botón y mostrar indicador de carga
+            // Deshabilitar bot?n y mostrar indicador de carga
             btnExportar.prop('disabled', true);
             const textoOriginal = btnExportar.html();
             btnExportar.html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Generando...');
@@ -5891,7 +6522,7 @@
             // Mostrar loading
             mostrarToast('Generando archivo Excel...', 'info');
             
-            // Función para restaurar el botón
+            // Funci?n para restaurar el bot?n
             const restaurarBoton = function() {
                 btnExportar.prop('disabled', false);
                 btnExportar.html(textoOriginal);
@@ -5932,7 +6563,7 @@
                         }
                         
                         if (response.d && response.d.Resultado === 'SUCCESS') {
-                            // Descargar el archivo usando el método del servidor
+                            // Descargar el archivo usando el m?todo del servidor
                             const nombreArchivo = response.d.NombreArchivo;
                             const urlDescarga = 'GestionSocios.aspx?action=download&file=' + encodeURIComponent(nombreArchivo);
                             
@@ -5955,13 +6586,13 @@
                             mostrarToast(mensaje, 'error');
                         }
                     } finally {
-                        // Restaurar botón siempre, incluso si hay error
+                        // Restaurar bot?n siempre, incluso si hay error
                         restaurarBoton();
                     }
                 },
                 error: function(xhr, status, error) {
                     mostrarToast('Error al exportar historial de intereses: ' + error, 'error');
-                    // Restaurar botón en caso de error
+                    // Restaurar bot?n en caso de error
                     restaurarBoton();
                 }
             });
@@ -6185,7 +6816,7 @@
                         justify-content: center;
                     }
                     
-                    /* Forzar colores de fondo en impresión */
+                    /* Forzar colores de fondo en impresi?n */
                     .datos-asociado {
                         background: #f8f9fa !important;
                         -webkit-print-color-adjust: exact;
@@ -6216,7 +6847,7 @@
                     }
                 }
                 
-                /* Forzar colores fuera de media print también */
+                /* Forzar colores fuera de media print tambi?n */
                 .datos-asociado {
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
@@ -6236,7 +6867,7 @@
                 }
             `;
             
-            // Escribir el contenido en la ventana de impresión con todos los estilos
+            // Escribir el contenido en la ventana de impresi?n con todos los estilos
             ventanaImpresion.document.write(`
                 <!DOCTYPE html>
                 <html>
@@ -6298,7 +6929,7 @@
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Comprobante de Transacción</title>
+                    <title>Comprobante de Transacci?n</title>
                     <style>
                         body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
                         .comprobante { height: auto !important; }

@@ -7,14 +7,14 @@
     <style>
         @page {
             size: 8.5in 11in;
-            margin: 0.5in;
+            margin: 0.45in 0.168in;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 20px;
-            font-size: 12px;
+            padding: 6px 8px;
+            font-size: 11px;
             line-height: 1.4;
             background-color: white;
             color: #333;
@@ -32,13 +32,12 @@
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #2c3e50;
+            margin-bottom: 10px;
+            padding-bottom: 4px;
         }
         
         .logo {
-            margin-bottom: 15px;
+            margin-bottom: 6px;
         }
         
         .logo img {
@@ -47,50 +46,60 @@
         }
         
         .cooperativa-nombre {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         
         .titulo-reporte {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 700;
             color: #2c3e50;
-            margin-top: 15px;
+            margin-top: 2px;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
         
         .datos-filtro {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border: 1px solid #dee2e6;
             border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 25px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
         }
         
         .datos-filtro h3 {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             text-transform: uppercase;
             border-bottom: 1px solid #ced4da;
-            padding-bottom: 8px;
+            padding-bottom: 4px;
+        }
+        
+        .datos-filtro .campos-filtro {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: nowrap;
         }
         
         .datos-filtro .campo {
-            display: flex;
-            margin-bottom: 8px;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 0;
         }
-        
+
         .datos-filtro .campo-label {
             font-weight: 600;
             color: #495057;
-            min-width: 150px;
+            min-width: auto;
+            margin-right: 6px;
+            white-space: nowrap;
         }
         
         .datos-filtro .campo-label::after {
@@ -104,10 +113,22 @@
         
         .tabla-datos {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-bottom: 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        
+        /* CODIGO/TRAN −40% sobre 18%; Fecha +15%; más espacio Asociado y Tipo; resto coherente al 100% */
+        .tabla-datos .col-no { width: 6.25%; }
+        .tabla-datos .col-fecha { width: 8.38%; }
+        .tabla-datos .col-asociado { width: 19.05%; }
+        .tabla-datos .col-codigo-tran { width: 10.8%; }
+        .tabla-datos .col-rubro { width: 10.87%; }
+        .tabla-datos .col-cuenta { width: 10.395%; }
+        .tabla-datos .col-tipo { width: 16.64%; }
+        .tabla-datos .col-dr { width: 8.807%; }
+        .tabla-datos .col-cr { width: 8.807%; }
         
         .tabla-datos thead {
             background: #2c3e50;
@@ -115,27 +136,86 @@
         }
         
         .tabla-datos thead th {
-            padding: 12px 8px;
+            padding: 8px 4px;
             text-align: center;
             font-weight: 600;
-            font-size: 11px;
+            font-size: 10px;
             text-transform: uppercase;
             border: 1px solid #1a252f;
         }
         
+        .tabla-datos thead th.col-no {
+            text-transform: none;
+        }
+        
         .tabla-datos tbody td {
-            padding: 10px 8px;
+            padding: 6px 4px;
             text-align: center;
             border: 1px solid #dee2e6;
-            font-size: 11px;
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .tabla-datos tbody td.col-codigo-tran {
+            white-space: normal;
+            word-break: break-word;
+        }
+        
+        .tabla-datos tbody td.col-asociado {
+            white-space: normal;
+            word-break: break-word;
+        }
+        
+        .tabla-datos tbody td.col-rubro {
+            white-space: normal;
+            word-break: break-word;
+        }
+        
+        .tabla-datos thead th.col-dr,
+        .tabla-datos thead th.col-cr,
+        .tabla-datos tbody td.col-dr,
+        .tabla-datos tbody td.col-cr,
+        .tabla-datos tbody td.monto.col-dr,
+        .tabla-datos tbody td.monto.col-cr {
+            text-align: center !important;
         }
         
         .tabla-datos tbody tr:nth-child(even) {
             background-color: #f8f9fa;
         }
         
+        .grupo-resumen-cierre {
+            margin-bottom: 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .grupo-resumen-cierre-header {
+            background: #5a9fd4;
+            color: #fff;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 8px 12px;
+            text-transform: uppercase;
+        }
+
+        .tabla-resumen-cierre th.col-num,
+        .tabla-resumen-cierre td.col-num {
+            text-align: center;
+            width: 8%;
+        }
+
+        .tabla-resumen-cierre th.col-monto,
+        .tabla-resumen-cierre td.col-monto {
+            text-align: right;
+            width: 14%;
+        }
+
         .grupo-rubro {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         
         .grupo-rubro-header {
@@ -150,20 +230,68 @@
         
         .grupo-rubro-total {
             background: #e9ecef;
-            padding: 10px 15px;
+            padding: 8px 12px;
             font-weight: 600;
             font-size: 11px;
-            text-align: right;
             border: 1px solid #dee2e6;
             border-top: none;
             border-radius: 0 0 4px 4px;
+            margin-top: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            text-align: right;
         }
         
         .grupo-rubro-total .total-label {
-            display: inline-block;
-            min-width: 150px;
+            margin-right: auto;
             text-align: left;
+            min-width: 0;
         }
+        
+        .total-registros {
+            color: #495057;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .totales-badges {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            gap: 8px;
+        }
+        
+        .badge-total {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-sizing: border-box;
+            width: 12rem;
+            min-height: 2rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: Consolas, 'Segoe UI Mono', monospace;
+            white-space: nowrap;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .badge-total .badge-nombre {
+            font-weight: 700;
+            opacity: 0.95;
+        }
+        
+        /* DR / CR pastel; BAL según signo */
+        .badge-total-dr { background: #c8e6c9; color: #1b5e20; border: 1px solid #a5d6a7; }
+        .badge-total-cr { background: #ffcdd2; color: #b71c1c; border: 1px solid #ef9a9a; }
+        .badge-total-bal-pos { background: #c8e6c9; color: #1b5e20; border: 1px solid #a5d6a7; }
+        .badge-total-bal-neg { background: #ffcdd2; color: #b71c1c; border: 1px solid #ef9a9a; }
         
         .total-general {
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
@@ -171,20 +299,33 @@
             padding: 15px;
             font-weight: 700;
             font-size: 13px;
-            text-align: right;
             border-radius: 4px;
             margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            text-align: right;
         }
         
         .total-general .total-label {
-            display: inline-block;
-            min-width: 150px;
+            margin-right: auto;
             text-align: left;
+            min-width: 0;
+        }
+        
+        .total-general .total-registros {
+            color: #e9ecef;
         }
         
         .monto {
             font-family: 'monospace';
-            text-align: right;
+        }
+        
+        .tabla-datos .monto.col-dr,
+        .tabla-datos .monto.col-cr {
+            text-align: center;
         }
         
         .monto-cr {
@@ -236,20 +377,25 @@
         <!-- Datos del Filtro -->
         <div class="datos-filtro">
             <h3>Datos del Reporte</h3>
-            <div class="campo">
-                <span class="campo-label">Usuario</span>
-                <span class="campo-valor">@Usuario</span>
-            </div>
-            <div class="campo">
-                <span class="campo-label">Fecha Desde</span>
-                <span class="campo-valor">@FechaDesde</span>
-            </div>
-            <div class="campo">
-                <span class="campo-label">Fecha Hasta</span>
-                <span class="campo-valor">@FechaHasta</span>
+            <div class="campos-filtro">
+                <div class="campo">
+                    <span class="campo-label">Usuario</span>
+                    <span class="campo-valor">@Usuario</span>
+                </div>
+                <div class="campo">
+                    <span class="campo-label">Fecha Desde</span>
+                    <span class="campo-valor">@FechaDesde</span>
+                </div>
+                <div class="campo">
+                    <span class="campo-label">Fecha Hasta</span>
+                    <span class="campo-valor">@FechaHasta</span>
+                </div>
             </div>
         </div>
         
+        <!-- Resumen de cierre -->
+        @ContenidoResumen
+
         <!-- Contenido Agrupado por Rubro -->
         @ContenidoRubros
         

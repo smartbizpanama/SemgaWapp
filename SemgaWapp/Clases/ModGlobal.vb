@@ -1,4 +1,7 @@
-Imports System.Data.SqlClient
+Imports System.Data
+Imports System.Globalization
+Imports System.IO
+Imports System.Net
 Imports System.Web
 Imports System.Web.Script.Serialization
 Imports SBSqlClient
@@ -52,38 +55,7 @@ Module ModGlobal
     End Sub
 
 
-    Sub escribirLogBD(Mensaje As String)
-        Dim Cnn As String = ConfigurationManager.AppSettings("ConnectionString").Trim
-        Dim uDBA As SBSqlClientInterface = GetDbaObject(Cnn)
-
-        Dim sSql As String = "Exec spSysAppLogAdd"
-
-        With uDBA.Parametros
-            .Add("@Men", Mensaje)
-            .Add("@SID", System.Web.HttpContext.Current.Session(VariablesSesion.logID))
-        End With
-
-        ' Escribir solo a archivo para evitar recursión (EscribirLog -> escribirLogBD -> EscribirLog -> ...)
-        EscribirLogSoloArchivo("Ejecutando: " & sSql & " " & uDBA.getParamList())
-        Try
-            Try
-                uDBA.ExecuteNonQuerySql(sSql)
-                If uDBA.MensajeError <> "" Then
-                    EscribirLogSoloArchivo("BD ERROR: LogAdd - " & uDBA.MensajeError)
-                Else
-                    EscribirLogSoloArchivo("BD OK: LogAdd")
-                End If
-            Catch ex As SqlException
-                EscribirLogSoloArchivo("BD ERROR: LogAdd - " & ex.Message)
-                log.WriteTxt("[ID.S: " & System.Web.HttpContext.Current.Session(VariablesSesion.logID) & "] - " & ex.Message)
-            End Try
-        Catch ex As Exception
-            EscribirLogSoloArchivo("BD ERROR: LogAdd - " & ex.Message)
-            log.WriteTxt("[ID.S: " & System.Web.HttpContext.Current.Session(VariablesSesion.logID) & "] - " & ex.Message)
-        End Try
-    End Sub
-
-    ''' <summary>Escribe al log solo en archivo, sin pasar por BD. Evita recursión cuando ya estamos en escribirLogBD.</summary>
+    ''' <summary>Escribe al log solo en archivo, sin pasar por BD.</summary>
     Private Sub EscribirLogSoloArchivo(mensaje As String)
         If log Is Nothing Then
             Debug.WriteLine(mensaje)
@@ -112,16 +84,8 @@ Module ModGlobal
             Debug.WriteLine(Mensaje)
             Return
         End If
-        Select Case LogType
-            Case 0
-                escribirLogFile(Mensaje)
-            Case 1
-                escribirLogBD(Mensaje)
-            Case 2
-                escribirLogFile(Mensaje)
-                escribirLogBD(Mensaje)
-        End Select
-
+        ' LogType 0/1/2: todo a archivo (spSysAppLogAdd deshabilitado). LogType 1/2 siguen afectando solo IniciarSesionLog (spSysAppLogInicioSesion).
+        escribirLogFile(Mensaje)
         Debug.WriteLine(Mensaje)
     End Sub
 
@@ -470,6 +434,123 @@ Module ModGlobal
             Return True
         End If
         Return False
+    End Function
+
+    ''' <summary>Formato solicitado para encabezados: dd/MM/yyyy y hora 12 h con am/pm.</summary>
+    Public Function FormatearFechaHoraTituloReferencia(value As DateTime) As String
+        Dim s As String = value.ToString("dd/MM/yyyy hh:mm tt", New CultureInfo("en-US"))
+        Return s.Replace(" AM", " am").Replace(" PM", " pm")
+    End Function
+
+    ''' <summary>Zona IANA enviada por el navegador (ej. America/Guatemala). Si es inválida, America/Guatemala.</summary>
+    Public Function NormalizarZonaHorariaCliente(raw As String) As String
+        Const fallback As String = "America/Guatemala"
+        If String.IsNullOrWhiteSpace(raw) Then Return fallback
+        Dim t As String = raw.Trim()
+        If t.Length > 90 OrElse t.Length < 3 Then Return fallback
+        For Each c As Char In t
+            If Not (Char.IsLetterOrDigit(c) OrElse c = "/"c OrElse c = "_"c OrElse c = "-"c) Then
+                Return fallback
+            End If
+        Next
+        If t.Contains("..") Then Return fallback
+        Return t.Replace("\"c, "/"c)
+    End Function
+
+    ''' <summary>Hora civil en la zona del usuario (WorldTimeAPI + respaldo timeapi.io). No usar /api/ip: es la IP del servidor.</summary>
+    Public Function IntentarObtenerFechaHoraInternetParaZona(timeZoneCliente As String) As DateTime?
+        Dim zona As String = NormalizarZonaHorariaCliente(timeZoneCliente)
+        Try
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 Or SecurityProtocolType.Tls11 Or SecurityProtocolType.Tls
+        Catch
+        End Try
+
+        Dim urlWorld As String = "https://worldtimeapi.org/api/timezone/" & zona
+        Try
+            Dim json As String = DescargarTextoHttpGet(urlWorld, 9000)
+            If Not String.IsNullOrWhiteSpace(json) Then
+                Dim ser As New JavaScriptSerializer()
+                Dim d As Dictionary(Of String, Object) = ser.Deserialize(Of Dictionary(Of String, Object))(json)
+                If d IsNot Nothing AndAlso d.ContainsKey("datetime") AndAlso d("datetime") IsNot Nothing Then
+                    Dim s As String = d("datetime").ToString()
+                    Dim dto As DateTimeOffset
+                    If DateTimeOffset.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, dto) Then
+                        Return dto.DateTime
+                    End If
+                    If DateTimeOffset.TryParse(s, dto) Then
+                        Return dto.DateTime
+                    End If
+                End If
+            End If
+        Catch ex As Exception
+            EscribirLog("IntentarObtenerFechaHoraInternetParaZona WorldTime " & urlWorld & ": " & ex.Message)
+        End Try
+
+        Try
+            Dim urlIo As String = "https://timeapi.io/api/Time/current/zone?timeZone=" & Uri.EscapeDataString(zona)
+            Dim json2 As String = DescargarTextoHttpGet(urlIo, 9000)
+            If Not String.IsNullOrWhiteSpace(json2) Then
+                Dim ser2 As New JavaScriptSerializer()
+                Dim d2 As Dictionary(Of String, Object) = ser2.Deserialize(Of Dictionary(Of String, Object))(json2)
+                If d2 IsNot Nothing AndAlso d2.ContainsKey("dateTime") AndAlso d2("dateTime") IsNot Nothing Then
+                    Dim s2 As String = d2("dateTime").ToString()
+                    Dim dto2 As DateTimeOffset
+                    If DateTimeOffset.TryParse(s2, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, dto2) Then
+                        Return dto2.DateTime
+                    End If
+                    If DateTimeOffset.TryParse(s2, dto2) Then
+                        Return dto2.DateTime
+                    End If
+                End If
+            End If
+        Catch ex As Exception
+            EscribirLog("IntentarObtenerFechaHoraInternetParaZona timeapi.io: " & ex.Message)
+        End Try
+
+        Return Nothing
+    End Function
+
+    Private Function DescargarTextoHttpGet(url As String, timeoutMs As Integer) As String
+        Dim req As HttpWebRequest = DirectCast(WebRequest.Create(url), HttpWebRequest)
+        req.Method = "GET"
+        req.Timeout = timeoutMs
+        req.ReadWriteTimeout = timeoutMs
+        req.UserAgent = "SemgaWapp/1.0 (referencia de hora)"
+        Using resp As HttpWebResponse = DirectCast(req.GetResponse(), HttpWebResponse)
+            Using sr As New StreamReader(resp.GetResponseStream())
+                Return sr.ReadToEnd()
+            End Using
+        End Using
+    End Function
+
+    ''' <summary>GETDATE() en SQL Server y hora de referencia en internet para la zona del navegador (IANA).</summary>
+    Public Function ObtenerFechasReferenciaParaTitulo(connectionStringEncrypted As String, timeZoneCliente As String) As Object
+        Dim fechaSistema As DateTime = DateTime.Now
+        Try
+            If Not String.IsNullOrWhiteSpace(connectionStringEncrypted) Then
+                Dim objSql As SBSqlClientInterface = GetDbaObject(connectionStringEncrypted)
+                If objSql IsNot Nothing Then
+                    Dim dt As DataTable = objSql.GetDataTableSql("SELECT CAST(GETDATE() AS datetime2(0)) AS ServerNow")
+                    If String.IsNullOrEmpty(objSql.MensajeError) AndAlso dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
+                        fechaSistema = Convert.ToDateTime(dt.Rows(0)("ServerNow"))
+                    ElseIf Not String.IsNullOrEmpty(objSql.MensajeError) Then
+                        EscribirLog("ObtenerFechasReferenciaParaTitulo GETDATE: " & objSql.MensajeError)
+                    End If
+                End If
+            End If
+        Catch ex As Exception
+            EscribirLog("ObtenerFechasReferenciaParaTitulo GETDATE ex: " & ex.Message)
+        End Try
+
+        Dim fechaReal As DateTime? = IntentarObtenerFechaHoraInternetParaZona(timeZoneCliente)
+        Dim textoReal As String = If(fechaReal.HasValue, FormatearFechaHoraTituloReferencia(fechaReal.Value), "No disponible")
+
+        Return New With {
+            .Resultado = "SUCCESS",
+            .FechaReal = textoReal,
+            .FechaSistema = FormatearFechaHoraTituloReferencia(fechaSistema),
+            .FechaRealOk = fechaReal.HasValue
+        }
     End Function
 
 End Module

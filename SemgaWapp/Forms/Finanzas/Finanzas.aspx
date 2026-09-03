@@ -163,17 +163,56 @@
             cursor: pointer !important;
             opacity: 1 !important;
         }
+
+        .header-title-with-fechas {
+            min-width: 0;
+        }
+        .header-fechas-ref .fecha-ref-pill {
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid transparent;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+        .header-fechas-ref .fecha-ref-pill--real {
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+        .header-fechas-ref .fecha-ref-pill--sistema {
+            background: linear-gradient(135deg, #ca8a04 0%, #eab308 100%);
+            color: #422006;
+            border-color: rgba(66, 32, 6, 0.25);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+        .header-fechas-ref .fecha-ref-pill strong {
+            font-weight: 600;
+            margin-right: 4px;
+        }
     </style>
 </head>
 <body>
     <form id="form1" runat="server">
         <div class="main-wrapper">
             <div class="card shadow-sm">
-                <div class="card-header d-flex align-items-center justify-content-between">
-                    <h5 class="mb-0"><i class="fas fa-balance-scale me-2"></i>Registro de Asientos Contables</h5>
-                    <button type="button" class="btn btn-light btn-sm" onclick="volverDashboard()">
-                        <i class="fas fa-arrow-left me-1"></i>Volver
-                    </button>
+                <div class="card-header">
+                    <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 w-100">
+                        <div class="flex-grow-1 min-width-0">
+                            <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3 header-title-with-fechas">
+                                <h5 class="mb-0 flex-shrink-0 align-self-center"><i class="fas fa-balance-scale me-2"></i>Registro de Asientos Contables</h5>
+                                <div id="fechasReferenciaHeader" class="header-fechas-ref d-flex flex-wrap align-items-center gap-2 flex-grow-1 min-width-0" aria-live="polite"></div>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <button type="button" class="btn btn-light btn-sm" onclick="volverDashboard()">
+                                <i class="fas fa-arrow-left me-1"></i>Volver
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="mb-4">
@@ -358,7 +397,37 @@
             return isoCandidate;
         }
 
+        function semgaCargarFechasReferenciaTitulo(endpoint) {
+            var tz = '';
+            try {
+                tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+            } catch (e) { }
+            $.ajax({
+                type: 'POST',
+                url: endpoint,
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ timeZoneCliente: tz }),
+                dataType: 'json',
+                success: function (response) {
+                    var d = response.d;
+                    if (!d || d.Resultado !== 'SUCCESS') return;
+                    var $c = $('#fechasReferenciaHeader');
+                    if (!$c.length) return;
+                    var $p1 = $('<span class="fecha-ref-pill fecha-ref-pill--real"></span>')
+                        .append($('<i class="fas fa-globe-americas me-1" aria-hidden="true"></i>'))
+                        .append($('<strong></strong>').text('Fecha real: '))
+                        .append($('<span></span>').text(d.FechaReal || ''));
+                    var $p2 = $('<span class="fecha-ref-pill fecha-ref-pill--sistema"></span>')
+                        .append($('<i class="fas fa-database me-1" aria-hidden="true"></i>'))
+                        .append($('<strong></strong>').text('Fecha sistema: '))
+                        .append($('<span></span>').text(d.FechaSistema || ''));
+                    $c.empty().append($p1, $p2);
+                }
+            });
+        }
+
         $(document).ready(function () {
+            semgaCargarFechasReferenciaTitulo('Finanzas.aspx/ObtenerFechasReferenciaTitulo');
             inicializarFormulario();
         });
 

@@ -192,6 +192,14 @@
             background: linear-gradient(135deg, #6f42c1, #e83e8c);
         }
 
+        .resumen-asociados-tile .tile-icon {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+        }
+
+        .auxiliares-tile .tile-icon {
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .header {
@@ -247,6 +255,8 @@
         .tile:nth-child(2) { animation-delay: 0.1s; }
         .tile:nth-child(3) { animation-delay: 0.15s; }
         .tile:nth-child(4) { animation-delay: 0.2s; }
+        .tile:nth-child(5) { animation-delay: 0.25s; }
+        .tile:nth-child(6) { animation-delay: 0.3s; }
     </style>
 </head>
 <body>
@@ -318,6 +328,28 @@
                     <div class="tile-title">Asientos</div>
                     <div class="tile-description">
                         Consultar asientos contables por rango de fechas
+                    </div>
+                </div>
+
+                <!-- Resumen Asociados (IdMenu 38; permiso por URL igual que menú principal) -->
+                <div class="tile resumen-asociados-tile" data-url="forms/reportes/resumenasociados.aspx" onclick="window.location.href='ResumenAsociados.aspx'">
+                    <div class="tile-icon">
+                        <i class="fa-solid fa-users-rays"></i>
+                    </div>
+                    <div class="tile-title">Resumen Asociados</div>
+                    <div class="tile-description">
+                        Consultar el resumen de asociados según los criterios del reporte
+                    </div>
+                </div>
+
+                <!-- Auxiliares (IdMenu 39) -->
+                <div class="tile auxiliares-tile" data-url="forms/reportes/auxiliares.aspx" onclick="window.location.href='Auxiliares.aspx'">
+                    <div class="tile-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="tile-title">Auxiliares</div>
+                    <div class="tile-description">
+                        Consultar auxiliares por rubro, tipo y asociado
                     </div>
                 </div>
             </div>

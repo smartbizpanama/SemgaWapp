@@ -634,6 +634,23 @@
             font-size: 0.95rem;
             padding: 0.4em 0.65em;
         }
+
+        /* Encabezados ordenables */
+        #tblCuentas th.sortable-cuenta {
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        #tblCuentas th.sortable-cuenta:hover {
+            background-color: #3b5266;
+            color: #fff;
+        }
+
+        #tblCuentas th .sort-icon {
+            font-size: 12px;
+            margin-left: 4px;
+        }
         
     </style>
 </head>
@@ -1854,19 +1871,32 @@
                                 <div class="col-md-3">
                                     <div class="d-flex align-items-center">
                                         <label class="form-label me-2 mb-0">Código:</label>
-                                        <input type="text" id="txtFiltroCodigoCuenta" class="form-control" placeholder="Buscar código..."/>
+                                        <div class="input-group">
+                                            <input type="text" id="txtFiltroCodigoCuenta" class="form-control" placeholder="Buscar código..."/>
+                                            <button type="button" class="btn btn-outline-secondary btn-limpiar-campo-cuenta" data-target="txtFiltroCodigoCuenta" title="Limpiar">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-3">
+                                    <div class="d-flex align-items-center">
+                                        <label class="form-label me-2 mb-0">Nombre:</label>
+                                        <div class="input-group">
+                                            <input type="text" id="txtFiltroNombreCuenta" class="form-control" placeholder="Buscar nombre..."/>
+                                            <button type="button" class="btn btn-outline-secondary btn-limpiar-campo-cuenta" data-target="txtFiltroNombreCuenta" title="Limpiar">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
                                     <div class="d-flex align-items-end gap-2">
                                         <button type="button" id="btnNuevoCuenta" class="btn btn-primary">
                                             <i class="fas fa-plus me-1"></i>Nuevo
                                         </button>
-                                        <button type="button" id="btnBuscarCuentas" class="btn btn-outline-primary">
-                                            <i class="fas fa-search me-1"></i>Buscar
-                                        </button>
                                         <button type="button" id="btnLimpiarFiltrosCuenta" class="btn btn-outline-secondary">
-                                            <i class="fas fa-times me-1"></i>Limpiar
+                                            <i class="fas fa-eraser me-1"></i>Limpiar todo
                                         </button>
                                     </div>
                                 </div>
@@ -1877,12 +1907,12 @@
                                 <table id="tblCuentas" class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
-                                            <th>Cuenta</th>
-                                            <th>Nombre</th>
-                                            <th>Grupo</th>
-                                            <th>Imputable</th>
-                                            <th class="text-end">Saldo</th>
+                                            <th class="sortable-cuenta" data-col="ID">ID <i class="fas fa-sort sort-icon text-muted"></i></th>
+                                            <th class="sortable-cuenta" data-col="Cuenta">Cuenta <i class="fas fa-sort sort-icon text-muted"></i></th>
+                                            <th class="sortable-cuenta" data-col="Nombre">Nombre <i class="fas fa-sort sort-icon text-muted"></i></th>
+                                            <th class="sortable-cuenta" data-col="Grupo">Grupo <i class="fas fa-sort sort-icon text-muted"></i></th>
+                                            <th class="sortable-cuenta" data-col="Imputable">Imputable <i class="fas fa-sort sort-icon text-muted"></i></th>
+                                            <th class="sortable-cuenta text-end" data-col="Saldo">Saldo <i class="fas fa-sort sort-icon text-muted"></i></th>
                                             <th>Acciones</th>
                                         </tr>
                                     </thead>
@@ -9658,10 +9688,33 @@
 			});
 		}
 
+		let ordenActualCuenta = { col: null, dir: 'ASC' };
+		let debounceFiltroCuenta = null;
+
+		function cargarCuentasDebounced() {
+			clearTimeout(debounceFiltroCuenta);
+			debounceFiltroCuenta = setTimeout(cargarCuentas, 350);
+		}
+
+		function actualizarIconosOrdenCuenta() {
+			$('#tblCuentas thead th.sortable-cuenta').each(function () {
+				const $icon = $(this).find('.sort-icon');
+				if ($(this).data('col') === ordenActualCuenta.col) {
+					$icon.removeClass('fa-sort text-muted')
+						.addClass(ordenActualCuenta.dir === 'ASC' ? 'fa-sort-up' : 'fa-sort-down');
+				} else {
+					$icon.removeClass('fa-sort-up fa-sort-down').addClass('fa-sort text-muted');
+				}
+			});
+		}
+
 		function cargarCuentas() {
 			const filtros = {
 				IDGrupo: $('#ddlFiltroGrupoCuenta').val() || null,
-				Codigo: $('#txtFiltroCodigoCuenta').val() || null
+				Codigo: $('#txtFiltroCodigoCuenta').val() || null,
+				Nombre: $('#txtFiltroNombreCuenta').val() || null,
+				OrderBy: ordenActualCuenta.col,
+				OrderDir: ordenActualCuenta.dir
 			};
 
 			$.ajax({
@@ -9745,7 +9798,31 @@
 				}
 			});
 
-			$('#btnBuscarCuentas').on('click', function () {
+			$('#ddlFiltroGrupoCuenta').on('change', function () {
+				cargarCuentas();
+			});
+
+			$('#txtFiltroCodigoCuenta, #txtFiltroNombreCuenta').on('input', cargarCuentasDebounced);
+			$('#txtFiltroCodigoCuenta, #txtFiltroNombreCuenta').on('keypress', function (e) {
+				if (e.which === 13) { e.preventDefault(); clearTimeout(debounceFiltroCuenta); cargarCuentas(); }
+			});
+
+			$('.btn-limpiar-campo-cuenta').on('click', function () {
+				const target = $(this).data('target');
+				$('#' + target).val('');
+				clearTimeout(debounceFiltroCuenta);
+				cargarCuentas();
+			});
+
+			$('#tblCuentas thead').on('click', 'th.sortable-cuenta', function () {
+				const col = $(this).data('col');
+				if (ordenActualCuenta.col === col) {
+					ordenActualCuenta.dir = (ordenActualCuenta.dir === 'ASC') ? 'DESC' : 'ASC';
+				} else {
+					ordenActualCuenta.col = col;
+					ordenActualCuenta.dir = 'ASC';
+				}
+				actualizarIconosOrdenCuenta();
 				cargarCuentas();
 			});
 
@@ -9787,6 +9864,9 @@
 		function limpiarFiltrosCuenta() {
 			$('#ddlFiltroGrupoCuenta').val('');
 			$('#txtFiltroCodigoCuenta').val('');
+			$('#txtFiltroNombreCuenta').val('');
+			ordenActualCuenta = { col: null, dir: 'ASC' };
+			actualizarIconosOrdenCuenta();
 			cargarCuentas();
 		}
 

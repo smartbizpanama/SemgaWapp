@@ -188,6 +188,10 @@
             background: linear-gradient(135deg, #ffc107, #e0a800);
         }
 
+        .saldos-tile .tile-icon {
+            background: linear-gradient(135deg, #6f42c1, #59359a);
+        }
+
         .backup-tile .tile-icon {
             background: linear-gradient(135deg, #dc3545, #c82333);
         }
@@ -473,6 +477,17 @@
                     <div class="tile-title">Tablas de Tipo</div>
                     <div class="tile-description">
                         Mantenimientos de tablas de tipo del sistema
+                    </div>
+                </div>
+
+                <!-- Saldos Contables -->
+                <div class="tile saldos-tile" data-url="forms/mantenimientos/saldoscontables.aspx" onclick="window.location.href='SaldosContables.aspx'">
+                    <div class="tile-icon">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div class="tile-title">Saldos Contables</div>
+                    <div class="tile-description">
+                        Consultar y ajustar los saldos de las cuentas contables
                     </div>
                 </div>
 

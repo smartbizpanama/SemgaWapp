@@ -4362,6 +4362,15 @@ Public Class Mantenimientos
 					If Not String.IsNullOrEmpty(filtrosDict("Codigo")?.ToString()) Then
 						objSql.Parametros.Add("@Codigo", filtrosDict("Codigo").ToString())
 					End If
+					If filtrosDict.ContainsKey("Nombre") AndAlso Not String.IsNullOrEmpty(filtrosDict("Nombre")?.ToString()) Then
+						objSql.Parametros.Add("@Nombre", filtrosDict("Nombre").ToString())
+					End If
+					If filtrosDict.ContainsKey("OrderBy") AndAlso Not String.IsNullOrEmpty(filtrosDict("OrderBy")?.ToString()) Then
+						objSql.Parametros.Add("@OrderBy", filtrosDict("OrderBy").ToString())
+					End If
+					If filtrosDict.ContainsKey("OrderDir") AndAlso Not String.IsNullOrEmpty(filtrosDict("OrderDir")?.ToString()) Then
+						objSql.Parametros.Add("@OrderDir", filtrosDict("OrderDir").ToString())
+					End If
 				End If
 			End If
 			ModGlobal.EscribirLog($"Ejecutando SQL: {sSql} {objSql.getParamList()}")

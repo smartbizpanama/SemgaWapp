@@ -8,6 +8,7 @@ Imports Newtonsoft.Json
 Imports Newtonsoft.Json.Linq
 Imports System.Web.Security
 Imports System.Text
+Imports System.Web
 
 Public Class GestionSocios
     Inherits BasePage
@@ -2272,6 +2273,205 @@ Public Class GestionSocios
             result("Resultado") = "ERROR"
             result("Mensaje") = "Error al generar estado de cuenta: " & ex.Message
             Return serializer.Serialize(result)
+        End Try
+    End Function
+
+    Private Shared Function EdcrRowStr(r As DataRow, col As String) As String
+        If r Is Nothing OrElse Not r.Table.Columns.Contains(col) OrElse r.IsNull(col) Then Return ""
+        Return r(col).ToString().Trim()
+    End Function
+
+    Private Shared Function EdcrRowDec(r As DataRow, col As String) As Decimal
+        If r Is Nothing OrElse Not r.Table.Columns.Contains(col) OrElse r.IsNull(col) Then Return 0D
+        Return Convert.ToDecimal(r(col))
+    End Function
+
+    Private Shared Function FormatearMontoEdcr(valor As Decimal) As String
+        Return valor.ToString("$###,###,##0.00", System.Globalization.CultureInfo.InvariantCulture)
+    End Function
+
+    Private Shared Function FormatearFechaYyyyMmDd(fechaYyyyMmDd As String) As String
+        If String.IsNullOrEmpty(fechaYyyyMmDd) OrElse fechaYyyyMmDd.Length <> 8 Then Return ""
+        Return fechaYyyyMmDd.Substring(6, 2) & "/" & fechaYyyyMmDd.Substring(4, 2) & "/" & fechaYyyyMmDd.Substring(0, 4)
+    End Function
+
+    Private Shared Function ConstruirHtmlContenidoEstadoCuentaRegular(dt As DataTable) As String
+        If dt Is Nothing OrElse dt.Rows.Count = 0 Then
+            Return "<p style=""padding:16px;color:#6c757d;text-align:center;"">No se encontraron movimientos en el período indicado.</p>"
+        End If
+
+        Dim sb As New StringBuilder()
+        Dim totalGenDR As Decimal = 0
+        Dim totalGenCR As Decimal = 0
+        Dim totalGenCant As Integer = 0
+        Dim totalGenSaldo As Decimal = 0
+
+        Dim i As Integer = 0
+        While i < dt.Rows.Count
+            Dim auxEtiqueta As String = EdcrRowStr(dt.Rows(i), "AuxiliarEtiqueta")
+            Dim cuenta As String = EdcrRowStr(dt.Rows(i), "Cuenta")
+            Dim idAux As String = EdcrRowStr(dt.Rows(i), "IDAuxiliar")
+
+            sb.AppendLine("<div class=""grupo-cuenta"">")
+            sb.AppendLine("<div class=""grupo-cuenta-header"">AUXILIAR: " & HttpUtility.HtmlEncode(auxEtiqueta) & "</div>")
+            sb.AppendLine("<div class=""grupo-cuenta-subheader"">CUENTA: " & HttpUtility.HtmlEncode(cuenta) & "</div>")
+            sb.AppendLine("<table class=""tabla-movimientos""><thead><tr>")
+            sb.AppendLine("<th class=""col-fecha"">Fecha de transacción</th>")
+            sb.AppendLine("<th class=""col-codigo"">Código de transacción</th>")
+            sb.AppendLine("<th class=""col-desc"">Descripción</th>")
+            sb.AppendLine("<th class=""col-monto"">Monto débito</th>")
+            sb.AppendLine("<th class=""col-monto"">Monto crédito</th>")
+            sb.AppendLine("<th class=""col-monto"">Saldo</th>")
+            sb.AppendLine("</tr></thead><tbody>")
+
+            Dim subDR As Decimal = 0
+            Dim subCR As Decimal = 0
+            Dim subCant As Integer = 0
+            Dim saldoFinal As Decimal = 0
+
+            While i < dt.Rows.Count AndAlso EdcrRowStr(dt.Rows(i), "IDAuxiliar") = idAux
+                Dim r As DataRow = dt.Rows(i)
+                Dim mdr As Decimal = EdcrRowDec(r, "MontoDebito")
+                Dim mcr As Decimal = EdcrRowDec(r, "MontoCredito")
+                saldoFinal = EdcrRowDec(r, "Saldo")
+                subDR += mdr
+                subCR += mcr
+                subCant += 1
+                totalGenDR += mdr
+                totalGenCR += mcr
+                totalGenCant += 1
+
+                sb.AppendLine("<tr>")
+                sb.AppendLine("<td class=""col-fecha"">" & HttpUtility.HtmlEncode(EdcrRowStr(r, "FechaTransaccion")) & "</td>")
+                sb.AppendLine("<td class=""col-codigo"">" & HttpUtility.HtmlEncode(EdcrRowStr(r, "CodigoTransaccion")) & "</td>")
+                sb.AppendLine("<td class=""col-desc"">" & HttpUtility.HtmlEncode(EdcrRowStr(r, "DescripcionTransaccion")) & "</td>")
+                sb.AppendLine("<td class=""col-monto"">" & If(mdr <> 0, FormatearMontoEdcr(mdr), "") & "</td>")
+                sb.AppendLine("<td class=""col-monto"">" & If(mcr <> 0, FormatearMontoEdcr(mcr), "") & "</td>")
+                sb.AppendLine("<td class=""col-monto"">" & FormatearMontoEdcr(saldoFinal) & "</td>")
+                sb.AppendLine("</tr>")
+                i += 1
+            End While
+
+            Dim etiquetaSub As String = "TOTAL " & auxEtiqueta.ToUpperInvariant() & " / CUENTA " & cuenta
+            sb.AppendLine("<tr class=""fila-subtotal"">")
+            sb.AppendLine("<td colspan=""3"" class=""subtotal-label"">" & HttpUtility.HtmlEncode(etiquetaSub) &
+                "<span class=""subtotal-cantidad"">(Cantidad: " & subCant.ToString() & ")</span></td>")
+            sb.AppendLine("<td class=""col-monto"">" & FormatearMontoEdcr(subDR) & "</td>")
+            sb.AppendLine("<td class=""col-monto"">" & FormatearMontoEdcr(subCR) & "</td>")
+            sb.AppendLine("<td class=""col-monto"">" & FormatearMontoEdcr(saldoFinal) & "</td>")
+            sb.AppendLine("</tr></tbody></table></div>")
+            totalGenSaldo += saldoFinal
+
+        End While
+
+        sb.AppendLine("<div class=""total-general"">")
+        sb.AppendLine("<span>TOTAL GENERAL</span>")
+        sb.AppendLine("<span class=""totales-montos"">")
+        sb.AppendLine("<span class=""monto-col"">" & FormatearMontoEdcr(totalGenDR) & "<span class=""cantidad-gen"">(" & totalGenCant.ToString() & ")</span></span>")
+        sb.AppendLine("<span class=""monto-col"">" & FormatearMontoEdcr(totalGenCR) & "<span class=""cantidad-gen"">(" & totalGenCant.ToString() & ")</span></span>")
+        sb.AppendLine("<span class=""monto-col"">" & FormatearMontoEdcr(totalGenSaldo) & "</span>")
+        sb.AppendLine("</span></div>")
+
+        Return sb.ToString()
+    End Function
+
+    <WebMethod(EnableSession:=True)>
+    <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+    Public Shared Function GenerarEstadoCuentaRegular(numeroAsociado As String, fechaDesde As String, fechaHasta As String) As String
+        Dim serializer As New JavaScriptSerializer()
+
+        Try
+            ModGlobal.EscribirLog("GenerarEstadoCuentaRegular iniciado. NumeroAsociado: " & numeroAsociado)
+
+            If String.IsNullOrWhiteSpace(numeroAsociado) Then
+                Return serializer.Serialize(New Dictionary(Of String, Object) From {
+                    {"Resultado", "ERROR"},
+                    {"Mensaje", "El número de asociado es obligatorio"}
+                })
+            End If
+
+            If String.IsNullOrWhiteSpace(fechaDesde) OrElse fechaDesde.Length <> 8 Then
+                Return serializer.Serialize(New Dictionary(Of String, Object) From {
+                    {"Resultado", "ERROR"},
+                    {"Mensaje", "La fecha desde es obligatoria (formato yyyyMMdd)"}
+                })
+            End If
+
+            If String.IsNullOrWhiteSpace(fechaHasta) OrElse fechaHasta.Length <> 8 Then
+                Return serializer.Serialize(New Dictionary(Of String, Object) From {
+                    {"Resultado", "ERROR"},
+                    {"Mensaje", "La fecha hasta es obligatoria (formato yyyyMMdd)"}
+                })
+            End If
+
+            Dim uDBA As SBSqlClientInterface = GetDbaObject(HttpContext.Current.Session(VariablesSesion.ConnectionString))
+            uDBA.Parametros.Clear()
+
+            Dim sSql As String = "Exec spAsociados_EstadoCuentaRegular"
+            With uDBA.Parametros
+                .Add("@NumeroAsociado", Integer.Parse(numeroAsociado))
+                .Add("@FechaDesde", fechaDesde)
+                .Add("@FechaHasta", fechaHasta)
+            End With
+
+            Dim dt As DataTable = uDBA.GetDataTableSql(sSql)
+
+            If uDBA.MensajeError <> "" Then
+                ModGlobal.EscribirLog("Error en BD al obtener estado de cuenta regular: " & uDBA.MensajeError)
+                Return serializer.Serialize(New Dictionary(Of String, Object) From {
+                    {"Resultado", "ERROR"},
+                    {"Mensaje", "Error en la base de datos: " & uDBA.MensajeError}
+                })
+            End If
+
+            Dim nombreCompleto As String = ""
+            Dim tipoId As String = ""
+            Dim numeroId As String = ""
+
+            If dt.Rows.Count > 0 Then
+                Dim primera As DataRow = dt.Rows(0)
+                nombreCompleto = EdcrRowStr(primera, "NombreCompleto")
+                tipoId = EdcrRowStr(primera, "TipoIdentificacion")
+                numeroId = EdcrRowStr(primera, "NumeroIdentificacion")
+            Else
+                uDBA.Parametros.Clear()
+                Dim sSqlAsoc As String = "SELECT Nombre, SegundoNombre, Apellido, SegundoApellido, TipoIdentificacion, NumeroIdentificacion FROM tbAsociados WHERE NumeroAsociado = @NumeroAsociado AND snEliminado = 0"
+                With uDBA.Parametros
+                    .Add("@NumeroAsociado", Integer.Parse(numeroAsociado))
+                End With
+                Dim dtAsoc As DataTable = uDBA.GetDataTableSql(sSqlAsoc)
+                If dtAsoc.Rows.Count > 0 Then
+                    Dim ra As DataRow = dtAsoc.Rows(0)
+                    nombreCompleto = $"{ra("Nombre")} {If(Not IsDBNull(ra("SegundoNombre")), ra("SegundoNombre"), "")} {ra("Apellido")} {If(Not IsDBNull(ra("SegundoApellido")), ra("SegundoApellido"), "")}".Trim()
+                    If Not IsDBNull(ra("TipoIdentificacion")) Then tipoId = ra("TipoIdentificacion").ToString()
+                    If Not IsDBNull(ra("NumeroIdentificacion")) Then numeroId = ra("NumeroIdentificacion").ToString()
+                End If
+            End If
+
+            Dim cedula As String = (tipoId & " " & numeroId).Trim()
+            Dim templatePath As String = HttpContext.Current.Server.MapPath("~/Forms/Socios/EstadoCuentaRegular.html")
+            Dim htmlTemplate As String = System.IO.File.ReadAllText(templatePath)
+
+            htmlTemplate = htmlTemplate.Replace("@NumeroAsociado", HttpUtility.HtmlEncode(numeroAsociado))
+            htmlTemplate = htmlTemplate.Replace("@NombreAsociado", HttpUtility.HtmlEncode(nombreCompleto))
+            htmlTemplate = htmlTemplate.Replace("@Cedula", HttpUtility.HtmlEncode(cedula))
+            htmlTemplate = htmlTemplate.Replace("@FechaReporte", DateTime.Now.ToString("dd/MM/yyyy"))
+            htmlTemplate = htmlTemplate.Replace("@FechaDesde", FormatearFechaYyyyMmDd(fechaDesde))
+            htmlTemplate = htmlTemplate.Replace("@FechaHasta", FormatearFechaYyyyMmDd(fechaHasta))
+            htmlTemplate = htmlTemplate.Replace("@ContenidoCuentas", ConstruirHtmlContenidoEstadoCuentaRegular(dt))
+            htmlTemplate = htmlTemplate.Replace("@FechaHoraImpresion", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"))
+
+            Return serializer.Serialize(New Dictionary(Of String, Object) From {
+                {"Resultado", "SUCCESS"},
+                {"Html", htmlTemplate}
+            })
+
+        Catch ex As Exception
+            ModGlobal.EscribirLog("Error en GenerarEstadoCuentaRegular: " & ex.Message & " | StackTrace: " & ex.StackTrace)
+            Return serializer.Serialize(New Dictionary(Of String, Object) From {
+                {"Resultado", "ERROR"},
+                {"Mensaje", "Error al generar estado de cuenta regular: " & ex.Message}
+            })
         End Try
     End Function
 

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Cuenta Regular</title>
+    <style>
+        @page { size: 8.5in 11in; margin: 0.45in 0.35in; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 8px 10px;
+            font-size: 11px;
+            line-height: 1.35;
+            color: #333;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .reporte-edcr { max-width: 8.5in; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 12px; }
+        .logo img { max-width: 180px; height: auto; }
+        .cooperativa-nombre {
+            font-size: 14px; font-weight: 700; color: #2c3e50;
+            text-transform: uppercase; margin: 6px 0;
+        }
+        .titulo-reporte {
+            font-size: 17px; font-weight: 700; color: #2c3e50;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .datos-asociado {
+            display: flex; flex-wrap: wrap; gap: 8px 24px;
+            margin-bottom: 12px; padding: 8px 10px;
+            background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;
+        }
+        .datos-asociado .campo { display: inline-flex; gap: 6px; }
+        .datos-asociado .campo-label { font-weight: 600; color: #495057; }
+        .datos-asociado .campo-valor { color: #212529; }
+        .grupo-cuenta { margin-bottom: 14px; }
+        .grupo-cuenta-header {
+            background: #b8d4e8; color: #1a3a52; font-weight: 700;
+            padding: 6px 10px; font-size: 11px;
+            border: 1px solid #8fb8d6;
+        }
+        .grupo-cuenta-subheader {
+            background: #d4e8f4; padding: 4px 10px; font-weight: 600;
+            border-left: 1px solid #8fb8d6; border-right: 1px solid #8fb8d6;
+        }
+        .tabla-movimientos {
+            width: 100%; border-collapse: collapse; table-layout: fixed;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .tabla-movimientos thead { background: #2c3e50; color: #fff; }
+        .tabla-movimientos thead th {
+            padding: 6px 4px; font-size: 9px; text-transform: uppercase;
+            border: 1px solid #1a252f; text-align: center;
+        }
+        .tabla-movimientos tbody td {
+            padding: 5px 4px; border: 1px solid #dee2e6; font-size: 10px;
+            text-align: center; vertical-align: middle;
+        }
+        .tabla-movimientos .col-fecha,
+        .tabla-movimientos .col-codigo,
+        .tabla-movimientos .col-desc,
+        .tabla-movimientos .col-monto { text-align: center; }
+        .fila-subtotal td {
+            background: #e9ecef; font-weight: 700; border-top: 2px solid #adb5bd;
+            text-align: center;
+        }
+        .fila-subtotal .subtotal-label { text-align: center; padding-left: 0; }
+        .fila-subtotal .subtotal-cantidad {
+            font-size: 9px; font-weight: 500; color: #6c757d; display: block;
+        }
+        .total-general {
+            background: #2c3e50; color: #fff; padding: 8px 12px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px;
+            margin-top: 8px; font-weight: 700;
+        }
+        .total-general .totales-montos {
+            margin-left: auto; display: flex; gap: 20px; justify-content: center; flex: 1;
+        }
+        .total-general .monto-col { text-align: center; min-width: 90px; }
+        .total-general .cantidad-gen { font-size: 9px; font-weight: 500; opacity: 0.85; }
+        .footer { margin-top: 10px; font-size: 10px; color: #6c757d; text-align: right; }
+        .periodo-rango { font-size: 10px; color: #495057; margin-bottom: 8px; }
+        @media print {
+            .no-print { display: none; }
+            body { padding: 0; margin: 0; }
+            .reporte-edcr { max-width: none; width: 100%; margin: 0; }
+            .grupo-cuenta { width: 100%; page-break-inside: avoid; }
+            .tabla-movimientos { width: 100% !important; }
+            .tabla-movimientos thead th,
+            .tabla-movimientos tbody td { text-align: center !important; }
+            .datos-asociado { display: block; }
+            .datos-asociado .campo { display: inline-block; width: 49%; margin-bottom: 4px; }
+            .total-general { width: 100%; justify-content: center; }
+            .total-general .totales-montos { margin-left: 0; justify-content: center; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="reporte-edcr estado-cuenta-regular">
+        <div class="header">
+            <div class="logo"><img src="/logo.png" alt="Logo" /></div>
+            <div class="cooperativa-nombre">COOPSEMGA</div>
+            <div class="titulo-reporte">ESTADO DE CUENTA REGULAR</div>
+        </div>
+        <div class="datos-asociado">
+            <div class="campo"><span class="campo-label">ASOCIADO:</span><span class="campo-valor">@NumeroAsociado</span></div>
+            <div class="campo"><span class="campo-label">NOMBRE:</span><span class="campo-valor">@NombreAsociado</span></div>
+            <div class="campo"><span class="campo-label">CÉDULA:</span><span class="campo-valor">@Cedula</span></div>
+            <div class="campo"><span class="campo-label">FECHA:</span><span class="campo-valor">@FechaReporte</span></div>
+        </div>
+        <div class="periodo-rango">Período: @FechaDesde al @FechaHasta</div>
+        @ContenidoCuentas
+        <div class="footer">Impreso: @FechaHoraImpresion</div>
+    </div>
+</body>
+</html>

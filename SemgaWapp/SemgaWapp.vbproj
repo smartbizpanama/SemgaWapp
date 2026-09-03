@@ -160,16 +160,22 @@
     <Content Include="Forms\Mantenimientos\dashboardSistemas.aspx" />
     <Content Include="Forms\Mantenimientos\GestionUsuarios.aspx" />
     <Content Include="Forms\Mantenimientos\PermisosMenu.aspx" />
+    <Content Include="Forms\Mantenimientos\SaldosContables.aspx" />
     <Content Include="Forms\Mantenimientos\TestMantenimientos.aspx" />
     <Content Include="Forms\Reportes\Asientos.aspx" />
+    <Content Include="Forms\Reportes\Auxiliares.aspx" />
     <Content Include="Forms\Reportes\dashboardReportes.aspx" />
     <Content Include="Forms\Reportes\Movimientos.aspx" />
+    <Content Include="Forms\Reportes\MovimientosReporte.js" />
     <Content Include="Forms\Reportes\ReporteMovimientos.html" />
+    <Content Include="Forms\Reportes\ReporteResumenAsociados.html" />
     <Content Include="Forms\Reportes\Reportes.aspx" />
     <Content Include="Forms\Help\Documentacion.aspx" />
+    <Content Include="Forms\Reportes\ResumenAsociados.aspx" />
     <Content Include="Forms\Sistemas\cambioPass.aspx" />
     <Content Include="Forms\Sistemas\Respaldos.aspx" />
     <Content Include="Forms\Socios\EstadoCuenta.html" />
+    <Content Include="Forms\Socios\EstadoCuentaRegular.html" />
     <Content Include="Forms\Socios\GestionSocios.aspx" />
     <Content Include="Forms\Transacciones\ComprobanteAuxiliar.html" />
     <Content Include="Forms\Transacciones\comprobanteLote.html" />
@@ -186,7 +192,9 @@
     <Content Include="Scripts\inactivity-monitor-standalone.js" />
     <Content Include="Scripts\inactivity-monitor.js" />
     <Content Include="Scripts\notifications.js" />
+    <Content Include="Scripts\toast-global.css" />
     <Content Include="Scripts\smart-chips.js" />
+    <Content Include="Scripts\transacciones-socios-acciones.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -291,6 +299,13 @@
       <DependentUpon>PermisosMenu.aspx</DependentUpon>
       <SubType>ASPXCodebehind</SubType>
     </Compile>
+    <Compile Include="Forms\Mantenimientos\SaldosContables.aspx.designer.vb">
+      <DependentUpon>SaldosContables.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Mantenimientos\SaldosContables.aspx.vb">
+      <DependentUpon>SaldosContables.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
     <Compile Include="Forms\Mantenimientos\TestMantenimientos.aspx.vb">
       <DependentUpon>TestMantenimientos.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -300,6 +315,13 @@
     </Compile>
     <Compile Include="Forms\Reportes\Asientos.aspx.vb">
       <DependentUpon>Asientos.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
+    <Compile Include="Forms\Reportes\Auxiliares.aspx.designer.vb">
+      <DependentUpon>Auxiliares.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Reportes\Auxiliares.aspx.vb">
+      <DependentUpon>Auxiliares.aspx</DependentUpon>
       <SubType>ASPXCodebehind</SubType>
     </Compile>
     <Compile Include="Forms\Reportes\dashboardReportes.aspx.designer.vb">
@@ -328,6 +350,13 @@
     </Compile>
     <Compile Include="Forms\Help\Documentacion.aspx.vb">
       <DependentUpon>Documentacion.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
+    <Compile Include="Forms\Reportes\ResumenAsociados.aspx.designer.vb">
+      <DependentUpon>ResumenAsociados.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Reportes\ResumenAsociados.aspx.vb">
+      <DependentUpon>ResumenAsociados.aspx</DependentUpon>
       <SubType>ASPXCodebehind</SubType>
     </Compile>
     <Compile Include="Forms\Sistemas\cambioPass.aspx.designer.vb">

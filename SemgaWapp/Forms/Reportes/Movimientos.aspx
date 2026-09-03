@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Movimientos.aspx.vb" Inherits="SemgaWapp.Movimientos" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Movimientos.aspx.vb" Inherits="SemgaWapp.Movimientos" %>
 
 <!DOCTYPE html>
 
@@ -7,12 +7,13 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reporte de Movimientos</title>
+    <title>Movimientos</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet"/>
+    <link href="../../Scripts/toast-global.css" rel="stylesheet"/>
     
     <style>
         body {
@@ -48,44 +49,33 @@
             min-height: 0;
         }
         
-        .header-section {
-            background: #2c3e50;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
+        /* Barra: título | filtros | volver (mismo patrón que Asientos.aspx) */
+        .barra-reporte-movimientos {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
             flex-shrink: 0;
         }
-        
-        .header-section .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .header-section .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #87CEEB, #B0E0E6);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-        }
-        
-        .header-section .logo-text {
-            font-size: 24px;
+
+        .barra-reporte-movimientos .titulo-reporte {
+            font-size: 18px;
             font-weight: 700;
+            color: #2c3e50;
+            line-height: 1.15;
+            text-align: center;
         }
-        
-        .header-section .breadcrumb {
-            color: #bdc3c7;
-            font-size: 14px;
+
+        .barra-reporte-movimientos .filters-section {
+            flex: 1;
+            margin-bottom: 0;
+            padding: 8px 12px;
+        }
+
+        .barra-reporte-movimientos .back-btn {
+            flex-shrink: 0;
+            padding: 6px 14px;
+            font-size: 13px;
         }
         
         .back-btn {
@@ -177,48 +167,165 @@
             box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.25);
         }
 
-        .filters-table {
+        /* Una sola fila: etiqueta arriba, control abajo */
+        .filters-toolbar {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: flex-end;
+            gap: 10px;
             width: 100%;
-            border-collapse: collapse;
         }
 
-        .filters-table tr {
-            vertical-align: middle;
+        .filters-toolbar .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1 1 0;
+            min-width: 0;
         }
 
-        .filters-table td {
-            padding: 8px;
-            vertical-align: middle;
+        .filters-toolbar .filter-field--asociado {
+            flex: 1.45 1 180px;
+            max-width: 320px;
         }
 
-        /* Asegurar que las celdas con controles tengan el mismo ancho */
-        .filters-table td:nth-child(2),
-        .filters-table td:nth-child(4) {
-            width: auto;
-            min-width: 150px;
-        }
-
-        /* Celda de botones */
-        .filters-table .filter-row-dates td:last-child {
-            text-align: right;
+        .filter-field--asociado #txtAsociadoSeleccionadoTexto {
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
             white-space: nowrap;
         }
 
-        .filters-table .filter-row-dates td:last-child .btn-buscar,
-        .filters-table .filter-row-dates td:last-child .btn-limpiar,
-        .filters-table .filter-row-dates td:last-child .btn-exportar-excel {
-            margin-left: 8px;
+        .filters-toolbar .filter-field--fecha {
+            flex: 0 1 118px;
         }
 
-        .filters-table .filter-row-dates td:last-child .btn-buscar:first-child {
-            margin-left: 0;
+        .filters-toolbar .filter-field--periodo {
+            flex: 0.65 1 84px;
+            min-width: 72px;
         }
 
-        .filters-table .filter-select,
-        .filters-table .filter-input {
-            width: 100%;
-            min-width: 150px;
+        .periodo-historial-picker {
+            min-height: 38px;
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background: #fff;
+            color: #6c757d;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
             box-sizing: border-box;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .periodo-historial-picker:hover:not(.periodo-historial-picker--seleccionado) {
+            border-color: #87CEEB;
+        }
+
+        .periodo-historial-picker--seleccionado {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            color: #1a3a5c;
+            border-color: #90caf9;
+            font-size: 12px;
+            font-weight: 600;
+            justify-content: space-between;
+        }
+
+        .periodo-historial-picker--seleccionado:hover {
+            border-color: #64b5f6;
+        }
+
+        .periodo-historial-picker__texto {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .periodo-historial-picker .btn-quitar-periodo {
+            border: none;
+            background: rgba(26, 58, 92, 0.12);
+            color: #1a3a5c;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            padding: 0;
+            line-height: 1;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .periodo-historial-picker .btn-quitar-periodo:hover {
+            background: rgba(26, 58, 92, 0.22);
+        }
+
+        .filters-toolbar .filter-field--actions {
+            flex: 0 0 auto;
+        }
+
+        .filter-asociado-row {
+            display: flex;
+            gap: 6px;
+            align-items: stretch;
+            min-width: 0;
+        }
+
+        .filter-asociado-row .filter-input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .filters-toolbar .filter-select,
+        .filters-toolbar .filter-input {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .filter-actions-inner {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-end;
+            min-height: 38px;
+        }
+
+        .filters-toolbar .filter-actions-inner .btn-buscar,
+        .filters-toolbar .filter-actions-inner .btn-limpiar,
+        .filters-toolbar .filter-actions-inner .btn-imprimir,
+        .filters-toolbar .filter-actions-inner .btn-exportar-excel {
+            min-width: 38px;
+            padding: 8px 10px;
+            justify-content: center;
+            display: inline-flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .filters-toolbar .filter-actions-inner .btn-imprimir {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: #fff;
+        }
+
+        .filters-toolbar .filter-actions-inner .btn-imprimir:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.35);
+        }
+
+        .filters-toolbar .filter-actions-inner .btn-exportar-excel {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: #fff;
+        }
+
+        .filters-toolbar .filter-actions-inner .btn-exportar-excel:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
         }
 
         .filter-label {
@@ -267,6 +374,33 @@
             transform: translateY(-2px);
         }
 
+        .btn-imprimir {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-imprimir:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.35);
+        }
+
+        .btn-imprimir:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         .btn-exportar-excel {
             background: linear-gradient(135deg, #28a745, #20c997);
             color: white;
@@ -294,6 +428,300 @@
             box-shadow: none;
         }
 
+        .btn-exportar-excel-icon {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .btn-exportar-excel-icon:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-exportar-excel-icon:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.65;
+        }
+
+        .loading-movimientos-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .loading-movimientos-overlay .spinner-movimientos {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #87CEEB;
+            border-radius: 50%;
+            animation: spin-movimientos 0.8s linear infinite;
+        }
+
+        .loading-movimientos-overlay .texto-carga {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        @keyframes spin-movimientos {
+            to { transform: rotate(360deg); }
+        }
+
+        .contenedor-tabs-movimientos {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #contenedorTabsMovimientos .nav-tabs {
+            flex-shrink: 0;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 0;
+        }
+
+        #contenedorTabsMovimientos .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 500;
+            padding: 12px 20px;
+            border-radius: 0;
+        }
+
+        #contenedorTabsMovimientos .nav-tabs .nav-link.active {
+            background: #5a9fd4;
+            color: white;
+        }
+
+        .tab-content-movimientos {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding-top: 12px;
+        }
+
+        .tab-content-movimientos .tab-pane {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .tab-content-movimientos .tab-pane.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contenedor-grid-movimientos {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .mov-resumen-pivot-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 4px 8px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .mov-pivot-tabla {
+            width: auto;
+            max-width: 640px;
+            table-layout: fixed;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: #fff;
+        }
+
+        .mov-pivot-tabla thead th {
+            background: #f8f9fa;
+            font-weight: 600;
+            text-align: center !important;
+            padding: 8px 6px;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+        }
+
+        .mov-pivot-tabla thead th.col-etiqueta {
+            width: 168px;
+            max-width: 168px;
+            text-align: center;
+        }
+
+        .mov-pivot-tabla thead th.col-registros {
+            width: 72px;
+        }
+
+        .mov-pivot-tabla thead th.col-monto {
+            width: 96px;
+        }
+
+        .mov-pivot-tabla tbody td {
+            padding: 7px 6px;
+            vertical-align: middle;
+        }
+
+        .mov-pivot-cell-label {
+            text-align: left !important;
+            padding-left: 8px !important;
+            padding-right: 4px !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mov-pivot-row-rubro {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .mov-pivot-row-rubro td {
+            font-weight: 700;
+            color: #1a3a5c;
+            background-color: #e3f2fd !important;
+        }
+
+        .mov-pivot-row-rubro:hover td {
+            background-color: #d4e9f7 !important;
+        }
+
+        .mov-pivot-row-rubro .mov-pivot-cell-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: flex-start;
+        }
+
+        .mov-pivot-row-tipo td {
+            font-weight: 400;
+            color: #495057;
+            background: #fff;
+        }
+
+        .mov-pivot-row-tipo .mov-pivot-cell-label {
+            padding-left: 22px !important;
+        }
+
+        .mov-pivot-row-tipo:hover td {
+            background: #f8f9fa;
+        }
+
+        .mov-pivot-registros {
+            text-align: right !important;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            padding-right: 8px !important;
+        }
+
+        .mov-pivot-monto {
+            text-align: right !important;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            padding-right: 8px !important;
+        }
+
+        /* Anular .table-container table td/th { text-align: center } del detallado */
+        .table-container .mov-pivot-tabla thead th {
+            text-align: center !important;
+        }
+
+        .table-container .mov-pivot-tabla tbody td.mov-pivot-cell-label {
+            text-align: left !important;
+        }
+
+        .table-container .mov-pivot-tabla tbody td.mov-pivot-registros,
+        .table-container .mov-pivot-tabla tbody td.mov-pivot-monto {
+            text-align: right !important;
+        }
+
+        .mov-pivot-chevron {
+            flex-shrink: 0;
+            width: 10px;
+            font-size: 10px;
+            color: #6c757d;
+            display: inline-block;
+            transition: transform 0.15s ease;
+        }
+
+        .mov-pivot-row-rubro.is-expanded .mov-pivot-chevron {
+            transform: rotate(90deg);
+        }
+
+        .movimientos-totales-bar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 12px 28px;
+            width: 100%;
+            padding: 10px 14px;
+            margin-top: 8px;
+            background: linear-gradient(135deg, #f8f9fa, #eef2f5);
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #2c3e50;
+        }
+
+        .movimientos-totales-bar .totales-titulo { font-weight: 700; margin-right: 8px; }
+
+        .movimientos-totales-bar .totales-montos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px 28px;
+            justify-content: flex-end;
+            text-align: right;
+        }
+
+        .movimientos-totales-bar b.monto-negativo { color: #c0392b !important; }
+
+        #tablaMovimientosDatos td.monto-negativo { color: #c0392b !important; font-weight: 600; }
+
+        .placeholder-mensaje {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+
         /* Estilos de tabla */
         .table-container {
             flex: 1;
@@ -306,8 +734,90 @@
         .table-responsive {
             flex: 1;
             min-height: 0;
-            overflow-x: auto;
-            overflow-y: auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Grid de tabla igual al patrón de Asientos */
+        .movimientos-grid-wrapper {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .movimientos-grid-wrapper .dataTables_wrapper {
+            flex: 1;
+            display: grid;
+            grid-template-rows: 1fr auto;
+            grid-template-columns: 1fr auto 1fr;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .movimientos-grid-wrapper .dataTables_scroll {
+            grid-row: 1;
+            grid-column: 1 / -1;
+            min-height: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .movimientos-grid-wrapper .dataTables_scrollHead {
+            flex-shrink: 0;
+        }
+
+        .movimientos-grid-wrapper .dataTables_scrollBody {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto !important;
+            overflow-x: auto !important;
+            height: 100% !important;
+        }
+
+        .movimientos-grid-wrapper .dataTables_length {
+            grid-row: 2;
+            grid-column: 2;
+            align-self: center;
+            justify-self: center;
+            padding: 10px 0;
+        }
+
+        .movimientos-grid-wrapper .dataTables_info {
+            grid-row: 2;
+            grid-column: 1;
+            align-self: center;
+            justify-self: start;
+            padding: 10px 0;
+            position: static !important;
+            left: auto !important;
+            transform: none !important;
+            white-space: nowrap;
+        }
+
+        .movimientos-grid-wrapper .dataTables_paginate {
+            grid-row: 2;
+            grid-column: 3;
+            align-self: center;
+            justify-self: end;
+            padding: 10px 0;
+            margin-left: 0 !important;
+        }
+
+        .movimientos-grid-wrapper .dataTables_length {
+            position: static !important;
+            left: auto !important;
+            transform: none !important;
+        }
+
+        .movimientos-grid-wrapper .dataTables_wrapper > .row,
+        .movimientos-grid-wrapper .dataTables_wrapper .row [class*="col-"] {
+            display: contents;
         }
 
         /* Scroll horizontal en pantallas pequeñas */
@@ -317,7 +827,7 @@
                 -webkit-overflow-scrolling: touch;
             }
 
-            #tablaMovimientos {
+            #tablaMovimientosDatos {
                 min-width: 800px;
             }
         }
@@ -369,8 +879,23 @@
         }
 
         /* Forzar centrado en todas las celdas de DataTables */
-        #tablaMovimientos th,
-        #tablaMovimientos td {
+        .movimientos-grid-wrapper table.dataTable,
+        .movimientos-grid-wrapper .dataTables_scrollHead table,
+        .movimientos-grid-wrapper .dataTables_scrollBody table {
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+        .movimientos-grid-wrapper .col-no { width: 6% !important; }
+        .movimientos-grid-wrapper .col-fecha { width: 10% !important; }
+        .movimientos-grid-wrapper .col-asociado { width: 17% !important; }
+        .movimientos-grid-wrapper .col-codigo-tran { width: 15% !important; white-space: normal; word-break: break-word; }
+        .movimientos-grid-wrapper .col-rubro { width: 11% !important; white-space: normal; word-break: break-word; }
+        .movimientos-grid-wrapper .col-cuenta { width: 11% !important; }
+        .movimientos-grid-wrapper .col-tipo { width: 14% !important; }
+        .movimientos-grid-wrapper .col-dr,
+        .movimientos-grid-wrapper .col-cr { width: 8% !important; }
+        .movimientos-grid-wrapper th,
+        .movimientos-grid-wrapper td {
             text-align: center !important;
         }
 
@@ -380,10 +905,44 @@
             text-align: center !important;
         }
 
-        /* Centrar contenido de todas las columnas */
-        .table-container table th,
-        .table-container table td {
+        /* Centrar contenido del detallado (DataTables); el resumen usa .mov-pivot-tabla */
+        .table-container table:not(.mov-pivot-tabla) th,
+        .table-container table:not(.mov-pivot-tabla) td {
             text-align: center !important;
+        }
+
+        .movimientos-grid-wrapper table.dataTable,
+        .movimientos-grid-wrapper .dataTables_scrollHeadInner table,
+        .movimientos-grid-wrapper .dataTables_scrollBody table {
+            width: 100% !important;
+            table-layout: fixed !important;
+            margin-bottom: 0;
+        }
+
+        .movimientos-grid-wrapper .dataTables_scrollHead {
+            overflow: hidden !important;
+        }
+
+        .movimientos-grid-wrapper .dataTables_scrollHeadInner {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+
+        .movimientos-grid-wrapper .dataTables_scrollHead th,
+        .movimientos-grid-wrapper .dataTables_scrollBody td {
+            box-sizing: border-box;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movimientos-grid-wrapper .dataTables_scrollHead th.col-asociado,
+        .movimientos-grid-wrapper .dataTables_scrollBody td.col-asociado,
+        .movimientos-grid-wrapper .dataTables_scrollHead th.col-codigo-tran,
+        .movimientos-grid-wrapper .dataTables_scrollBody td.col-codigo-tran,
+        .movimientos-grid-wrapper .dataTables_scrollHead th.col-rubro,
+        .movimientos-grid-wrapper .dataTables_scrollBody td.col-rubro {
+            white-space: normal;
+            word-break: break-word;
         }
 
         /* Modal de resultados de tamaño completo */
@@ -607,6 +1166,39 @@
             border: 1px solid rgba(0, 0, 0, 0.1);
         }
 
+        /* Pantallas medianas: permitir salto de línea si no cabe todo en una fila */
+        @media (max-width: 1499px) {
+            .filters-toolbar {
+                flex-wrap: wrap;
+            }
+
+            .filters-toolbar .filter-field {
+                flex: 1 1 140px;
+            }
+
+            .filters-toolbar .filter-field--asociado {
+                flex: 1.35 1 160px;
+                max-width: 320px;
+            }
+
+            .filters-toolbar .filter-field--periodo {
+                flex: 0.65 1 80px;
+                min-width: 68px;
+            }
+
+            .filters-toolbar .filter-field--fecha {
+                flex: 1 1 118px;
+            }
+
+            .filters-toolbar .filter-field--actions {
+                flex: 1 1 100%;
+            }
+
+            .filter-actions-inner {
+                justify-content: flex-start;
+            }
+        }
+
         /* Responsive */
         @media (max-width: 1200px) {
             .filter-row {
@@ -684,23 +1276,12 @@
                 width: calc(100vw - 10px);
             }
 
-            .header-section {
-                padding: 8px 12px;
-                margin-bottom: 10px;
+            .barra-reporte-movimientos {
+                flex-wrap: wrap;
             }
 
-            .header-section .logo-text {
-                font-size: 18px;
-            }
-
-            .header-section .breadcrumb {
-                font-size: 12px;
-            }
-
-            .header-section .logo-icon {
-                width: 35px;
-                height: 35px;
-                font-size: 18px;
+            .barra-reporte-movimientos .titulo-reporte {
+                width: 100%;
             }
 
             .back-btn {
@@ -712,19 +1293,30 @@
                 padding: 10px;
             }
 
-            .filters-table {
-                display: block;
+            .filters-toolbar {
+                flex-wrap: wrap;
+                align-items: stretch;
             }
 
-            .filters-table tr {
-                display: block;
-                margin-bottom: 10px;
+            .filters-toolbar .filter-field,
+            .filters-toolbar .filter-field--asociado,
+            .filters-toolbar .filter-field--fecha {
+                flex: 1 1 calc(50% - 8px);
+                min-width: 0;
             }
 
-            .filters-table td {
-                display: block;
-                padding: 4px 0;
-                width: 100% !important;
+            .filters-toolbar .filter-field--actions {
+                flex: 1 1 100%;
+            }
+
+            .filter-field--actions .filter-label {
+                display: none;
+            }
+
+            .filter-actions-inner {
+                justify-content: flex-start;
+                min-height: 0;
+                flex-wrap: wrap;
             }
 
             .filter-label {
@@ -746,7 +1338,8 @@
 
             .btn-buscar,
             .btn-limpiar,
-            .btn-exportar-excel {
+            .btn-exportar-excel,
+            .btn-imprimir {
                 flex: 1;
                 min-width: 0;
                 justify-content: center;
@@ -820,16 +1413,76 @@
 <body>
     <form id="form1" runat="server">
         <div class="main-container">
-            <!-- Header -->
-            <div class="header-section">
-                <div class="logo">
-                    <div class="logo-icon">
-                        <i class="fas fa-exchange-alt"></i>
+            <!-- Barra: título | filtros | volver (mismo patrón que Asientos.aspx) -->
+            <div class="barra-reporte-movimientos">
+                <div class="titulo-reporte">Reporte<br />Movimientos</div>
+                <div class="filters-section">
+                <div class="filters-toolbar">
+                    <div class="filter-field">
+                        <label class="filter-label" for="ddlUsuario">Usuario</label>
+                        <select id="ddlUsuario" class="filter-select">
+                            <option value="">Todos los usuarios</option>
+                        </select>
                     </div>
-        <div>
-                        <div class="logo-text">Reporte de Movimientos</div>
-                        <div class="breadcrumb">Consulta de movimientos y transacciones</div>
-        </div>
+                    <div class="filter-field filter-field--asociado">
+                        <label class="filter-label">Asociado</label>
+                        <div class="filter-asociado-row">
+                            <div id="txtAsociadoSeleccionado" class="filter-input" role="button" tabindex="0" aria-label="Seleccionar asociado"
+                                 style="background-color: #f8f9fa; cursor: pointer; min-height: 38px; padding: 6px 10px; display: flex; align-items: center; color: #6c757d;">
+                                <span id="txtAsociadoSeleccionadoTexto">Ningún asociado seleccionado</span>
+                            </div>
+                            <button type="button" id="btnLimpiarAsociado" class="btn btn-outline-secondary btn-sm align-self-stretch"
+                                    style="white-space: nowrap; padding: 6px 12px; display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-label" for="ddlRubro">Rubro</label>
+                        <select id="ddlRubro" class="filter-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-label" for="ddlTransaccion">Tipo transacción</label>
+                        <select id="ddlTransaccion" class="filter-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="filter-field filter-field--periodo">
+                        <label class="filter-label">Período historial</label>
+                        <div id="pickerPeriodoHistorial" class="periodo-historial-picker" role="button" tabindex="0" aria-label="Seleccionar período de historial">Sin período</div>
+                    </div>
+                    <div class="filter-field filter-field--fecha">
+                        <label class="filter-label" for="txtFechaDesde">Fecha desde</label>
+                        <input type="text" id="txtFechaDesde" class="filter-input" placeholder="dd/MM/yyyy" />
+                    </div>
+                    <div class="filter-field filter-field--fecha">
+                        <label class="filter-label" for="txtFechaHasta">Fecha hasta</label>
+                        <input type="text" id="txtFechaHasta" class="filter-input" placeholder="dd/MM/yyyy" />
+                    </div>
+                    <div class="filter-field filter-field--actions">
+                        <label class="filter-label" style="visibility: hidden;">Acciones</label>
+                        <div class="filter-actions-inner">
+                            <button type="button" id="btnBuscarMovimientos" class="btn-buscar" onclick="buscarMovimientos()"
+                                    title="Buscar" aria-label="Buscar">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button type="button" class="btn-limpiar" onclick="limpiarFiltros()"
+                                    title="Limpiar filtros" aria-label="Limpiar filtros">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                            <button type="button" id="btnImprimirMovimientos" class="btn-imprimir" onclick="imprimirTablaMovimientos()" disabled="disabled"
+                                    title="Imprimir" aria-label="Imprimir">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            <button type="button" id="btnExportarExcelMovimientos" class="btn-exportar-excel-icon" onclick="exportarMovimientosExcel()" disabled="disabled"
+                                    title="Exportar a Excel" aria-label="Exportar a Excel">
+                                <i class="fas fa-file-excel"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 </div>
                 <a href="dashboardReportes.aspx" class="back-btn">
                     <i class="fas fa-arrow-left"></i>
@@ -837,97 +1490,96 @@
                 </a>
             </div>
 
-            <!-- Filtros -->
-            <div class="filters-section">
-                <table class="filters-table">
-                    <!-- Primera fila: Dropdowns -->
-                    <tr class="filter-row-dropdowns">
-                        <td>
-                            <label class="filter-label">Usuario:</label>
-                        </td>
-                        <td>
-                            <select id="ddlUsuario" class="filter-select">
-                                <option value="">Todos los usuarios</option>
-                            </select>
-                        </td>
-                        <td>
-                            <label class="filter-label">Asociado:</label>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 5px; align-items: center;">
-                                <div id="txtAsociadoSeleccionado" class="filter-input" 
-                                     style="flex: 1; background-color: #f8f9fa; cursor: pointer; min-height: 38px; padding: 6px 10px; display: flex; align-items: center; color: #6c757d;">
-                                    <span id="txtAsociadoSeleccionadoTexto">Ningún asociado seleccionado</span>
-                                </div>
-                                <button type="button" id="btnBuscarAsociado" class="btn btn-outline-primary btn-sm" 
-                                        style="white-space: nowrap; padding: 6px 12px;">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                                <button type="button" id="btnLimpiarAsociado" class="btn btn-outline-secondary btn-sm" 
-                                        style="white-space: nowrap; padding: 6px 12px; display: none;">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </td>
-                        <td>
-                            <label class="filter-label">Rubro:</label>
-                        </td>
-                        <td>
-                            <select id="ddlRubro" class="filter-select">
-                                <option value="">Todos los rubros</option>
-                            </select>
-                        </td>
-                        <td>
-                            <label class="filter-label">Tipo Transacción:</label>
-                        </td>
-                        <td>
-                            <select id="ddlTransaccion" class="filter-select">
-                                <option value="">Todas las transacciones</option>
-                            </select>
-                        </td>
-                    </tr>
-
-                    <!-- Segunda fila: Datepickers y Botones -->
-                    <tr class="filter-row-dates">
-                        <td>
-                            <label class="filter-label">Fecha Desde:</label>
-                        </td>
-                        <td>
-                            <input type="text" id="txtFechaDesde" class="filter-input" placeholder="dd/MM/yyyy" />
-                        </td>
-                        <td>
-                            <label class="filter-label">Fecha Hasta:</label>
-                        </td>
-                        <td>
-                            <input type="text" id="txtFechaHasta" class="filter-input" placeholder="dd/MM/yyyy" />
-                        </td>
-                        <td colspan="2" style="text-align: right;">
-                            <button type="button" id="btnBuscarMovimientos" class="btn-buscar" onclick="buscarMovimientos()">
-                                <i class="fas fa-search"></i>
-                                Buscar
-                            </button>
-
-                            <button type="button" class="btn-limpiar" onclick="limpiarFiltros()">
-                                <i class="fas fa-eraser"></i>
-                                Limpiar
-                            </button>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-
-            <!-- Contenedor de resultados (se mostrará en modal) -->
-            <div class="table-container" style="display: flex; align-items: center; justify-content: center; color: #6c757d;">
-                <div style="text-align: center;">
+            <!-- Contenedor de resultados en pantalla -->
+            <div class="table-container">
+                <div id="placeholderMovimientos" class="placeholder-mensaje">
+                    <div style="text-align: center;">
                     <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
                     <p style="font-size: 16px;">Utiliza los filtros y haz clic en "Buscar" para ver los resultados</p>
+                    </div>
+                </div>
+                <div id="contenedorTabsMovimientos" class="contenedor-tabs-movimientos" style="display: none;">
+                    <ul class="nav nav-tabs" id="movimientosTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tabResumenMovBtn" data-bs-toggle="tab" data-bs-target="#tabPaneResumenMov" type="button" role="tab"><i class="fas fa-chart-pie me-2"></i>Resumen</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tabDetalladoMovBtn" data-bs-toggle="tab" data-bs-target="#tabPaneDetalladoMov" type="button" role="tab"><i class="fas fa-list-ul me-2"></i>Detallado</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content tab-content-movimientos" id="movimientosTabContent">
+                        <div class="tab-pane fade show active" id="tabPaneResumenMov" role="tabpanel">
+                            <div class="contenedor-grid-movimientos">
+                                <div id="contenedorResumenMovPivot" class="mov-resumen-pivot-scroll"></div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tabPaneDetalladoMov" role="tabpanel">
+                            <div class="contenedor-grid-movimientos">
+                                <div class="movimientos-grid-wrapper">
+                                    <table id="tablaMovimientosDatos" class="table table-hover table-striped">
+                                        <thead><tr></tr></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="movimientos-totales-bar" id="barTotalesMovimientosGlobal" style="display: none;">
+                        <span class="totales-titulo">Totales</span>
+                        <div class="totales-montos">
+                            <span>Registros: <b id="totalRegistrosMovGlobal">0</b></span>
+                            <span>DR: <b id="totalDrMovGlobal">$0.00</b></span>
+                            <span>CR: <b id="totalCrMovGlobal">$0.00</b></span>
+                            <span>Balance: <b id="totalBalMovGlobal">$0.00</b></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         
         <!-- Global Modals Container -->
         <div id="globalModalsContainer"></div>
+
+        <!-- Modal período historial -->
+        <div class="modal fade" id="modalPeriodoHistorial" tabindex="-1" aria-labelledby="modalPeriodoHistorialLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header py-2">
+                        <h5 class="modal-title" id="modalPeriodoHistorialLabel"><i class="fas fa-history me-2"></i>Período de historial</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label" for="ddlAnioHistorial">Año</label>
+                            <select id="ddlAnioHistorial" class="form-select form-select-sm"></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="ddlMesHistorial">Mes</label>
+                            <select id="ddlMesHistorial" class="form-select form-select-sm" disabled="disabled">
+                                <option value="">Seleccione año</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label" for="ddlVersionHistorial">Versión</label>
+                            <select id="ddlVersionHistorial" class="form-select form-select-sm" disabled="disabled">
+                                <option value="">Seleccione mes</option>
+                            </select>
+                        </div>
+                        <p id="msgSinPeriodosHistorial" class="text-muted small mb-0" style="display: none;">No hay cortes de historial registrados.</p>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary btn-sm" id="btnAplicarPeriodoHistorial">Aplicar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </form>
+
+    <div id="loadingMovimientosOverlay" class="loading-movimientos-overlay" style="display: none;">
+        <div class="spinner-movimientos"></div>
+        <div class="texto-carga">Cargando, espere por favor...</div>
+    </div>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -939,7 +1591,7 @@
     <!-- Script de monitoreo de inactividad -->
     <script src="../../Scripts/inactivity-monitor-final.js?v=2.6"></script>
     <!-- Script de notificaciones globales -->
-    <script src="../../Scripts/notifications.js"></script>
+    <script src="../../Scripts/notifications.js?v=2"></script>
     <!-- Script de chips para identificación -->
     <script src="../../Scripts/smart-chips.js"></script>
     <!-- Script global de búsqueda de asociados -->
@@ -985,6 +1637,20 @@
             cargarUsuarios();
             cargarRubros();
             cargarCodigosTransaccion();
+            cargarPeriodosHistorialMovimientos();
+
+            $('#ddlAnioHistorial').on('change', onCambioAnioHistorial);
+            $('#ddlMesHistorial').on('change', onCambioMesHistorial);
+            $('#ddlVersionHistorial').on('change', actualizarEstadoBtnAplicarPeriodoHistorial);
+
+            $('#pickerPeriodoHistorial').on('click keydown', function(e) {
+                if ($(e.target).closest('.btn-quitar-periodo').length) return;
+                if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+                if (e.type === 'keydown') e.preventDefault();
+                abrirModalPeriodoHistorial();
+            });
+            $('#pickerPeriodoHistorial').on('click', '.btn-quitar-periodo', limpiarPeriodoHistorial);
+            $('#btnAplicarPeriodoHistorial').on('click', aplicarPeriodoHistorialDesdeModal);
             
             // Test de conexión al WebMethod
             $.ajax({
@@ -1004,12 +1670,10 @@
             // Inicializar componente global de búsqueda de asociados
             inicializarBusquedaAsociadosGlobal();
             
-            // Eventos para búsqueda de asociado
-            $('#btnBuscarAsociado').on('click', function() {
-                abrirBusquedaAsociados(globalSearchConfig);
-            });
-            
-            $('#txtAsociadoSeleccionado').on('click', function() {
+            // Abrir modal de asociado solo al hacer clic en el campo (sin botón lupa)
+            $('#txtAsociadoSeleccionado').on('click keydown', function(e) {
+                if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+                if (e.type === 'keydown') e.preventDefault();
                 abrirBusquedaAsociados(globalSearchConfig);
             });
             
@@ -1052,6 +1716,257 @@
         // Variable global para almacenar el asociado seleccionado
         var asociadoSeleccionado = null;
         var globalSearchConfig = null;
+        var periodoHistorialSeleccionado = null;
+        var modalPeriodoHistorialBs = null;
+        var periodosHistorialCatalogo = [];
+
+        var NOMBRES_MESES_HISTORIAL = [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+
+        function normalizarPeriodoHistorialItem(item) {
+            return {
+                anio: parseInt(item.AnioHistorial != null ? item.AnioHistorial : item.anioHistorial, 10),
+                mes: parseInt(item.MesHistorial != null ? item.MesHistorial : item.mesHistorial, 10),
+                version: parseInt(item.VersionHistorial != null ? item.VersionHistorial : item.versionHistorial, 10)
+            };
+        }
+
+        function cargarPeriodosHistorialMovimientos() {
+            $.ajax({
+                type: 'POST',
+                url: 'Movimientos.aspx/ListarPeriodosHistorialMovimientos',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify({}),
+                success: function(response) {
+                    try {
+                        var rd = typeof response.d === 'string' ? JSON.parse(response.d) : response.d;
+                        if (rd && rd.Success && rd.Data) {
+                            periodosHistorialCatalogo = (Array.isArray(rd.Data) ? rd.Data : []).map(normalizarPeriodoHistorialItem)
+                                .filter(function(p) { return p.anio && p.mes >= 1 && p.mes <= 12 && !isNaN(p.version) && p.version >= 0; });
+                        } else {
+                            periodosHistorialCatalogo = [];
+                        }
+                    } catch (e) {
+                        periodosHistorialCatalogo = [];
+                    }
+                    renderPeriodoHistorialPicker();
+                },
+                error: function() {
+                    periodosHistorialCatalogo = [];
+                    renderPeriodoHistorialPicker();
+                }
+            });
+        }
+
+        function obtenerAniosHistorialDisponibles() {
+            var map = {};
+            periodosHistorialCatalogo.forEach(function(p) { map[p.anio] = true; });
+            return Object.keys(map).map(function(k) { return parseInt(k, 10); }).sort(function(a, b) { return b - a; });
+        }
+
+        function obtenerMesesHistorialPorAnio(anio) {
+            var map = {};
+            periodosHistorialCatalogo.filter(function(p) { return p.anio === anio; })
+                .forEach(function(p) { map[p.mes] = true; });
+            return Object.keys(map).map(function(k) { return parseInt(k, 10); }).sort(function(a, b) { return a - b; });
+        }
+
+        function obtenerVersionesHistorialPorAnioMes(anio, mes) {
+            var map = {};
+            periodosHistorialCatalogo.filter(function(p) { return p.anio === anio && p.mes === mes; })
+                .forEach(function(p) { map[p.version] = true; });
+            return Object.keys(map).map(function(k) { return parseInt(k, 10); }).sort(function(a, b) { return b - a; });
+        }
+
+        function deshabilitarSelectHistorial($sel, textoPlaceholder) {
+            $sel.empty().append($('<option>', { value: '', text: textoPlaceholder }));
+            $sel.prop('disabled', true).val('');
+        }
+
+        function llenarSelectPeriodoHistorial($sel, valores, textoFn, valorSeleccionado, opciones) {
+            opciones = opciones || {};
+            $sel.empty();
+            if (!valores.length) {
+                $sel.append($('<option>', { value: '', text: opciones.sinDatos || '(Sin datos)' }));
+                $sel.prop('disabled', true);
+                return;
+            }
+            $sel.prop('disabled', false);
+            var unico = valores.length === 1;
+            if (opciones.placeholder && !unico) {
+                $sel.append($('<option>', { value: '', text: opciones.placeholder }));
+            }
+            valores.forEach(function(v) {
+                $sel.append($('<option>', { value: v, text: textoFn(v) }));
+            });
+            if (valorSeleccionado != null && valores.indexOf(valorSeleccionado) >= 0) {
+                $sel.val(valorSeleccionado);
+            } else if (unico) {
+                $sel.val(valores[0]);
+            } else if (!opciones.placeholder) {
+                $sel.val(valores[0]);
+            } else {
+                $sel.val('');
+            }
+        }
+
+        function periodoHistorialVersionSeleccionada() {
+            var versionStr = $('#ddlVersionHistorial').val();
+            if (versionStr === '' || versionStr == null) return false;
+            var version = parseInt(versionStr, 10);
+            return !isNaN(version) && version >= 0;
+        }
+
+        function actualizarEstadoBtnAplicarPeriodoHistorial() {
+            var anio = parseInt($('#ddlAnioHistorial').val(), 10);
+            var mes = parseInt($('#ddlMesHistorial').val(), 10);
+            var completo = periodosHistorialCatalogo.length > 0 && anio && mes >= 1 && mes <= 12 && periodoHistorialVersionSeleccionada();
+            $('#btnAplicarPeriodoHistorial').prop('disabled', !completo);
+        }
+
+        function onCambioAnioHistorial() {
+            var anio = parseInt($('#ddlAnioHistorial').val(), 10);
+            deshabilitarSelectHistorial($('#ddlVersionHistorial'), 'Seleccione mes');
+            if (!anio) {
+                deshabilitarSelectHistorial($('#ddlMesHistorial'), 'Seleccione año');
+                actualizarEstadoBtnAplicarPeriodoHistorial();
+                return;
+            }
+            var meses = obtenerMesesHistorialPorAnio(anio);
+            llenarSelectPeriodoHistorial($('#ddlMesHistorial'), meses, function(m) {
+                return NOMBRES_MESES_HISTORIAL[m - 1];
+            }, null, { placeholder: 'Seleccione mes' });
+            if (meses.length === 1) {
+                onCambioMesHistorial();
+                return;
+            }
+            actualizarEstadoBtnAplicarPeriodoHistorial();
+        }
+
+        function onCambioMesHistorial() {
+            var anio = parseInt($('#ddlAnioHistorial').val(), 10);
+            var mes = parseInt($('#ddlMesHistorial').val(), 10);
+            if (!anio) {
+                deshabilitarSelectHistorial($('#ddlVersionHistorial'), 'Seleccione mes');
+                actualizarEstadoBtnAplicarPeriodoHistorial();
+                return;
+            }
+            if (!mes) {
+                deshabilitarSelectHistorial($('#ddlVersionHistorial'), 'Seleccione mes');
+                actualizarEstadoBtnAplicarPeriodoHistorial();
+                return;
+            }
+            var versiones = obtenerVersionesHistorialPorAnioMes(anio, mes);
+            llenarSelectPeriodoHistorial($('#ddlVersionHistorial'), versiones, function(v) {
+                return 'v' + v;
+            }, null, { placeholder: 'Seleccione versión' });
+            actualizarEstadoBtnAplicarPeriodoHistorial();
+        }
+
+        function inicializarModalPeriodoHistorialAlAbrir() {
+            var tieneCatalogo = periodosHistorialCatalogo.length > 0;
+            $('#msgSinPeriodosHistorial').toggle(!tieneCatalogo);
+            actualizarEstadoBtnAplicarPeriodoHistorial();
+
+            if (!tieneCatalogo) {
+                deshabilitarSelectHistorial($('#ddlAnioHistorial'), '(Sin historial)');
+                deshabilitarSelectHistorial($('#ddlMesHistorial'), 'Seleccione año');
+                deshabilitarSelectHistorial($('#ddlVersionHistorial'), 'Seleccione mes');
+                return;
+            }
+
+            var sel = periodoHistorialSeleccionado;
+            var anios = obtenerAniosHistorialDisponibles();
+            llenarSelectPeriodoHistorial($('#ddlAnioHistorial'), anios, function(v) { return String(v); },
+                sel ? sel.anio : null, { placeholder: 'Seleccione año' });
+
+            if (sel && sel.anio && anios.indexOf(sel.anio) >= 0) {
+                var meses = obtenerMesesHistorialPorAnio(sel.anio);
+                var mesRestaurar = sel.mes && meses.indexOf(sel.mes) >= 0 ? sel.mes : null;
+                llenarSelectPeriodoHistorial($('#ddlMesHistorial'), meses, function(m) {
+                    return NOMBRES_MESES_HISTORIAL[m - 1];
+                }, mesRestaurar, { placeholder: 'Seleccione mes' });
+
+                var mesActivo = parseInt($('#ddlMesHistorial').val(), 10);
+                if (mesActivo) {
+                    var versiones = obtenerVersionesHistorialPorAnioMes(sel.anio, mesActivo);
+                    var verRestaurar = versiones.indexOf(sel.version) >= 0 ? sel.version : null;
+                    llenarSelectPeriodoHistorial($('#ddlVersionHistorial'), versiones, function(v) {
+                        return 'v' + v;
+                    }, verRestaurar, { placeholder: 'Seleccione versión' });
+                } else {
+                    deshabilitarSelectHistorial($('#ddlVersionHistorial'), 'Seleccione mes');
+                }
+            } else {
+                deshabilitarSelectHistorial($('#ddlMesHistorial'), 'Seleccione año');
+                deshabilitarSelectHistorial($('#ddlVersionHistorial'), 'Seleccione mes');
+                if (anios.length === 1) {
+                    $('#ddlAnioHistorial').val(anios[0]);
+                    onCambioAnioHistorial();
+                }
+            }
+
+            actualizarEstadoBtnAplicarPeriodoHistorial();
+        }
+
+        function renderPeriodoHistorialPicker() {
+            var $picker = $('#pickerPeriodoHistorial');
+            if (!periodoHistorialSeleccionado) {
+                $picker.removeClass('periodo-historial-picker--seleccionado')
+                    .html(periodosHistorialCatalogo.length ? 'Sin período' : 'Sin historial');
+                return;
+            }
+            var etiqueta = NOMBRES_MESES_HISTORIAL[periodoHistorialSeleccionado.mes - 1] + ' ' +
+                periodoHistorialSeleccionado.anio + ' v' + periodoHistorialSeleccionado.version;
+            $picker.addClass('periodo-historial-picker--seleccionado').html(
+                '<span class="periodo-historial-picker__texto"><i class="fas fa-history me-1"></i>' + etiqueta + '</span>' +
+                '<button type="button" class="btn-quitar-periodo" title="Quitar período" aria-label="Quitar período"><i class="fas fa-times"></i></button>'
+            );
+        }
+
+        function abrirModalPeriodoHistorial() {
+            if (!modalPeriodoHistorialBs) {
+                modalPeriodoHistorialBs = new bootstrap.Modal(document.getElementById('modalPeriodoHistorial'));
+            }
+            inicializarModalPeriodoHistorialAlAbrir();
+            modalPeriodoHistorialBs.show();
+        }
+
+        function aplicarPeriodoHistorialDesdeModal() {
+            if (!periodosHistorialCatalogo.length) {
+                showToast('warning', 'Período', 'No hay periodos de historial disponibles');
+                return;
+            }
+            var anio = parseInt($('#ddlAnioHistorial').val(), 10);
+            var mes = parseInt($('#ddlMesHistorial').val(), 10);
+            if (!periodoHistorialVersionSeleccionada()) {
+                showToast('warning', 'Período', 'Seleccione un periodo de historial valido');
+                return;
+            }
+            var version = parseInt($('#ddlVersionHistorial').val(), 10);
+            var existe = periodosHistorialCatalogo.some(function(p) {
+                return p.anio === anio && p.mes === mes && p.version === version;
+            });
+            if (!existe) {
+                showToast('warning', 'Período', 'Seleccione un periodo de historial valido');
+                return;
+            }
+            periodoHistorialSeleccionado = { mes: mes, anio: anio, version: version };
+            renderPeriodoHistorialPicker();
+            if (modalPeriodoHistorialBs) modalPeriodoHistorialBs.hide();
+        }
+
+        function limpiarPeriodoHistorial(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            periodoHistorialSeleccionado = null;
+            renderPeriodoHistorialPicker();
+        }
         
         // Función para inicializar el componente global de búsqueda
         function inicializarBusquedaAsociadosGlobal() {
@@ -1163,95 +2078,117 @@
             });
         }
 
-        // Buscar movimientos
-        function buscarMovimientos() {
-            // Obtener valores de filtros
+        function obtenerParametrosMovimientosParaServidor() {
             const idUsuario = $('#ddlUsuario').val() || null;
             const numeroAsociado = asociadoSeleccionado ? asociadoSeleccionado.numeroAsociado : null;
             const codigoRubro = $('#ddlRubro').val() || null;
             const codigoTransaccion = $('#ddlTransaccion').val() || null;
-            
-            // Obtener fechas y convertir formato
             let fechaDesde = $('#txtFechaDesde').val();
             let fechaHasta = $('#txtFechaHasta').val();
-            
-            // Validar que las fechas estén presentes ANTES de convertir
+
             if (!fechaDesde || fechaDesde.trim() === '') {
-                showToast('warning', 'Fecha requerida', 'La fecha desde es obligatoria');
-                return;
+                return { error: 'La fecha desde es obligatoria' };
             }
-            
             if (!fechaHasta || fechaHasta.trim() === '') {
-                showToast('warning', 'Fecha requerida', 'La fecha hasta es obligatoria');
-                return;
+                return { error: 'La fecha hasta es obligatoria' };
             }
-            
-            // Convertir fecha de dd/MM/yyyy a yyyyMMdd para el servidor
-            let fechaDesdeConvertida = null;
-            let fechaHastaConvertida = null;
-            
+
             const partesDesde = fechaDesde.split('/');
-            if (partesDesde.length === 3) {
-                fechaDesdeConvertida = partesDesde[2] + partesDesde[1] + partesDesde[0];
-            } else {
-                showToast('warning', 'Formato inválido', 'La fecha desde tiene un formato inválido. Use dd/MM/yyyy');
-                return;
+            if (partesDesde.length !== 3) {
+                return { error: 'La fecha desde tiene un formato inválido. Use dd/MM/yyyy' };
             }
+            fechaDesde = partesDesde[2] + partesDesde[1] + partesDesde[0];
 
             const partesHasta = fechaHasta.split('/');
-            if (partesHasta.length === 3) {
-                fechaHastaConvertida = partesHasta[2] + partesHasta[1] + partesHasta[0];
-            } else {
-                showToast('warning', 'Formato inválido', 'La fecha hasta tiene un formato inválido. Use dd/MM/yyyy');
+            if (partesHasta.length !== 3) {
+                return { error: 'La fecha hasta tiene un formato inválido. Use dd/MM/yyyy' };
+            }
+            fechaHasta = partesHasta[2] + partesHasta[1] + partesHasta[0];
+
+            var mesHistorial = periodoHistorialSeleccionado ? periodoHistorialSeleccionado.mes : null;
+            var anioHistorial = periodoHistorialSeleccionado ? periodoHistorialSeleccionado.anio : null;
+            var versionHistorial = periodoHistorialSeleccionado ? periodoHistorialSeleccionado.version : null;
+
+            return {
+                idUsuario: idUsuario,
+                numeroAsociado: numeroAsociado,
+                fechaDesde: fechaDesde,
+                fechaHasta: fechaHasta,
+                codigoRubro: codigoRubro,
+                codigoTransaccion: codigoTransaccion,
+                mesHistorial: mesHistorial,
+                anioHistorial: anioHistorial,
+                versionHistorial: versionHistorial
+            };
+        }
+
+        /* buscarMovimientos: definido en MovimientosReporte.js (resumen + detalle JSON) */
+
+        function exportarMovimientosExcel() {
+            const params = obtenerParametrosMovimientosParaServidor();
+            if (params.error) {
+                showToast('warning', 'Validación', params.error);
                 return;
             }
-            
-            // Usar las fechas convertidas
-            fechaDesde = fechaDesdeConvertida;
-            fechaHasta = fechaHastaConvertida;
 
-            // Mostrar loading en el botón Buscar
-            const btnBuscar = $('#btnBuscarMovimientos');
-            const htmlOriginal = btnBuscar.html();
-            btnBuscar.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Buscando...');
+            const btn = $('#btnExportarExcelMovimientos');
+            const htmlOriginal = btn.length ? btn.html() : '';
+            if (btn.length) {
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>');
+            }
 
             $.ajax({
-                type: "POST",
-                url: "Movimientos.aspx/BuscarMovimientos",
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
+                type: 'POST',
+                url: 'Movimientos.aspx/ExportarMovimientosExcel',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
                 data: JSON.stringify({
-                    idUsuario: idUsuario,
-                    numeroAsociado: numeroAsociado,
-                    fechaDesde: fechaDesde,
-                    fechaHasta: fechaHasta,
-                    codigoRubro: codigoRubro,
-                    codigoTransaccion: codigoTransaccion
+                    idUsuario: params.idUsuario,
+                    numeroAsociado: params.numeroAsociado,
+                    fechaDesde: params.fechaDesde,
+                    fechaHasta: params.fechaHasta,
+                    codigoRubro: params.codigoRubro,
+                    codigoTransaccion: params.codigoTransaccion
                 }),
                 success: function(response) {
                     try {
                         let responseData = typeof response.d === 'string' ? JSON.parse(response.d) : response.d;
-                        
-                        if (responseData && responseData.Success && responseData.Html) {
-                            mostrarReporteMovimientos(responseData.Html);
+                        if (responseData && responseData.Resultado === 'SUCCESS' && responseData.NombreArchivo) {
+                            const url = 'Movimientos.aspx?action=download&file=' + encodeURIComponent(responseData.NombreArchivo);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = responseData.NombreArchivo;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            showToast('success', 'Éxito', 'Archivo Excel generado correctamente');
                         } else {
-                            showToast('error', 'Error', responseData?.Message || 'Error al generar el reporte');
+                            showToast('error', 'Error', responseData && responseData.Mensaje ? responseData.Mensaje : 'No se pudo generar el Excel');
                         }
-                    } catch (error) {
-                        showToast('error', 'Error', 'Error al procesar la respuesta del servidor');
+                    } catch (e) {
+                        showToast('error', 'Error', 'Error al procesar la exportación');
                     }
                 },
-                error: function(xhr, status, error) {
-                    mostrarMovimientos([]);
+                error: function() {
+                    showToast('error', 'Error', 'Error al exportar a Excel');
                 },
                 complete: function() {
-                    btnBuscar.prop('disabled', false).html(htmlOriginal);
+                    if (btn.length) {
+                        btn.prop('disabled', false).html(htmlOriginal);
+                    }
                 }
             });
         }
 
-        // Variable global para HTML del reporte
-        let htmlReporteMovimientos = '';
+        window.htmlReporteMovimientos = '';
+
+        function imprimirTablaMovimientos() {
+            if (!htmlReporteMovimientos || htmlReporteMovimientos.trim() === '') {
+                showToast('warning', 'Impresión', 'No hay datos para imprimir');
+                return;
+            }
+            imprimirReporteMovimientos();
+        }
 
         // Mostrar reporte de movimientos en modal
         function mostrarReporteMovimientos(htmlContent) {
@@ -1275,6 +2212,9 @@
                         <div class="estado-cuenta-modal-footer">
                             <button type="button" class="btn btn-secondary" onclick="cerrarModalReporteMovimientos()">
                                 <i class="fas fa-times"></i> Cerrar
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="exportarMovimientosExcel()">
+                                <i class="fas fa-file-excel"></i> Excel
                             </button>
                             <button type="button" class="btn btn-primary" onclick="imprimirReporteMovimientos()">
                                 <i class="fas fa-print"></i> Imprimir
@@ -1436,14 +2376,14 @@
             const estilosCompletos = `
                 @page {
                     size: 8.5in 11in;
-                    margin: 0.5in;
+                    margin: 0.45in 0.168in;
                 }
                 
                 body {
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                     margin: 0;
-                    padding: 20px;
-                    font-size: 12px;
+                    padding: 6px 8px;
+                    font-size: 11px;
                     line-height: 1.4;
                     background-color: white;
                     color: #333;
@@ -1461,63 +2401,76 @@
                 
                 .header {
                     text-align: center;
-                    margin-bottom: 30px;
-                    padding-bottom: 20px;
-                    border-bottom: 2px solid #2c3e50;
+                    margin-bottom: 10px;
+                    padding-bottom: 4px;
                 }
                 
                 .logo img {
                     max-width: 200px;
                     height: auto;
                 }
+
+                .logo {
+                    margin-bottom: 6px;
+                }
                 
                 .cooperativa-nombre {
-                    font-size: 18px;
+                    font-size: 15px;
                     font-weight: 700;
                     color: #2c3e50;
-                    margin-bottom: 10px;
+                    margin-bottom: 6px;
                     text-transform: uppercase;
-                    letter-spacing: 1px;
+                    letter-spacing: 0.5px;
                 }
                 
                 .titulo-reporte {
-                    font-size: 24px;
+                    font-size: 18px;
                     font-weight: 700;
                     color: #2c3e50;
-                    margin-top: 15px;
+                    margin-top: 2px;
                     text-transform: uppercase;
-                    letter-spacing: 2px;
+                    letter-spacing: 1px;
                 }
                 
                 .datos-filtro {
                     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
                     border: 1px solid #dee2e6;
                     border-radius: 6px;
-                    padding: 15px;
-                    margin-bottom: 25px;
+                    padding: 10px 12px;
+                    margin-bottom: 10px;
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
                 }
                 
                 .datos-filtro h3 {
-                    font-size: 14px;
+                    font-size: 12px;
                     font-weight: 600;
                     color: #2c3e50;
-                    margin-bottom: 10px;
+                    margin-bottom: 6px;
                     text-transform: uppercase;
                     border-bottom: 1px solid #ced4da;
-                    padding-bottom: 8px;
+                    padding-bottom: 4px;
+                }
+                
+                .datos-filtro .campos-filtro {
+                    display: flex;
+                    gap: 20px;
+                    align-items: center;
+                    flex-wrap: nowrap;
                 }
                 
                 .datos-filtro .campo {
-                    display: flex;
-                    margin-bottom: 8px;
+                    display: inline-flex;
+                    align-items: center;
+                    margin-bottom: 0;
                 }
                 
                 .datos-filtro .campo-label {
                     font-weight: 600;
                     color: #495057;
-                    min-width: 150px;
+                    min-width: auto;
+                    margin-right: 6px;
+                    white-space: nowrap;
                 }
                 
                 .datos-filtro .campo-label::after {
@@ -1527,10 +2480,21 @@
                 
                 .tabla-datos {
                     width: 100%;
+                    table-layout: fixed;
                     border-collapse: collapse;
-                    margin-bottom: 30px;
+                    margin-bottom: 0;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                 }
+                
+                .tabla-datos .col-no { width: 6.25%; }
+                .tabla-datos .col-fecha { width: 8.38%; }
+                .tabla-datos .col-asociado { width: 19.05%; }
+                .tabla-datos .col-codigo-tran { width: 10.8%; }
+                .tabla-datos .col-rubro { width: 10.87%; }
+                .tabla-datos .col-cuenta { width: 10.395%; }
+                .tabla-datos .col-tipo { width: 16.64%; }
+                .tabla-datos .col-dr { width: 8.807%; }
+                .tabla-datos .col-cr { width: 8.807%; }
                 
                 .tabla-datos thead {
                     background: #2c3e50;
@@ -1540,19 +2504,50 @@
                 }
                 
                 .tabla-datos thead th {
-                    padding: 12px 8px;
+                    padding: 8px 4px;
                     text-align: center;
                     font-weight: 600;
-                    font-size: 11px;
+                    font-size: 10px;
                     text-transform: uppercase;
                     border: 1px solid #1a252f;
                 }
                 
+                .tabla-datos thead th.col-no {
+                    text-transform: none;
+                }
+                
                 .tabla-datos tbody td {
-                    padding: 10px 8px;
+                    padding: 6px 4px;
                     text-align: center;
                     border: 1px solid #dee2e6;
-                    font-size: 11px;
+                    font-size: 10px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                
+                .tabla-datos tbody td.col-codigo-tran {
+                    white-space: normal;
+                    word-break: break-word;
+                }
+                
+                .tabla-datos tbody td.col-asociado {
+                    white-space: normal;
+                    word-break: break-word;
+                }
+                
+                .tabla-datos tbody td.col-rubro {
+                    white-space: normal;
+                    word-break: break-word;
+                }
+                
+                .tabla-datos thead th.col-dr,
+                .tabla-datos thead th.col-cr,
+                .tabla-datos tbody td.col-dr,
+                .tabla-datos tbody td.col-cr,
+                .tabla-datos tbody td.monto.col-dr,
+                .tabla-datos tbody td.monto.col-cr {
+                    text-align: center !important;
                 }
                 
                 .tabla-datos tbody tr:nth-child(even) {
@@ -1562,7 +2557,7 @@
                 }
                 
                 .grupo-rubro {
-                    margin-bottom: 20px;
+                    margin-bottom: 10px;
                 }
                 
                 .grupo-rubro-header {
@@ -1579,16 +2574,68 @@
                 
                 .grupo-rubro-total {
                     background: #e9ecef;
-                    padding: 10px 15px;
+                    padding: 8px 12px;
                     font-weight: 600;
                     font-size: 11px;
-                    text-align: right;
                     border: 1px solid #dee2e6;
                     border-top: none;
                     border-radius: 0 0 4px 4px;
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
+                    margin-top: 0;
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: flex-end;
+                    gap: 10px;
+                    text-align: right;
                 }
+                
+                .grupo-rubro-total .total-label {
+                    margin-right: auto;
+                    text-align: left;
+                }
+                
+                .total-registros {
+                    color: #495057;
+                    font-weight: 600;
+                    white-space: nowrap;
+                }
+                
+                .totales-badges {
+                    display: inline-flex;
+                    flex-wrap: wrap;
+                    align-items: stretch;
+                    gap: 8px;
+                }
+                
+                .badge-total {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    box-sizing: border-box;
+                    width: 12rem;
+                    min-height: 2rem;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    font-family: Consolas, 'Segoe UI Mono', monospace;
+                    white-space: nowrap;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                
+                .badge-total .badge-nombre {
+                    font-weight: 700;
+                    opacity: 0.95;
+                }
+                
+                .badge-total-dr { background: #c8e6c9; color: #1b5e20; border: 1px solid #a5d6a7; }
+                .badge-total-cr { background: #ffcdd2; color: #b71c1c; border: 1px solid #ef9a9a; }
+                .badge-total-bal-pos { background: #c8e6c9; color: #1b5e20; border: 1px solid #a5d6a7; }
+                .badge-total-bal-neg { background: #ffcdd2; color: #b71c1c; border: 1px solid #ef9a9a; }
                 
                 .total-general {
                     background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
@@ -1596,16 +2643,34 @@
                     padding: 15px;
                     font-weight: 700;
                     font-size: 13px;
-                    text-align: right;
                     border-radius: 4px;
                     margin-top: 20px;
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: flex-end;
+                    gap: 10px;
+                    text-align: right;
+                }
+                
+                .total-general .total-label {
+                    margin-right: auto;
+                    text-align: left;
+                }
+                
+                .total-general .total-registros {
+                    color: #e9ecef;
                 }
                 
                 .monto {
                     font-family: 'monospace';
-                    text-align: right;
+                }
+                
+                .tabla-datos .monto.col-dr,
+                .tabla-datos .monto.col-cr {
+                    text-align: center;
                 }
                 
                 .monto-cr {
@@ -1848,6 +2913,7 @@
         function limpiarFiltros() {
             $('#ddlUsuario').val('');
             limpiarAsociadoSeleccionado();
+            limpiarPeriodoHistorial();
             $('#ddlRubro').val('');
             $('#ddlTransaccion').val('');
             
@@ -1868,8 +2934,16 @@
             if (fpHasta) {
                 fpHasta.setDate(fechaHoy, false);
             }
+
+            window.htmlReporteMovimientos = '';
+            $('#contenedorTabsMovimientos').hide();
+            $('#barTotalesMovimientosGlobal').hide();
+            $('#placeholderMovimientos').show();
+            $('#btnImprimirMovimientos').prop('disabled', true);
+            $('#btnExportarExcelMovimientos').prop('disabled', true);
         }
 
     </script>
+    <script src="MovimientosReporte.js?v=13"></script>
 </body>
 </html>

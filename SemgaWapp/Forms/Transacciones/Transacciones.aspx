@@ -1,4 +1,4 @@
-﻿<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Transacciones.aspx.vb" Inherits="SemgaWapp.Transacciones" %>
+<%@ Page Language="vb" AutoEventWireup="false" CodeBehind="Transacciones.aspx.vb" Inherits="SemgaWapp.Transacciones" %>
 
 <!DOCTYPE html>
 
@@ -19,9 +19,16 @@
     <link href="../../Scripts/toast-global.css" rel="stylesheet" />
     
     <style>
+        /* Evita scrollbar con pantalla “vacía”: márgenes del .main-container sumaban altura al viewport */
+        html {
+            height: 100%;
+        }
         body {
             background: #f8f9fa;
-            min-height: 100vh;
+            min-height: 100%;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
@@ -29,7 +36,7 @@
             background: #ffffff;
             border-radius: 6px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            margin: 15px;
+            margin: 0;
             padding: 15px;
             border: 1px solid #e9ecef;
         }
@@ -269,7 +276,7 @@
         }
         
         /* Ajustar altura de botones para que coincida con form-control */
-        #btnGuardarTransaccion, #btnCancelarTransaccion {
+        #btnCancelarTransaccion {
             height: 38px !important;
             padding: 8px 16px !important;
             font-size: 14px !important;
@@ -299,7 +306,7 @@
             justify-content: space-between !important;
         }
         
-        /* Fila doble: mismo ancho 50% / 50% para asociado y para formulario+lista */
+        /* Fila doble: dos columnas iguales (alineadas con formulario / lote) */
         .row-fila-doble {
             display: flex !important;
             flex-wrap: nowrap;
@@ -318,7 +325,7 @@
             width: 100%;
         }
         
-        /* Dos columnas 50% para formulario y lista de lote (solo cuando está visible, sin .d-none) */
+        /* Dos columnas 50/50: alineadas con .row-fila-doble */
         #divFormularioTransaccion:not(.d-none) {
             display: flex !important;
             flex-wrap: nowrap;
@@ -332,12 +339,235 @@
         #divFormularioTransaccion .card {
             min-width: 0;
         }
+        #divFormularioTransaccion .card-lote-transacciones,
+        #divFormularioTransaccion .card-form-transaccion {
+            flex: 0 0 49.5% !important;
+            max-width: 50% !important;
+        }
         
         #tblTransaccionesLote td, #tblTransaccionesLote th {
             font-size: 12px;
             padding: 6px 8px;
         }
         
+        /* Detalle simulación préstamo (rubro PR): tarjetas métricas */
+        tr.lote-pr-sim-row td {
+            border-top: none !important;
+            padding-top: 0 !important;
+            background: #f1f5f9;
+        }
+        tr.lote-pr-sim-row .lote-pr-sim-inner {
+            border-left: 3px solid #2563eb;
+            padding: 8px 10px 10px;
+            border-radius: 0 10px 10px 0;
+            margin: 0 0 6px 0;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 55%, #f1f5f9 100%);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        }
+        tr.lote-pr-sim-row .lote-pr-sim-toolbar {
+            min-width: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 2px;
+        }
+        tr.lote-pr-sim-row .lote-pr-metrics {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 6px;
+            align-items: stretch;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        tr.lote-pr-sim-row .lote-pr-metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: #fff;
+            border-radius: 8px;
+            padding: 6px 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 6px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
+            border-top: 2px solid var(--lote-metric-accent, #64748b);
+            transition: box-shadow 0.18s ease;
+        }
+        /* Métricas reparten todo el ancho; saldo con mayor peso que el resto */
+        tr.lote-pr-sim-row .lote-pr-metric--saldo {
+            flex: 1.5 1 0;
+            min-width: 0;
+            max-width: none;
+        }
+        tr.lote-pr-sim-row .lote-pr-metric--compact {
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: none;
+            padding: 6px 8px;
+        }
+        tr.lote-pr-sim-row .lote-pr-metric--compact .lote-pr-metric-value {
+            font-size: 12px;
+        }
+        tr.lote-pr-sim-row .lote-pr-metric--saldo .lote-pr-metric-value {
+            font-size: 14px;
+        }
+        tr.lote-pr-sim-row .lote-pr-metric:hover {
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+        }
+        tr.lote-pr-sim-row .lote-pr-metric--saldo { --lote-metric-accent: #0284c7; }
+        tr.lote-pr-sim-row .lote-pr-metric--tasa { --lote-metric-accent: #4f46e5; }
+        tr.lote-pr-sim-row .lote-pr-metric--dias { --lote-metric-accent: #64748b; }
+        tr.lote-pr-sim-row .lote-pr-metric--intgen { --lote-metric-accent: #0891b2; }
+        tr.lote-pr-sim-row .lote-pr-metric--aplint { --lote-metric-accent: #2563eb; }
+        tr.lote-pr-sim-row .lote-pr-metric--aplcap { --lote-metric-accent: #059669; }
+        tr.lote-pr-sim-row .lote-pr-metric--rti-fecha { --lote-metric-accent: #7c3aed; }
+        tr.lote-pr-sim-row .lote-pr-metric--rti-intcalc { --lote-metric-accent: #0e7490; }
+        tr.lote-pr-sim-row .lote-pr-metric--rti-intpag { --lote-metric-accent: #b45309; }
+        tr.lote-pr-sim-row .lote-pr-metric--rti-madev { --lote-metric-accent: #be185d; }
+        tr.lote-pr-sim-row .lote-pr-metric--rti-nuevopag { --lote-metric-accent: #15803d; }
+        tr.lote-pr-sim-row .lote-pr-metric--rtr-madev { --lote-metric-accent: #be185d; }
+        tr.lote-pr-sim-row .lote-pr-metric--rtr-nuevo { --lote-metric-accent: #15803d; }
+        tr.lote-pr-sim-row .lote-pr-metric-label {
+            display: block;
+            width: 100%;
+            text-align: center;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 3px;
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        tr.lote-pr-sim-row .lote-pr-metric-value {
+            display: block;
+            width: 100%;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        tr.lote-pr-sim-row .lote-pr-switch-wrap {
+            flex-shrink: 0;
+            align-self: stretch;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 96px;
+            max-width: 110px;
+            padding: 6px 8px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 6px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
+            border-top: 2px solid #475569;
+        }
+        tr.lote-pr-sim-row .lote-pr-switch-entire {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1 1 auto;
+            min-height: 0;
+            margin: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+        tr.lote-pr-sim-row .lote-pr-switch-title {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            line-height: 1.15;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        tr.lote-pr-sim-row .lote-pr-switch-center {
+            position: relative;
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 1.25rem;
+        }
+        /* Input real oculto; la pista muestra NO / SI */
+        tr.lote-pr-sim-row .lote-pr-solo-capital-switch.lote-pr-sr-input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        tr.lote-pr-sim-row .lote-pr-switch-ui-track {
+            position: relative;
+            width: 34px;
+            height: 16px;
+            border-radius: 8px;
+            background: #94a3b8;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+            transition: background 0.2s ease;
+        }
+        tr.lote-pr-sim-row .lote-pr-solo-capital-switch:checked + .lote-pr-switch-ui-track {
+            background: #0d6efd;
+        }
+        tr.lote-pr-sim-row .lote-pr-switch-ui-txt {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 6px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: 0.02em;
+            z-index: 1;
+            pointer-events: none;
+        }
+        /* NO a la derecha (visible con pulgar a la izquierda); SI a la izquierda (visible con pulgar a la derecha) */
+        tr.lote-pr-sim-row .lote-pr-switch-ui-no {
+            right: 4px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+        tr.lote-pr-sim-row .lote-pr-switch-ui-si {
+            left: 4px;
+            color: rgba(255, 255, 255, 0.88);
+        }
+        tr.lote-pr-sim-row .lote-pr-solo-capital-switch:checked + .lote-pr-switch-ui-track .lote-pr-switch-ui-no {
+            color: rgba(255, 255, 255, 0.75);
+        }
+        tr.lote-pr-sim-row .lote-pr-solo-capital-switch:checked + .lote-pr-switch-ui-track .lote-pr-switch-ui-si {
+            color: rgba(255, 255, 255, 1);
+        }
+        tr.lote-pr-sim-row .lote-pr-switch-ui-thumb {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+            z-index: 2;
+            transition: left 0.2s ease;
+        }
+        tr.lote-pr-sim-row .lote-pr-solo-capital-switch:checked + .lote-pr-switch-ui-track .lote-pr-switch-ui-thumb {
+            left: 20px;
+        }
+        tr.lote-pr-sim-row .lote-pr-switch-entire:focus-within .lote-pr-switch-ui-track {
+            outline: 2px solid rgba(13, 110, 253, 0.45);
+            outline-offset: 2px;
+        }
         /* Botones Añadir y Cancelar del formulario: mismo tamaño y alto */
         #btnAnadirTransaccion, #btnCancelarTransaccion {
             height: 38px !important;
@@ -358,6 +588,10 @@
             display: none !important;
         }
         
+        #divBotonesGlobales:not(.d-none) {
+            display: block !important;
+        }
+        
         /* Barra de botones globales: mismo ancho que las columnas de arriba */
         .barra-botones-globales {
             background: rgba(13, 110, 253, 0.08);
@@ -366,16 +600,113 @@
             margin: 0 0 15px 0;
             border: 1px solid rgba(13, 110, 253, 0.15);
         }
+
+        .header-title-with-fechas {
+            min-width: 0;
+        }
+        .header-fechas-ref .fecha-ref-pill {
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid transparent;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        /* Fecha real (internet / zona del equipo): verde azulado */
+        .header-fechas-ref .fecha-ref-pill--real {
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+        /* Fecha sistema (SQL GETDATE): amarillo */
+        .header-fechas-ref .fecha-ref-pill--sistema {
+            background: linear-gradient(135deg, #ca8a04 0%, #eab308 100%);
+            color: #422006;
+            border-color: rgba(66, 32, 6, 0.25);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+        .header-fechas-ref .fecha-ref-pill strong {
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        /* Acciones del asociado (misma semántica que botones en GestionSocios) */
+        .acciones-asociado-transacciones .btn {
+            flex: 1 1 0;
+            min-width: 0;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: normal;
+            line-height: 1.2;
+            padding: 0.5rem 0.35rem;
+        }
+        .global-panel-trans {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            overflow: hidden;
+        }
+        .global-panel-header-trans {
+            background: linear-gradient(135deg, #facc15, #fbbf24);
+            color: #1f2937;
+            border-bottom: 1px solid rgba(120, 53, 15, 0.2);
+            align-items: center;
+            padding: 14px 24px;
+        }
+        .global-panel-title-trans {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #1f2937;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .global-panel-body-trans { padding: 22px; }
+        .global-panel-footer-trans {
+            background: #f8fafc;
+            padding: 18px 22px;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .global-card-trans {
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+            padding: 16px;
+        }
+        .movimientos-modal-dialog-trans { max-width: 1200px; width: 95%; }
+        #tablaMovimientosSocio td.observaciones-cell {
+            min-width: 220px;
+            text-align: left !important;
+            white-space: normal;
+        }
+        #tablaMovimientosSocio thead th { text-align: center !important; }
     </style>
 </head>
 <body>
+    <%-- ResolveUrl aquí (no en <head>): si hay <%= %> dentro de head runat="server", BasePage no puede añadir el favicon vía Header.Controls.Add. --%>
+    <script type="text/javascript">
+        window.SEMGA_TRANSACCIONES_PAGE_URL = '<%= ResolveUrl("~/Forms/Transacciones/Transacciones.aspx") %>';
+        window.SEMGA_DASHBOARD_URL = '<%= ResolveUrl("~/Dashboard.aspx") %>';
+    </script>
     <form id="form1" runat="server">
         <div class="main-container">
             <!-- Header Section -->
             <div class="header-section">
                 <div class="row align-items-center">
                     <div class="col-md-6">
-                        <h6 class="mb-0" style="font-size: 16px;"><i class="fas fa-exchange-alt me-2"></i>Gestión de Transacciones</h6>
+                        <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3 header-title-with-fechas">
+                            <h6 class="mb-0 flex-shrink-0 align-self-center" style="font-size: 16px;"><i class="fas fa-exchange-alt me-2"></i>Gestión de Transacciones</h6>
+                            <div id="fechasReferenciaHeader" class="header-fechas-ref d-flex flex-wrap align-items-center gap-2 flex-grow-1 min-width-0" aria-live="polite"></div>
+                        </div>
                     </div>
                     <div class="col-md-6 text-end">
                         <button type="button" class="btn btn-secondary" onclick="volverDashboard()">
@@ -385,7 +716,7 @@
                 </div>
             </div>
 
-            <!-- Selección de Asociado: misma anchura y alineación que el div izquierdo (50%) -->
+            <!-- Selección de Asociado: misma anchura que formulario (50%) -->
             <div id="rowAsociado" class="row-fila-doble mb-4">
                 <div class="columna-izq">
                     <div class="card border-primary h-100">
@@ -425,9 +756,29 @@
                     </div>
                 </div>
                 
-                <!-- Div de Error de Validación -->
-                <div class="columna-der">
-                    <div id="divErrorValidacion" class="alert alert-danger d-none h-100" style="margin-bottom: 0;">
+                <!-- Acciones del asociado + error de validación -->
+                <div class="columna-der d-flex flex-column gap-3">
+                    <div class="card border-secondary h-100">
+                        <div class="card-header bg-light py-2">
+                            <h6 class="mb-0 text-secondary">
+                                <i class="fas fa-folder-open me-2"></i>Consultas del asociado
+                            </h6>
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="d-flex flex-wrap gap-2 acciones-asociado-transacciones" role="group" aria-label="Consultas">
+                                <button type="button" id="btnAccSocTransacciones" class="btn btn-outline-primary btn-sm" disabled title="Transacciones">
+                                    <i class="fas fa-list-ul me-1"></i>Transacciones
+                                </button>
+                                <button type="button" id="btnAccSocMovimientos" class="btn btn-outline-info btn-sm" disabled title="Ver movimientos">
+                                    <i class="fas fa-list-ul me-1"></i>Movimientos
+                                </button>
+                                <button type="button" id="btnAccSocEstadoCuenta" class="btn btn-outline-info btn-sm" disabled title="Generar Estado de Cuenta">
+                                    <i class="fas fa-file-invoice me-1"></i>Estado de cuenta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divErrorValidacion" class="alert alert-danger d-none" style="margin-bottom: 0;">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-exclamation-triangle fa-lg text-danger me-3"></i>
@@ -445,16 +796,16 @@
             </div>
 
             <!-- Dos columnas: solo visibles cuando hay asociado seleccionado -->
-            <div id="divFormularioTransaccion" class="mb-3 d-none" style="gap: 0 1%; display: none !important;">
+            <div id="divFormularioTransaccion" class="mb-3 d-none" style="gap: 0 1%;">
                 <!-- Izquierda: formulario de datos de la transacción -->
-                <div class="card border-success" style="flex: 0 0 49.5%; max-width: 50%;">
+                <div class="card border-success card-form-transaccion">
                     <div class="card-header bg-light">
                         <h6 class="mb-0 text-success">
                             <i class="fas fa-plus-circle me-2"></i>Datos de la transacción
                         </h6>
                     </div>
                     <div class="card-body">
-                        <form id="formTransaccion">
+                        <div id="panelCapturaTransaccion" class="panel-captura-transaccion" role="region" aria-label="Datos de la transacción">
                             <div class="row mb-2">
                                 <div class="col-6">
                                     <label for="ddlRubro" class="form-label fw-bold">Rubro <span class="text-danger">*</span></label>
@@ -508,11 +859,11 @@
                                     </button>
                                 </div>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
                 <!-- Derecha: lista de transacciones del lote -->
-                <div class="card border-primary" style="flex: 0 0 49.5%; max-width: 50%;">
+                <div class="card border-primary card-lote-transacciones">
                     <div class="card-header bg-light">
                         <h6 class="mb-0 text-primary" id="tituloTransaccionesLote">
                             <i class="fas fa-list me-2"></i>Transacciones del lote (máx. <%= CantTransLoteMax %>)
@@ -521,7 +872,7 @@
                     <div class="card-body p-2">
                         <input type="hidden" id="cantTransLoteMax" value="<%= CantTransLoteMax %>" />
                         <input type="hidden" id="jsonTransaccionesLote" value="[]" />
-                        <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                        <div class="table-responsive" style="max-height: 560px; overflow-y: auto;">
                             <table class="table table-sm table-hover mb-0" id="tblTransaccionesLote" style="display: none;">
                                 <thead class="table-light sticky-top">
                                     <tr>
@@ -545,7 +896,7 @@
             </div>
 
             <!-- Botones globales: solo visibles cuando hay asociado seleccionado -->
-            <div id="divBotonesGlobales" class="d-none" style="display: none !important;">
+            <div id="divBotonesGlobales" class="d-none">
                 <div class="barra-botones-globales">
                     <div class="d-flex justify-content-center gap-3 align-items-center">
                         <button type="button" id="btnGuardarLote" class="btn btn-success">
@@ -580,24 +931,179 @@
         
         <!-- Global Modals Container -->
         <div id="globalModalsContainer"></div>
+
+        <!-- Modales consulta asociado (GestionSocios.aspx) -->
+        <div class="modal fade" id="modalMovimientosSocio" tabindex="-1" aria-labelledby="modalMovimientosSocioLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable movimientos-modal-dialog-trans">
+                <div class="modal-content global-panel-trans">
+                    <div class="modal-header global-panel-header-trans">
+                        <h5 class="modal-title global-panel-title-trans" id="modalMovimientosSocioLabel">
+                            <i class="fas fa-receipt me-2"></i>Movimientos del socio
+                            <span id="tituloMovimientosSocio" class="d-inline-flex align-items-center gap-2"></span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body global-panel-body-trans">
+                        <div id="estadoMovimientosSocio" class="d-flex align-items-center justify-content-center flex-column py-4 d-none">
+                            <i class="fas fa-folder-open fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No se encontraron movimientos para este socio.</p>
+                        </div>
+                        <div id="spinnerMovimientosSocio" class="text-center my-4 d-none">
+                            <div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div>
+                            <p class="mt-3 mb-0">Cargando movimientos...</p>
+                        </div>
+                        <div class="global-card-trans" id="contenedorTablaMovimientosSocio" style="display: none;">
+                            <table class="table table-hover align-middle" id="tablaMovimientosSocio">
+                                <thead>
+                                    <tr>
+                                        <th>Transacción</th>
+                                        <th>Fecha</th>
+                                        <th>Rubro</th>
+                                        <th>Detalle</th>
+                                        <th>Monto</th>
+                                        <th>Observaciones</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyMovimientosSocio"></tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-center" id="verMasMovimientosContainer" style="display: none;">
+                            <button type="button" class="btn btn-outline-primary" id="btnVerMasMovimientos">Ver más movimientos</button>
+                        </div>
+                    </div>
+                    <div class="modal-footer global-panel-footer-trans">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="modalTransaccionesSocio" tabindex="-1" aria-labelledby="modalTransaccionesSocioLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header modal-header-transacciones" style="background: #2c3e50; color: white;">
+                        <h6 class="modal-title mb-0" id="modalTransaccionesSocioLabel">
+                            <i class="fas fa-list-ul me-2"></i>Transacciones del socio
+                            <span id="tituloTransaccionesSocio" class="ms-2"></span>
+                        </h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="estadoTransaccionesSocio" class="text-center py-4 d-none">
+                            <i class="fas fa-folder-open fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No se encontraron transacciones.</p>
+                        </div>
+                        <div id="spinnerTransaccionesSocio" class="text-center my-4 d-none">
+                            <div class="spinner-border" role="status"></div>
+                            <p class="mt-2 mb-0">Cargando transacciones...</p>
+                        </div>
+                        <div id="contenedorTablaTransaccionesSocio" style="display: none;">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Fecha/Hora</th>
+                                        <th>Cajero</th>
+                                        <th>Movimientos</th>
+                                        <th>Imprimir</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyTransaccionesSocio"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </form>
+
+    <!-- Estilos impresión estado de cuenta (resumen; el HTML del servidor aporta clases .estado-cuenta, .tabla-datos, etc.) -->
+    <textarea id="semgaEstadoCuentaPrintCss" class="d-none" aria-hidden="true">@page { size: 8.5in 11in; margin: 0.5in; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; font-size: 12px; line-height: 1.4; background: #fff; color: #333; }
+.estado-cuenta { width: 100%; max-width: 8.5in; margin: 0 auto; background: #fff; }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #2c3e50; }
+.cooperativa-nombre { font-size: 18px; font-weight: 700; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; }
+.titulo-estado { font-size: 24px; font-weight: 700; color: #2c3e50; margin-top: 15px; text-transform: uppercase; }
+.datos-asociado { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; margin-bottom: 25px; }
+.tabla-datos { width: 100%; border-collapse: collapse; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.tabla-datos thead { background: #2c3e50; color: #fff; }
+.tabla-datos th, .tabla-datos td { padding: 8px; border: 1px solid #dee2e6; }
+.footer { margin-top: 40px; padding-top: 15px; border-top: 1px solid #dee2e6; text-align: center; font-size: 11px; color: #6c757d; }
+.no-print, .btn-detalle-intereses { display: none !important; }
+@media print { body { margin: 0; padding: 0; } .datos-asociado, .tabla-datos thead { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    </textarea>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../../Scripts/smart-chips.js"></script>
-    <script src="../../Scripts/global-associate-search.js?v=1.3"></script>
+    <script src="../../Scripts/global-associate-search.js?v=1.4"></script>
     <script src="../../Scripts/inactivity-monitor-final.js?v=2.6"></script>
     <script src="../../Scripts/notifications.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../../Scripts/transacciones-socios-acciones.js?v=1.1"></script>
     <!-- Flatpickr Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
     <script>
+        /** URL para PageMethods de esta página (virtual directory-safe). */
+        function semgaTransPageMethod(methodName) {
+            var u = (typeof window.SEMGA_TRANSACCIONES_PAGE_URL === 'string' && window.SEMGA_TRANSACCIONES_PAGE_URL)
+                ? window.SEMGA_TRANSACCIONES_PAGE_URL.replace(/\/+$/, '')
+                : 'Transacciones.aspx';
+            return u + '/' + methodName;
+        }
+        function semgaTransaccionesReload() {
+            window.location.href = (typeof window.SEMGA_TRANSACCIONES_PAGE_URL === 'string' && window.SEMGA_TRANSACCIONES_PAGE_URL)
+                ? window.SEMGA_TRANSACCIONES_PAGE_URL
+                : 'Transacciones.aspx';
+        }
+        function semgaIrDashboard() {
+            window.location.href = (typeof window.SEMGA_DASHBOARD_URL === 'string' && window.SEMGA_DASHBOARD_URL)
+                ? window.SEMGA_DASHBOARD_URL
+                : '../../Dashboard.aspx';
+        }
+
+        function semgaCargarFechasReferenciaTitulo(endpoint) {
+            var tz = '';
+            try {
+                tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+            } catch (e) { }
+            $.ajax({
+                type: 'POST',
+                url: endpoint,
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ timeZoneCliente: tz }),
+                dataType: 'json',
+                success: function (response) {
+                    var d = response.d;
+                    if (!d || d.Resultado !== 'SUCCESS') return;
+                    var $c = $('#fechasReferenciaHeader');
+                    if (!$c.length) return;
+                    var $p1 = $('<span class="fecha-ref-pill fecha-ref-pill--real"></span>')
+                        .append($('<i class="fas fa-globe-americas me-1" aria-hidden="true"></i>'))
+                        .append($('<strong></strong>').text('Fecha real: '))
+                        .append($('<span></span>').text(d.FechaReal || ''));
+                    var $p2 = $('<span class="fecha-ref-pill fecha-ref-pill--sistema"></span>')
+                        .append($('<i class="fas fa-database me-1" aria-hidden="true"></i>'))
+                        .append($('<strong></strong>').text('Fecha sistema: '))
+                        .append($('<span></span>').text(d.FechaSistema || ''));
+                    $c.empty().append($p1, $p2);
+                }
+            });
+        }
+
         $(document).ready(function() {
+            semgaCargarFechasReferenciaTitulo(semgaTransPageMethod('ObtenerFechasReferenciaTitulo'));
+            if (typeof SemgaTransAcciones !== 'undefined') {
+                SemgaTransAcciones.init();
+            }
+
             // Ocultar sección de transacción y botones globales hasta que se elija un asociado
-            $('#divFormularioTransaccion, #divBotonesGlobales').addClass('d-none').css('display', 'none');
+            $('#divFormularioTransaccion, #divBotonesGlobales').addClass('d-none');
 
             // Inicializar monitoreo de inactividad
             if (typeof initializeInactivityMonitoring === 'function') {
@@ -687,26 +1193,6 @@
                 imprimirComprobanteLotePorId(idTrans);
             });
 
-            function imprimirComprobanteLotePorId(idTrans) {
-                $.ajax({
-                    type: 'POST',
-                    url: 'Transacciones.aspx/GenerarComprobanteLote',
-                    data: JSON.stringify({ idTrans: idTrans }),
-                    contentType: 'application/json; charset=utf-8',
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.d && response.d.Resultado === 'SUCCESS') {
-                            mostrarModalComprobante(response.d.Html, '', '');
-                        } else {
-                            showToast('error', 'Error', (response.d && response.d.Mensaje) || 'Error al generar comprobante.');
-                        }
-                    },
-                    error: function(xhr, status, err) {
-                        showToast('error', 'Error', 'Error al generar comprobante: ' + (err || xhr.statusText));
-                    }
-                });
-            }
-            
             // Evento para cerrar el div de error
             $('#btnCerrarError').on('click', function() {
                 ocultarErrorValidacion();
@@ -761,7 +1247,6 @@
         var globalSearchConfig = null;
         var jsonAuxiliares = null; // Almacenar el JSON de auxiliares del asociado
         var listaTransaccionesPendientes = []; // Lote de transacciones (mismo asociado). Cada ítem: { CodigoRubro, AuxiliarKey, IDAuxiliar, CodigoTransaccion, Monto, Observaciones, textoAuxiliar, textoCuenta, textoTransaccion }
-        var guardandoTransaccion = false; // Usado por flujo legacy (guardar una sola transacción)
 
         // Función para inicializar el componente global de búsqueda
         function inicializarBusquedaAsociadosGlobal() {
@@ -816,9 +1301,9 @@
             $('#divSinAsociado').addClass('d-none');
             $('#divAsociadoSeleccionado').removeClass('d-none');
             
-            // Mostrar formulario y botones globales (solo cuando hay asociado)
-            $('#divFormularioTransaccion').removeClass('d-none').css('display', 'flex');
-            $('#divBotonesGlobales').removeClass('d-none').css('display', 'block');
+            // Mostrar formulario y botones globales (solo cuando hay asociado); visibilidad solo con .d-none + CSS
+            $('#divFormularioTransaccion').removeClass('d-none');
+            $('#divBotonesGlobales').removeClass('d-none');
             
             // Reiniciar lote para el nuevo asociado
             listaTransaccionesPendientes = [];
@@ -830,6 +1315,12 @@
             
             // Cargar datos para el formulario usando JsonAuxiliares
             cargarDatosFormulario();
+
+            window.semgaNumeroAsociadoTransacciones = numeroAsociado;
+            if (typeof SemgaTransAcciones !== 'undefined') {
+                SemgaTransAcciones.syncSocio(asociadoSeleccionado);
+                SemgaTransAcciones.setAccionesHabilitadas(true);
+            }
         }
 
 
@@ -853,7 +1344,7 @@
                 'Eliminar al asociado borrará los datos de la transacción.<br><strong>¿Desea continuar?</strong>',
                 function() {
                     // Función de confirmación - redirigir para reiniciar todo
-                    window.location.href = 'Transacciones.aspx';
+                    semgaTransaccionesReload();
                 },
                 function() {
                     // Función de cancelación - no hacer nada
@@ -863,6 +1354,10 @@
         }
 
         function eliminarAsociadoSeleccionado() {
+            window.semgaNumeroAsociadoTransacciones = null;
+            if (typeof SemgaTransAcciones !== 'undefined') {
+                SemgaTransAcciones.setAccionesHabilitadas(false);
+            }
             asociadoSeleccionado = null;
             jsonAuxiliares = null;
             listaTransaccionesPendientes = [];
@@ -872,8 +1367,8 @@
             $('#divAsociadoSeleccionado').addClass('d-none');
             $('#divSinAsociado').removeClass('d-none');
             
-            $('#divFormularioTransaccion').addClass('d-none').css('display', 'none');
-            $('#divBotonesGlobales').addClass('d-none').css('display', 'none');
+            $('#divFormularioTransaccion').addClass('d-none');
+            $('#divBotonesGlobales').addClass('d-none');
             $('#jsonTransaccionesLote').val('[]');
         }
 
@@ -1074,15 +1569,71 @@
             return -1;
         }
 
-        function añadirTransaccionALista() {
-            if (!validarFormularioTransaccion()) return;
+        function completarPushItemAlLote(item, onDone) {
+            listaTransaccionesPendientes.push(item);
+            actualizarJsonYTablaLote();
+            actualizarEstadoBotonAsociado();
+            limpiarFormularioTransaccion();
+            ocultarErrorValidacion();
+            if (typeof onDone === 'function') onDone(true);
+        }
+
+        /** PR: simula con el SP; si Resultado es error no llama onOk. */
+        function ejecutarSiSimulacionPrestamoOk(item, onOk, onFail) {
+            if (!esRubroPrestamo(item.CodigoRubro)) {
+                onOk();
+                return;
+            }
+            if (!asociadoSeleccionado || !asociadoSeleccionado.numeroAsociado) {
+                showToast('error', 'Simulación', 'No hay asociado seleccionado.');
+                if (onFail) onFail();
+                return;
+            }
+            var fail = onFail || function () { };
+            $.ajax({
+                type: 'POST',
+                url: semgaTransPageMethod('SimularMovimiento'),
+                data: JSON.stringify({
+                    numeroAsociado: parseInt(asociadoSeleccionado.numeroAsociado, 10),
+                    codigoRubro: item.CodigoRubro,
+                    idAuxiliar: parseInt(item.IDAuxiliar, 10),
+                    codigoTransaccion: item.CodigoTransaccion,
+                    monto: item.Monto,
+                    snSoloCapital: item.SnSoloCapital ? 1 : 0
+                }),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function (response) {
+                    var d = response.d;
+                    if (!simExito(d)) {
+                        showToast('error', 'Simulación', (d && d.Mensaje) ? d.Mensaje : 'No se pudo simular el movimiento.');
+                        fail();
+                        return;
+                    }
+                    onOk();
+                },
+                error: function (xhr, status, err) {
+                    showToast('error', 'Simulación', err || xhr.statusText || '');
+                    fail();
+                }
+            });
+        }
+
+        /** onDone(true) si se añadió; onDone(false) si validación, simulación o usuario canceló. */
+        function añadirTransaccionALista(onDone) {
+            if (!validarFormularioTransaccion()) {
+                if (typeof onDone === 'function') onDone(false);
+                return;
+            }
             if (!asociadoSeleccionado || !asociadoSeleccionado.numeroAsociado) {
                 mostrarErrorValidacion('No hay un asociado seleccionado');
+                if (typeof onDone === 'function') onDone(false);
                 return;
             }
             var cantMax = parseInt($('#cantTransLoteMax').val(), 10) || 10;
             if (listaTransaccionesPendientes.length >= cantMax) {
                 showToast('warning', 'Lote lleno', 'El lote admite como máximo ' + cantMax + ' transacciones. Debe guardar o eliminar líneas para añadir más.');
+                if (typeof onDone === 'function') onDone(false);
                 return;
             }
             var codigoRubro = $('#ddlRubro').val();
@@ -1103,44 +1654,257 @@
                 textoCuenta: $('#ddlCuenta option:selected').text(),
                 textoTransaccion: $('#ddlCodigoTransaccion option:selected').text()
             };
+            asegurarCamposRubroPrestamo(item);
             var idxDup = indiceDuplicadoEnLote(codigoRubro, auxiliarKey, idAuxiliar, codigoTransaccion);
+            var cantMaxDup = parseInt($('#cantTransLoteMax').val(), 10) || 10;
+            var notificarFallo = function () {
+                if (typeof onDone === 'function') onDone(false);
+            };
             if (idxDup >= 0) {
                 var numLinea = idxDup + 1;
-                var cantMaxDup = parseInt($('#cantTransLoteMax').val(), 10) || 10;
                 if (listaTransaccionesPendientes.length >= cantMaxDup) {
                     showToast('warning', 'Lote lleno', 'El lote admite como máximo ' + cantMaxDup + ' transacciones.');
+                    notificarFallo();
                     return;
                 }
                 showConfirmToast(
                     'warning',
                     'Posible duplicado',
                     'Ya hay en la lista una transacción idéntica en la línea ' + numLinea + '.<br><strong>¿Seguro desea duplicarla?</strong>',
-                    function() {
+                    function () {
                         if (listaTransaccionesPendientes.length >= cantMaxDup) {
                             showToast('warning', 'Lote lleno', 'No se puede añadir: el lote ya tiene el máximo de ' + cantMaxDup + ' transacciones.');
+                            notificarFallo();
                             return;
                         }
-                        listaTransaccionesPendientes.push(item);
-                        actualizarJsonYTablaLote();
-                        actualizarEstadoBotonAsociado();
-                        limpiarFormularioTransaccion();
-                        ocultarErrorValidacion();
+                        ejecutarSiSimulacionPrestamoOk(item, function () {
+                            completarPushItemAlLote(item, onDone);
+                        }, notificarFallo);
                     },
-                    function() {
+                    function () {
                         showToast('info', 'Operación cancelada', 'No se añadió la transacción.');
+                        notificarFallo();
                     }
                 );
                 return;
             }
-            listaTransaccionesPendientes.push(item);
-            actualizarJsonYTablaLote();
-            actualizarEstadoBotonAsociado();
-            limpiarFormularioTransaccion();
-            ocultarErrorValidacion();
+            ejecutarSiSimulacionPrestamoOk(item, function () {
+                completarPushItemAlLote(item, onDone);
+            }, notificarFallo);
+        }
+
+        function esRubroPrestamo(codigoRubro) {
+            return (codigoRubro || '').toString().trim().toUpperCase() === 'PR';
+        }
+
+        /** Variante de simulación según código de transacción (PR). */
+        function codigoTransPrSimTipo(ct) {
+            ct = (ct || '').toString().trim().toUpperCase();
+            if (ct === 'PRRTI') return 'PRRTI';
+            if (ct === 'PRRTR') return 'PRRTR';
+            return 'PAGO';
+        }
+
+        function simExito(d) {
+            return d && (d.Resultado === 'SUCCESS' || d.Resultado === 'OK');
+        }
+
+        function fmtFechaSimPr(s) {
+            if (s == null || s === '') return '—';
+            var t = String(s).trim();
+            if (/^\d{4}-\d{2}-\d{2}/.test(t)) {
+                var p = t.substring(0, 10).split('-');
+                return parseInt(p[2], 10) + '/' + parseInt(p[1], 10) + '/' + p[0];
+            }
+            return t;
+        }
+
+        function htmlToolbarSimPr(ct, swId, soloCap, idx) {
+            var tipo = codigoTransPrSimTipo(ct);
+            var metrics;
+            if (tipo === 'PRRTI') {
+                metrics = '<div class="lote-pr-metrics sim-badges flex-grow-1">' +
+                    '<div class="lote-pr-metric lote-pr-metric--saldo" title="SaldoAuxiliar"><span class="lote-pr-metric-label">Saldo del auxiliar</span><span class="lote-pr-metric-value js-sim-rti-saldo">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--rti-fecha" title="FechaUltCalculoIntereses"><span class="lote-pr-metric-label">ULT. FEC. CÁLCULO</span><span class="lote-pr-metric-value js-sim-rti-fecha">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--rti-intcalc" title="InteresesCalculados"><span class="lote-pr-metric-label">INT. CALCULADOS</span><span class="lote-pr-metric-value js-sim-rti-intcalc">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--rti-intpag" title="InteresesPagados"><span class="lote-pr-metric-label">INT. PAGADOS</span><span class="lote-pr-metric-value js-sim-rti-intpag">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--rti-madev" title="MontoADevolver"><span class="lote-pr-metric-label">Monto a devolver</span><span class="lote-pr-metric-value js-sim-rti-madev">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--rti-nuevopag" title="NuevoInteresPagado"><span class="lote-pr-metric-label">NUEVO INT. PAGADOS</span><span class="lote-pr-metric-value js-sim-rti-nuevopag">—</span></div>' +
+                    '</div>';
+            } else if (tipo === 'PRRTR') {
+                metrics = '<div class="lote-pr-metrics sim-badges flex-grow-1">' +
+                    '<div class="lote-pr-metric lote-pr-metric--saldo" title="SaldoAuxiliar"><span class="lote-pr-metric-label">Saldo auxiliar</span><span class="lote-pr-metric-value js-sim-rtr-saldo">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--rtr-madev" title="MontoADevolver"><span class="lote-pr-metric-label">Monto a devolver</span><span class="lote-pr-metric-value js-sim-rtr-madev">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--rtr-nuevo" title="NuevoSaldo"><span class="lote-pr-metric-label">Nuevo saldo</span><span class="lote-pr-metric-value js-sim-rtr-nuevo">—</span></div>' +
+                    '</div>';
+            } else {
+                metrics = '<div class="lote-pr-metrics sim-badges flex-grow-1">' +
+                    '<div class="lote-pr-metric lote-pr-metric--saldo" title="SaldoAuxiliar"><span class="lote-pr-metric-label">Saldo del auxiliar</span><span class="lote-pr-metric-value js-sim-saldo">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--tasa" title="TasaInteresPorcentaje"><span class="lote-pr-metric-label">Tasa</span><span class="lote-pr-metric-value js-sim-tasa">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--dias" title="DiasInteresesAGenerar"><span class="lote-pr-metric-label">Días interés</span><span class="lote-pr-metric-value js-sim-dias">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--intgen" title="MontoInteresesAGenerar"><span class="lote-pr-metric-label">Int. a generar</span><span class="lote-pr-metric-value js-sim-montointgen">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--aplint" title="MontoAAplicarIntereses"><span class="lote-pr-metric-label">Aplic. intereses</span><span class="lote-pr-metric-value js-sim-aplint">—</span></div>' +
+                    '<div class="lote-pr-metric lote-pr-metric--compact lote-pr-metric--aplcap" title="MontoAAplicarCapital"><span class="lote-pr-metric-label">Aplic. capital</span><span class="lote-pr-metric-value js-sim-aplcap">—</span></div>' +
+                    '</div>';
+            }
+            if (tipo !== 'PAGO') return metrics;
+            return metrics +
+                '<div class="lote-pr-switch-wrap">' +
+                '<label class="lote-pr-switch-entire" for="' + swId + '">' +
+                '<span class="lote-pr-switch-title">Solo capital</span>' +
+                '<div class="lote-pr-switch-center">' +
+                '<input class="lote-pr-solo-capital-switch lote-pr-sr-input" type="checkbox" role="switch" id="' + swId + '" data-lote-idx="' + idx + '"' + (soloCap ? ' checked' : '') + '>' +
+                '<span class="lote-pr-switch-ui-track" aria-hidden="true">' +
+                '<span class="lote-pr-switch-ui-txt lote-pr-switch-ui-no">NO</span>' +
+                '<span class="lote-pr-switch-ui-txt lote-pr-switch-ui-si">SI</span>' +
+                '<span class="lote-pr-switch-ui-thumb"></span>' +
+                '</span></div></label></div>';
+        }
+
+        function aplicarResultadoSimulacionPr($detail, it, d) {
+            if (!simExito(d)) return;
+            it.Simulacion = d;
+            var tipo = codigoTransPrSimTipo(it.CodigoTransaccion);
+            if (tipo === 'PRRTI') {
+                $detail.find('.js-sim-rti-saldo').text(fmtSaldoAuxiliar(d.SaldoAuxiliar));
+                $detail.find('.js-sim-rti-fecha').text(fmtFechaSimPr(d.FechaUltCalculoIntereses));
+                $detail.find('.js-sim-rti-intcalc').text(fmtSaldoAuxiliar(d.InteresesCalculados));
+                $detail.find('.js-sim-rti-intpag').text(fmtSaldoAuxiliar(d.InteresesPagados));
+                $detail.find('.js-sim-rti-madev').text(fmtSaldoAuxiliar(d.MontoADevolver));
+                $detail.find('.js-sim-rti-nuevopag').text(fmtSaldoAuxiliar(d.NuevoInteresPagado));
+            } else if (tipo === 'PRRTR') {
+                $detail.find('.js-sim-rtr-saldo').text(fmtSaldoAuxiliar(d.SaldoAuxiliar));
+                $detail.find('.js-sim-rtr-madev').text(fmtSaldoAuxiliar(d.MontoADevolver));
+                $detail.find('.js-sim-rtr-nuevo').text(fmtSaldoAuxiliar(d.NuevoSaldo));
+            } else {
+                $detail.find('.js-sim-saldo').text(fmtSaldoAuxiliar(d.SaldoAuxiliar));
+                $detail.find('.js-sim-tasa').text(fmtTasaInteresPorcentaje(d.TasaInteresPorcentaje));
+                $detail.find('.js-sim-dias').text(d.DiasInteresesAGenerar != null ? d.DiasInteresesAGenerar : '—');
+                $detail.find('.js-sim-montointgen').text(fmtSaldoAuxiliar(d.MontoInteresesAGenerar));
+                $detail.find('.js-sim-aplint').text(fmtSaldoAuxiliar(d.MontoAAplicarIntereses));
+                $detail.find('.js-sim-aplcap').text(fmtSaldoAuxiliar(d.MontoAAplicarCapital));
+            }
+        }
+
+        function asegurarCamposRubroPrestamo(item) {
+            if (!item || !esRubroPrestamo(item.CodigoRubro)) return;
+            if (typeof item.SnSoloCapital !== 'boolean') item.SnSoloCapital = false;
+        }
+
+        /** JSON del hidden #jsonTransaccionesLote: misma forma que consume OPENJSON (snSoloCapital 0/1 en PR). */
+        function serializarLineaLoteParaHidden(it, index) {
+            var idAux = it.IDAuxiliar;
+            if (typeof idAux !== 'number') idAux = parseInt(idAux, 10);
+            if (isNaN(idAux)) idAux = null;
+            var o = {
+                NumeroLinea: index + 1,
+                CodigoRubro: it.CodigoRubro,
+                IDAuxiliar: idAux,
+                CodigoTransaccion: it.CodigoTransaccion,
+                Monto: it.Monto,
+                Observaciones: it.Observaciones || ''
+            };
+            if (esRubroPrestamo(it.CodigoRubro)) {
+                o.snSoloCapital = it.SnSoloCapital ? 1 : 0;
+            }
+            return o;
+        }
+
+        function serializarListaLoteParaInputHidden(arr) {
+            if (!arr || !arr.length) return [];
+            var out = [];
+            for (var i = 0; i < arr.length; i++) {
+                out.push(serializarLineaLoteParaHidden(arr[i], i));
+            }
+            return out;
+        }
+
+        function actualizarHiddenJsonLote() {
+            $('#jsonTransaccionesLote').val(JSON.stringify(serializarListaLoteParaInputHidden(listaTransaccionesPendientes)));
+        }
+
+        function fmtMontoSimPr(n) {
+            if (n == null || n === '' || (typeof n === 'number' && isNaN(n))) return '—';
+            return Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function fmtSaldoAuxiliar(n) {
+            if (n == null || n === '' || (typeof n === 'number' && isNaN(n))) return '—';
+            return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        /** Tasa desde BD: si viene como decimal 0–1 se muestra como %; si ya es >1 se asume valor en % */
+        function fmtTasaInteresPorcentaje(n) {
+            if (n == null || n === '' || (typeof n === 'number' && isNaN(n))) return '—';
+            var x = Number(n);
+            if (x > 0 && x <= 1) x = x * 100;
+            return x.toLocaleString('es-PA', { minimumFractionDigits: 2, maximumFractionDigits: 6 }) + '%';
+        }
+
+        function crearFilaDetallePrSim(idx, it) {
+            var tr = $('<tr class="lote-pr-sim-row"></tr>').attr('data-lote-idx', idx);
+            var soloCap = !!it.SnSoloCapital;
+            var swId = 'swPrLote' + idx;
+            var html = '<td colspan="7">' +
+                '<div class="lote-pr-sim-inner">' +
+                '<div class="lote-pr-sim-toolbar d-flex flex-nowrap align-items-stretch justify-content-between gap-2">' +
+                htmlToolbarSimPr(it.CodigoTransaccion, swId, soloCap, idx) +
+                '</div>' +
+                '<div class="sim-loading small text-muted mt-2 d-none"><i class="fas fa-spinner fa-spin me-1"></i>Calculando simulación…</div>' +
+                '<div class="sim-error small text-danger mt-2 d-none"></div>' +
+                '</div></td>';
+            tr.html(html);
+            tr.find('.lote-pr-solo-capital-switch').on('change', function () {
+                var i = parseInt($(this).attr('data-lote-idx'), 10);
+                if (isNaN(i) || !listaTransaccionesPendientes[i]) return;
+                listaTransaccionesPendientes[i].SnSoloCapital = $(this).is(':checked');
+                actualizarHiddenJsonLote();
+                simularMovimientoLinea(i);
+            });
+            return tr;
+        }
+
+        function simularMovimientoLinea(idx) {
+            var it = listaTransaccionesPendientes[idx];
+            if (!it || !esRubroPrestamo(it.CodigoRubro) || !asociadoSeleccionado) return;
+            var $detail = $('tr.lote-pr-sim-row[data-lote-idx="' + idx + '"]');
+            if (!$detail.length) return;
+            $detail.find('.sim-loading').removeClass('d-none');
+            $detail.find('.sim-error').addClass('d-none').text('');
+            $detail.find('.sim-badges').addClass('opacity-50');
+            $.ajax({
+                type: 'POST',
+                url: semgaTransPageMethod('SimularMovimiento'),
+                data: JSON.stringify({
+                    numeroAsociado: parseInt(asociadoSeleccionado.numeroAsociado, 10),
+                    codigoRubro: it.CodigoRubro,
+                    idAuxiliar: parseInt(it.IDAuxiliar, 10),
+                    codigoTransaccion: it.CodigoTransaccion,
+                    monto: it.Monto,
+                    snSoloCapital: it.SnSoloCapital ? 1 : 0
+                }),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function (response) {
+                    $detail.find('.sim-loading').addClass('d-none');
+                    $detail.find('.sim-badges').removeClass('opacity-50');
+                    var d = response.d;
+                    if (!d || !simExito(d)) {
+                        $detail.find('.sim-error').removeClass('d-none').text((d && d.Mensaje) ? d.Mensaje : 'No se pudo simular.');
+                        return;
+                    }
+                    aplicarResultadoSimulacionPr($detail, it, d);
+                },
+                error: function (xhr, status, err) {
+                    $detail.find('.sim-loading').addClass('d-none');
+                    $detail.find('.sim-badges').removeClass('opacity-50');
+                    $detail.find('.sim-error').removeClass('d-none').text('Error: ' + (err || xhr.statusText || ''));
+                }
+            });
         }
 
         function actualizarJsonYTablaLote() {
-            $('#jsonTransaccionesLote').val(JSON.stringify(listaTransaccionesPendientes));
+            actualizarHiddenJsonLote();
             var tbody = $('#tbodyTransaccionesLote');
             tbody.empty();
             if (listaTransaccionesPendientes.length === 0) {
@@ -1150,8 +1914,9 @@
                 $('#divListaVacia').hide();
                 $('#tblTransaccionesLote').show();
                 $.each(listaTransaccionesPendientes, function(i, it) {
+                    asegurarCamposRubroPrestamo(it);
                     var montoFmt = it.Monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    var tr = $('<tr></tr>').attr('data-numero-linea', i + 1);
+                    var tr = $('<tr class="lote-linea-main"></tr>').attr('data-numero-linea', i + 1).attr('data-lote-idx', i);
                     tr.append($('<td class="text-center"></td>').text(i + 1));
                     tr.append($('<td></td>').text(it.textoAuxiliar || ''));
                     tr.append($('<td></td>').text(it.textoCuenta || ''));
@@ -1172,7 +1937,15 @@
                     }));
                     tr.append(acc);
                     tbody.append(tr);
+                    if (esRubroPrestamo(it.CodigoRubro)) {
+                        tbody.append(crearFilaDetallePrSim(i, it));
+                    }
                 });
+                for (var j = 0; j < listaTransaccionesPendientes.length; j++) {
+                    if (esRubroPrestamo(listaTransaccionesPendientes[j].CodigoRubro)) {
+                        simularMovimientoLinea(j);
+                    }
+                }
             }
         }
 
@@ -1219,7 +1992,7 @@
             showConfirmToast('warning', 'Cancelar todo', 'Se borrará el asociado y todas las transacciones del lote.<br><strong>¿Continuar?</strong>',
                 function() {
                     eliminarAsociadoSeleccionado();
-                    window.location.href = 'Transacciones.aspx';
+                    semgaTransaccionesReload();
                 },
                 function() { showToast('info', 'Operación cancelada', ''); }
             );
@@ -1234,7 +2007,7 @@
             var montoInput = $('#txtMonto').val().replace(',', '.');
             var monto = parseFloat(montoInput);
             if (!isNaN(monto)) monto = Math.round(monto * 100) / 100;
-            return {
+            var o = {
                 CodigoRubro: codigoRubro,
                 AuxiliarKey: auxiliarKey,
                 IDAuxiliar: idAuxiliar,
@@ -1245,6 +2018,8 @@
                 textoCuenta: $('#ddlCuenta option:selected').text(),
                 textoTransaccion: $('#ddlCodigoTransaccion option:selected').text()
             };
+            asegurarCamposRubroPrestamo(o);
+            return o;
         }
 
         /** Arma el arreglo de transacciones a guardar: lista del lote o, si está vacía, una transacción desde el formulario si está completo. */
@@ -1258,17 +2033,24 @@
             return null;
         }
 
-        /** Convierte un ítem interno a payload para el SP: NumeroLinea, NumeroAsociado, CodigoRubro, IDAuxiliar, CodigoTransaccion, Monto, Observaciones. NumeroLinea permite asociar el resultado del servidor con la fila de la tabla. */
+        /** Convierte un ítem interno a payload para el SP (OPENJSON): NumeroLinea, NumeroAsociado, …; rubro PR incluye snSoloCapital 0/1. */
         function itemAPayload(it, index) {
-            return {
+            var idAux = it.IDAuxiliar;
+            if (typeof idAux !== 'number') idAux = parseInt(idAux, 10);
+            if (isNaN(idAux)) idAux = null;
+            var p = {
                 NumeroLinea: (index != null ? index + 1 : 1),
                 NumeroAsociado: asociadoSeleccionado ? asociadoSeleccionado.numeroAsociado : null,
                 CodigoRubro: it.CodigoRubro,
-                IDAuxiliar: it.IDAuxiliar,
+                IDAuxiliar: idAux,
                 CodigoTransaccion: it.CodigoTransaccion,
                 Monto: it.Monto,
                 Observaciones: it.Observaciones || ''
             };
+            if (esRubroPrestamo(it.CodigoRubro)) {
+                p.snSoloCapital = it.SnSoloCapital ? 1 : 0;
+            }
+            return p;
         }
 
         var loteGuardadoExito = false;
@@ -1277,26 +2059,32 @@
 
         function guardarLote() {
             if (loteGuardadoExito) return;
+            function continuarConfirmacionGuardado() {
+                var transacciones = obtenerTransaccionesParaGuardar();
+                if (!transacciones || transacciones.length === 0) {
+                    mostrarErrorValidacion('Añada al menos una transacción al lote o complete el formulario de datos de la transacción antes de guardar.');
+                    return;
+                }
+                var numeroAsociado = asociadoSeleccionado ? parseInt(asociadoSeleccionado.numeroAsociado, 10) : 0;
+                if (!numeroAsociado) {
+                    mostrarErrorValidacion('No hay asociado seleccionado.');
+                    return;
+                }
+                var n = transacciones.length;
+                var textoCantidad = n === 1 ? '1 transacción' : n + ' transacciones';
+                showConfirmToast('warning', 'Confirmar guardado', '¿Seguro desea guardar estas ' + textoCantidad + '?', function() {
+                    enviarLoteAlServidor(transacciones, numeroAsociado);
+                }, function() {
+                    showToast('info', 'Operación cancelada', 'No se guardó el lote.');
+                });
+            }
             if (listaTransaccionesPendientes.length === 0 && validarFormularioTransaccion() && asociadoSeleccionado && asociadoSeleccionado.numeroAsociado) {
-                añadirTransaccionALista();
-            }
-            var transacciones = obtenerTransaccionesParaGuardar();
-            if (!transacciones || transacciones.length === 0) {
-                mostrarErrorValidacion('Añada al menos una transacción al lote o complete el formulario de datos de la transacción antes de guardar.');
+                añadirTransaccionALista(function (ok) {
+                    if (ok) continuarConfirmacionGuardado();
+                });
                 return;
             }
-            var numeroAsociado = asociadoSeleccionado ? parseInt(asociadoSeleccionado.numeroAsociado, 10) : 0;
-            if (!numeroAsociado) {
-                mostrarErrorValidacion('No hay asociado seleccionado.');
-                return;
-            }
-            var n = transacciones.length;
-            var textoCantidad = n === 1 ? '1 transacción' : n + ' transacciones';
-            showConfirmToast('warning', 'Confirmar guardado', '¿Seguro desea guardar estas ' + textoCantidad + '?', function() {
-                enviarLoteAlServidor(transacciones, numeroAsociado);
-            }, function() {
-                showToast('info', 'Operación cancelada', 'No se guardó el lote.');
-            });
+            continuarConfirmacionGuardado();
         }
 
         function enviarLoteAlServidor(transacciones, numeroAsociado) {
@@ -1305,7 +2093,7 @@
             $('#btnGuardarLote').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando...');
             $.ajax({
                 type: 'POST',
-                url: 'Transacciones.aspx/GuardarLote',
+                url: semgaTransPageMethod('GuardarLote'),
                 data: JSON.stringify({ numeroAsociado: numeroAsociado, jsonLote: jsonLote }),
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
@@ -1344,7 +2132,7 @@
                 var num = detalles[i].NumeroLinea;
                 if (num != null) map[num] = detalles[i];
             }
-            $('#tbodyTransaccionesLote tr').each(function() {
+            $('#tbodyTransaccionesLote tr.lote-linea-main').each(function() {
                 var num = parseInt($(this).attr('data-numero-linea'), 10);
                 var det = map[num];
                 var $td = $(this).find('.td-mensaje-lote');
@@ -1361,6 +2149,7 @@
             $('#divFormularioTransaccion input, #divFormularioTransaccion select').prop('disabled', true);
             $('#btnAnadirTransaccion, #btnCancelarTransaccion').prop('disabled', true);
             $('#tbodyTransaccionesLote .btn').prop('disabled', true).addClass('disabled');
+            $('#tbodyTransaccionesLote .lote-pr-solo-capital-switch').prop('disabled', true);
             $('#btnGuardarLote').hide();
             $('#btnImprimirLote').show();
         }
@@ -1369,313 +2158,6 @@
             var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
-        }
-
-        function guardarTransaccion() {
-            // Prevenir múltiples ejecuciones simultáneas
-            if (guardandoTransaccion) {
-                return;
-            }
-            
-            if (!validarFormularioTransaccion()) {
-                guardandoTransaccion = false;
-                return;
-            }
-            
-            // NO establecer guardandoTransaccion = true aquí, solo cuando realmente se proceda con el guardado
-
-            try {
-            const idAuxiliarSeleccionado = $('#ddlCuenta').val();
-
-            // Obtener datos para el confirm
-            const datosConfirm = obtenerDatosParaConfirm();
-            
-            // Mostrar confirm dialog con los datos
-            mostrarConfirmGuardado(datosConfirm);
-            } catch (error) {
-                mostrarErrorValidacion(error.message || 'Error al preparar los datos para guardar');
-                guardandoTransaccion = false;
-            }
-        }
-
-        function obtenerDatosParaConfirm() {
-            // Validar que haya un asociado seleccionado
-            if (!asociadoSeleccionado || !asociadoSeleccionado.numeroAsociado) {
-                throw new Error('No hay un asociado seleccionado');
-            }
-            
-            const rubroSeleccionado = $('#ddlRubro option:selected').text();
-            const auxiliarSeleccionado = $('#ddlAuxiliar option:selected').text();
-            const cuentaSeleccionada = $('#ddlCuenta option:selected').text();
-            const transaccionSeleccionada = $('#ddlCodigoTransaccion option:selected').text();
-            // Normalizar el monto para usar punto decimal
-            const montoInput = $('#txtMonto').val().replace(',', '.');
-            const monto = parseFloat(montoInput);
-            
-            const datos = {
-                asociado: asociadoSeleccionado.nombre,
-                numeroAsociado: asociadoSeleccionado.numeroAsociado,
-                rubro: rubroSeleccionado,
-                auxiliar: auxiliarSeleccionado,
-                cuenta: cuentaSeleccionada,
-                transaccion: transaccionSeleccionada,
-                monto: monto,
-                observaciones: $('#txtObservaciones').val()
-            };
-            
-            return datos;
-        }
-
-        function mostrarConfirmGuardado(datos) {
-            const montoFormateado = datos.monto.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-
-            // Crear el modal personalizado
-            const modalHtml = `
-                <div id="modalConfirm" class="custom-modal-overlay">
-                    <div class="custom-modal">
-                        <div class="custom-modal-header">
-                            <h5><i class="fas fa-check-circle text-primary"></i> Confirmar Transacción</h5>
-                            <button type="button" class="btn-close-custom" onclick="cerrarConfirmModal()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="custom-modal-body">
-                            <div class="datos-transaccion">
-                                <div class="campo-dato">
-                                    <span class="label">Asociado:</span>
-                                    <span class="valor">${datos.asociado} (${datos.numeroAsociado})</span>
-                                </div>
-                                <div class="campo-dato">
-                                    <span class="label">Rubro:</span>
-                                    <span class="valor">${datos.rubro}</span>
-                                </div>
-                                <div class="campo-dato">
-                                    <span class="label">Auxiliar:</span>
-                                    <span class="valor">${datos.auxiliar}</span>
-                                </div>
-                                <div class="campo-dato">
-                                    <span class="label">Cuenta:</span>
-                                    <span class="valor">${datos.cuenta}</span>
-                                </div>
-                                <div class="campo-dato">
-                                    <span class="label">Transacción:</span>
-                                    <span class="valor">${datos.transaccion}</span>
-                                </div>
-                                <div class="campo-dato monto">
-                                    <span class="label">Monto:</span>
-                                    <span class="valor monto-valor">${montoFormateado}</span>
-                                </div>
-                                ${datos.observaciones ? `
-                                <div class="campo-dato">
-                                    <span class="label">Observaciones:</span>
-                                    <span class="valor">${datos.observaciones}</span>
-                                </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                        <div class="custom-modal-footer">
-                            <button type="button" class="btn btn-cancel" onclick="cerrarConfirmModal()">
-                                <i class="fas fa-times"></i> Cancelar
-                            </button>
-                            <button type="button" class="btn btn-confirm" onclick="procederConGuardado(); cerrarConfirmModal();">
-                                <i class="fas fa-save"></i> Guardar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Agregar el modal al body
-            $('body').append(modalHtml);
-            
-            // Agregar estilos si no existen
-            if (!$('#customModalStyles').length) {
-                $('head').append(`
-                    <style id="customModalStyles">
-                        .custom-modal-overlay {
-                            position: fixed;
-                            top: 0;
-                            left: 0;
-                            width: 100%;
-                            height: 100%;
-                            background: rgba(0, 0, 0, 0.5);
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            z-index: 9999;
-                            backdrop-filter: blur(2px);
-                        }
-                        
-                        .custom-modal {
-                            background: white;
-                            border-radius: 12px;
-                            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                            width: 90%;
-                            max-width: 500px;
-                            max-height: 90vh;
-                            overflow: hidden;
-                            animation: modalSlideIn 0.3s ease-out;
-                        }
-                        
-                        @keyframes modalSlideIn {
-                            from {
-                                opacity: 0;
-                                transform: translateY(-50px) scale(0.9);
-                            }
-                            to {
-                                opacity: 1;
-                                transform: translateY(0) scale(1);
-                            }
-                        }
-                        
-                        .custom-modal-header {
-                            background: linear-gradient(135deg, #2c3e50, #34495e);
-                            color: white;
-                            padding: 20px;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                        }
-                        
-                        .custom-modal-header h5 {
-                            margin: 0;
-                            font-size: 18px;
-                            font-weight: 600;
-                        }
-                        
-                        .btn-close-custom {
-                            background: none;
-                            border: none;
-                            color: white;
-                            font-size: 18px;
-                            cursor: pointer;
-                            padding: 5px;
-                            border-radius: 4px;
-                            transition: background-color 0.2s;
-                        }
-                        
-                        .btn-close-custom:hover {
-                            background-color: rgba(255, 255, 255, 0.1);
-                        }
-                        
-                        .custom-modal-body {
-                            padding: 15px 20px;
-                        }
-                        
-                        .datos-transaccion {
-                            background: #f8f9fa;
-                            border-radius: 8px;
-                            padding: 15px;
-                            margin-bottom: 0;
-                        }
-                        
-                        .campo-dato {
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            padding: 6px 0;
-                            border-bottom: 1px solid #e9ecef;
-                        }
-                        
-                        .campo-dato:last-child {
-                            border-bottom: none;
-                        }
-                        
-                        .campo-dato.monto {
-                            background: #e8f5e8;
-                            margin: 8px -8px -8px -8px;
-                            padding: 10px 8px;
-                            border-radius: 6px;
-                            border-bottom: none;
-                        }
-                        
-                        .campo-dato .label {
-                            font-weight: 600;
-                            color: #495057;
-                            flex: 1;
-                        }
-                        
-                        .campo-dato .valor {
-                            color: #212529;
-                            text-align: right;
-                            flex: 2;
-                        }
-                        
-                        .monto-valor {
-                            color: #27ae60 !important;
-                            font-weight: bold;
-                            font-size: 16px;
-                        }
-                        
-                        .pregunta-confirm {
-                            text-align: center;
-                            color: #6c757d;
-                            font-size: 15px;
-                            padding: 15px;
-                            background: #e3f2fd;
-                            border-radius: 6px;
-                            border-left: 4px solid #2196f3;
-                        }
-                        
-                        .custom-modal-footer {
-                            padding: 20px;
-                            background: #f8f9fa;
-                            display: flex;
-                            justify-content: flex-end;
-                            gap: 10px;
-                        }
-                        
-                        .btn {
-                            padding: 10px 20px;
-                            border: none;
-                            border-radius: 6px;
-                            font-weight: 500;
-                            cursor: pointer;
-                            transition: all 0.2s;
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                        }
-                        
-                        .btn-cancel {
-                            background: #6c757d;
-                            color: white;
-                        }
-                        
-                        .btn-cancel:hover {
-                            background: #5a6268;
-                        }
-                        
-                        .btn-confirm {
-                            background: #28a745;
-                            color: white;
-                        }
-                        
-                        .btn-confirm:hover {
-                            background: #218838;
-                        }
-                    </style>
-                `);
-            }
-        }
-
-        function cerrarConfirmModal() {
-            $('#modalConfirm').remove();
-            // Resetear la variable de control si el usuario cancela
-            guardandoTransaccion = false;
-        }
-
-        function procederConGuardado() {
-            cerrarConfirmModal();
-            guardandoTransaccion = false;
-            // Redirigir al flujo de lote: añadir la transacción actual al lote (si no está) y guardar lote
-            if (listaTransaccionesPendientes.length === 0 && validarFormularioTransaccion() && asociadoSeleccionado && asociadoSeleccionado.numeroAsociado) {
-                añadirTransaccionALista();
-            }
-            guardarLote();
         }
 
         function validarFormularioTransaccion() {
@@ -1725,76 +2207,6 @@
                 $('#ddlCodigoTransaccion').empty().append('<option value="">Seleccionar código...</option>');
             }
             ocultarErrorValidacion();
-        }
-
-        function bloquearFormularioPostGuardado() {
-            // Bloquear todos los campos del formulario
-            $('#ddlRubro, #ddlAuxiliar, #ddlCuenta, #ddlCodigoTransaccion, #txtMonto, #txtObservaciones').prop('disabled', true);
-            
-            // Bloquear la sección del asociado
-            $('#btnBuscarAsociado, #btnEliminarAsociado').prop('disabled', true);
-            $('#btnBuscarAsociado').html('<i class="fas fa-lock me-1"></i>Bloqueado');
-            $('#btnEliminarAsociado').hide(); // Ocultar el botón de eliminar
-            
-            // Cambiar el estilo visual para indicar que está bloqueado
-            $('#divAsociadoSeleccionado').addClass('asociado-bloqueado');
-            
-            // Actualizar el badge con el ID formateado (usar capital si existe, sino intereses)
-            let idParaBadge = '';
-            if (ultimoCapitalMovimientoId) {
-                idParaBadge = ultimoCapitalMovimientoId.toString().padStart(12, '0');
-            } else if (ultimoInteresesMovimientoId) {
-                idParaBadge = ultimoInteresesMovimientoId.toString().padStart(12, '0');
-            }
-            if (idParaBadge) {
-                $('#divAsociadoSeleccionado').attr('data-transaction-id', idParaBadge);
-            }
-            
-            // Ocultar botones de guardar/cancelar
-            $('#btnGuardarTransaccion, #btnCancelarTransaccion').hide();
-            
-            // Mostrar botones post-guardado
-            $('#btnImprimirComprobante, #btnNuevaTransaccion').show();
-        }
-
-        function nuevaTransaccion() {
-            // Redirigir a la misma página para limpiar completamente el estado
-            window.location.href = 'Transacciones.aspx';
-        }
-
-        function imprimirComprobante() {
-            // Validar que al menos uno de los IDs exista
-            if ((typeof ultimoCapitalMovimientoId === 'undefined' || !ultimoCapitalMovimientoId) &&
-                (typeof ultimoInteresesMovimientoId === 'undefined' || !ultimoInteresesMovimientoId)) {
-                alert('No se encontraron IDs de movimientos para imprimir');
-                return;
-            }
-
-            const capitalIdParaEnviar = ultimoCapitalMovimientoId ? ultimoCapitalMovimientoId.toString() : '';
-            const interesesIdParaEnviar = ultimoInteresesMovimientoId ? ultimoInteresesMovimientoId.toString() : '';
-
-            // Llamar al WebMethod para generar el comprobante
-            $.ajax({
-                type: 'POST',
-                url: 'Transacciones.aspx/GenerarComprobante',
-                data: JSON.stringify({ 
-                    capitalMovimientoId: capitalIdParaEnviar,
-                    interesesMovimientoId: interesesIdParaEnviar
-                }),
-                contentType: 'application/json; charset=utf-8',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.d.Resultado === 'SUCCESS') {
-                        // Mostrar el comprobante en un modal
-                        mostrarModalComprobante(response.d.Html, capitalIdParaEnviar, interesesIdParaEnviar);
-                    } else {
-                        alert('Error al generar el comprobante: ' + response.d.Mensaje);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    alert('Error al generar el comprobante: ' + error);
-                }
-            });
         }
 
         function mostrarModalComprobante(htmlContent, capitalMovimientoId, interesesMovimientoId) {
@@ -1946,6 +2358,35 @@
             }
         }
 
+        function imprimirComprobanteLotePorId(idTrans) {
+            $.ajax({
+                type: 'POST',
+                url: semgaTransPageMethod('GenerarComprobanteLote'),
+                data: JSON.stringify({ idTrans: idTrans }),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.d && response.d.Resultado === 'SUCCESS') {
+                        mostrarModalComprobante(response.d.Html, '', '');
+                    } else {
+                        if (typeof showToast === 'function') {
+                            showToast('error', 'Error', (response.d && response.d.Mensaje) || 'Error al generar comprobante.');
+                        } else {
+                            alert((response.d && response.d.Mensaje) || 'Error al generar comprobante.');
+                        }
+                    }
+                },
+                error: function(xhr, status, err) {
+                    var msg = 'Error al generar comprobante: ' + (err || xhr.statusText);
+                    if (typeof showToast === 'function') {
+                        showToast('error', 'Error', msg);
+                    } else {
+                        alert(msg);
+                    }
+                }
+            });
+        }
+
         function cerrarModalComprobante() {
             $('#modalComprobante').remove();
         }
@@ -1990,7 +2431,7 @@
         }
 
         function volverDashboard() {
-            window.location.href = '../../Dashboard.aspx';
+            semgaIrDashboard();
         }
         
         // Funciones para manejar el div de mensajes (error/éxito)
@@ -2097,7 +2538,7 @@
         function marcarComprobanteComoImpreso(capitalMovimientoId, interesesMovimientoId) {
             $.ajax({
                 type: 'POST',
-                url: 'Transacciones.aspx/MarcarComprobanteImpreso',
+                url: semgaTransPageMethod('MarcarComprobanteImpreso'),
                 data: JSON.stringify({ 
                     capitalMovimientoId: capitalMovimientoId || '',
                     interesesMovimientoId: interesesMovimientoId || ''
@@ -2116,6 +2557,9 @@
                 }
             });
         }
+
+        window.imprimirComprobanteLotePorId = imprimirComprobanteLotePorId;
+        window.mostrarModalComprobante = mostrarModalComprobante;
     </script>
 </body>
 </html>
